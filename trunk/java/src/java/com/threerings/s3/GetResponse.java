@@ -7,11 +7,12 @@
 //  this software code. (c) 2006 Amazon Digital Services, Inc. or its
 //  affiliates.
 
-package com.amazon.s3;
+package com.threerings.s3;
 
 import java.net.HttpURLConnection;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.io.ByteArrayOutputStream;
@@ -30,7 +31,7 @@ public class GetResponse extends Response {
     public GetResponse(HttpURLConnection connection) throws IOException {
         super(connection);
         if (connection.getResponseCode() < 400) {
-            Map metadata = extractMetadata(connection);
+            Map<String,List<String>> metadata = extractMetadata(connection);
             byte[] body = slurpInputStream(connection.getInputStream());
             this.object = new S3Object(body, metadata);
         }
@@ -40,9 +41,9 @@ public class GetResponse extends Response {
      * Examines the response's header fields and returns a Map from String to List of Strings
      * representing the object's metadata.
      */
-    private Map extractMetadata(HttpURLConnection connection) {
-        TreeMap metadata = new TreeMap();
-        Map headers = connection.getHeaderFields();
+    private Map<String,List<String>> extractMetadata(HttpURLConnection connection) {
+        TreeMap<String,List<String>> metadata = new TreeMap<String,List<String>>();
+        Map<String,List<String>> headers = connection.getHeaderFields();
         for (Iterator i = headers.keySet().iterator(); i.hasNext(); ) {
             String key = (String)i.next();
             if (key == null) continue;

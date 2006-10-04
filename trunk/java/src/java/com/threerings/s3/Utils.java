@@ -7,7 +7,7 @@
 //  this software code. (c) 2006 Amazon Digital Services, Inc. or its
 //  affiliates.
 
-package com.amazon.s3;
+package com.threerings.s3;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -42,7 +42,7 @@ public class Utils {
      */
     private static final String HMAC_SHA1_ALGORITHM = "HmacSHA1";
 
-    static String makeCanonicalString(String method, String resource, Map headers) {
+    static String makeCanonicalString(String method, String resource, Map<String,List<String>> headers) {
         return makeCanonicalString(method, resource, headers, null);
     }
 
@@ -51,14 +51,14 @@ public class Utils {
      * used instead of the Date header.
      */
     static String makeCanonicalString(String method, String resource,
-                                             Map headers, String expires)
+                                             Map<String,List<String>> headers, String expires)
     {
         StringBuffer buf = new StringBuffer();
         buf.append(method + "\n");
 
         // Add all interesting headers to a list, then sort them.  "Interesting"
         // is defined as Content-MD5, Content-Type, Date, and x-amz-
-        SortedMap interestingHeaders = new TreeMap();
+        SortedMap<String,String> interestingHeaders = new TreeMap<String,String>();
         if (headers != null) {
             for (Iterator i = headers.keySet().iterator(); i.hasNext(); ) {
                 String key = (String)i.next();

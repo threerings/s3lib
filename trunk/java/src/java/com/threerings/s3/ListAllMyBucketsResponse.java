@@ -7,7 +7,7 @@
 //  this software code. (c) 2006 Amazon Digital Services, Inc. or its
 //  affiliates.
 
-package com.amazon.s3;
+package com.threerings.s3;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -52,14 +52,14 @@ public class ListAllMyBucketsResponse extends Response {
 
     static class ListAllMyBucketsHandler extends DefaultHandler {
 
-        private List entries = null;
+        private List<Bucket> entries = null;
         private Bucket currBucket = null;
         private StringBuffer currText = null;
         private SimpleDateFormat iso8601Parser = null;
 
         public ListAllMyBucketsHandler() {
             super();
-            entries = new ArrayList();
+            entries = new ArrayList<Bucket>();
             this.iso8601Parser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
             this.iso8601Parser.setTimeZone(new SimpleTimeZone(0, "GMT"));
             this.currText = new StringBuffer();
