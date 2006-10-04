@@ -1,0 +1,78 @@
+<?xml version="1.0" standalone="yes"?>
+<!-- build configuration -->
+<project name="s3lib" default="compile" basedir=".">
+
+  <!-- configuration properties -->
+  <property name="app.name"       value="s3lib"/>
+  <property name="deploy.dir"     value="dist"/>
+  <property name="savedoc.dir"    value="docs"/>
+
+  <!-- derived properties -->  
+  <property name="dist.jar"       value="${app.name}.jar"/>
+  <property name="javadoc.home"   value="${deploy.dir}/docs"/>
+
+  <!-- declare our classpath -->
+  <path id="classpath">
+    <pathelement location="${deploy.dir}/classes"/>
+    <fileset dir="${deploy.dir}/lib" includes="**/*.jar"/>
+  </path>
+
+  <!-- prepares the application directories -->
+  <target name="prepare">
+    <mkdir dir="${deploy.dir}"/>
+    <mkdir dir="${deploy.dir}/classes"/>
+    <mkdir dir="${deploy.dir}/lib"/>
+    <mkdir dir="${javadoc.home}"/>
+    <copy todir="${deploy.dir}/classes">
+      <fileset dir="src/java" includes="**/*.properties"/>
+    </copy>
+    <copy todir="${deploy.dir}/lib">
+      <fileset dir="lib" includes="**/*.jar"/>
+    </copy>
+  </target>
+
+  <!-- cleans out the installed application -->
+  <target name="clean">
+    <delete dir="${deploy.dir}"/>
+  </target>
+
+  <!-- build the java class files -->
+  <target name="compile" depends="prepare">
+    <javac srcdir="src/java" destdir="${deploy.dir}/classes"
+           debug="on" optimize="${build.optimize}" deprecation="on"
+           source="1.5" target="1.5">
+      <classpath refid="classpath"/>
+      <!--<compilerarg value="-Xlint:unchecked"/>-->
+    </javac>
+  </target>
+
+  <!-- build the javadoc documentation -->
+  <target name="javadoc" depends="prepare">
+    <javadoc sourcepath="src/java"
+             packagenames="com.threerings.*"
+             destdir="${javadoc.home}"
+             additionalparam="-breakiterator"
+             link="http://dev.threerings.net/devel/docs/s3lib/">
+      <classpath refid="classpath"/>
+      <link href="http://java.sun.com/j2se/1.4/docs/api/"/>
+    </javadoc>
+  </target>
+
+  <!-- builds the javadocs and stuffs them in a directory where they won't
+       be blown away when we do "clean" next time -->
+  <target name="savedoc" depends="javadoc">
+    <delete dir="${savedoc.dir}/api"/>
+    <copy todir="${savedoc.dir}/api">
+      <fileset dir="${javadoc.home}" includes="**/*"/>
+    </copy>
+  </target>
+
+  <!-- the default target is to rebuild everything -->
+  <target name="all" depends="clean,prepare,compile,javadoc"/>
+
+  <!-- builds our distribution files (war and jar) -->
+  <target name="dist" depends="prepare,compile">
+    <jar destfile="${deploy.dir}/${dist.jar}"
+         basedir="${deploy.dir}/classes"/>
+  </target>
+</project>
