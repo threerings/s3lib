@@ -7,7 +7,7 @@
 //  this software code. (c) 2006 Amazon Digital Services, Inc. or its
 //  affiliates.
 
-package com.amazon.s3;
+package com.threerings.s3;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -77,7 +77,7 @@ public class AWSAuthConnection {
      * @param metadata A Map of String to List of Strings representing the s3
      * metadata for this bucket (can be null).
      */
-    public Response createBucket(String bucket, Map headers)
+    public Response createBucket(String bucket, Map<String,List<String>> headers)
         throws MalformedURLException, IOException
     {
         return new Response(makeRequest("PUT", bucket, headers));
@@ -94,7 +94,7 @@ public class AWSAuthConnection {
      * headers to pass (can be null).
      */
     public ListBucketResponse listBucket(String bucket, String prefix, String marker,
-                                         Integer maxKeys, Map headers)
+                                         Integer maxKeys, Map<String,List<String>> headers)
         throws MalformedURLException, IOException
     {
         return listBucket(bucket, prefix, marker, maxKeys, null, headers);
@@ -113,7 +113,7 @@ public class AWSAuthConnection {
      * headers to pass (can be null).
      */
     public ListBucketResponse listBucket(String bucket, String prefix, String marker,
-                                         Integer maxKeys, String delimiter, Map headers)
+                                         Integer maxKeys, String delimiter, Map<String,List<String>> headers)
         throws MalformedURLException, IOException
     {
 
@@ -127,7 +127,7 @@ public class AWSAuthConnection {
      * @param headers A Map of String to List of Strings representing the http
      * headers to pass (can be null).
      */
-    public Response deleteBucket(String bucket, Map headers)
+    public Response deleteBucket(String bucket, Map<String,List<String>> headers)
         throws MalformedURLException, IOException
     {
         return new Response(makeRequest("DELETE", bucket, headers));
@@ -141,7 +141,7 @@ public class AWSAuthConnection {
      * @param headers A Map of String to List of Strings representing the http
      * headers to pass (can be null).
      */
-    public Response put(String bucket, String key, S3Object object, Map headers)
+    public Response put(String bucket, String key, S3Object object, Map<String,List<String>> headers)
         throws MalformedURLException, IOException
     {
         HttpURLConnection request =
@@ -160,7 +160,7 @@ public class AWSAuthConnection {
      * @param headers A Map of String to List of Strings representing the http
      * headers to pass (can be null).
      */
-    public GetResponse get(String bucket, String key, Map headers)
+    public GetResponse get(String bucket, String key, Map<String,List<String>> headers)
         throws MalformedURLException, IOException
     {
         return new GetResponse(makeRequest("GET", bucket + "/" + Utils.urlencode(key), headers));
@@ -173,7 +173,7 @@ public class AWSAuthConnection {
      * @param headers A Map of String to List of Strings representing the http
      * headers to pass (can be null).
      */
-    public Response delete(String bucket, String key, Map headers)
+    public Response delete(String bucket, String key, Map<String,List<String>> headers)
         throws MalformedURLException, IOException
     {
         return new Response(makeRequest("DELETE", bucket + "/" + Utils.urlencode(key), headers));
@@ -185,7 +185,7 @@ public class AWSAuthConnection {
      * @param headers A Map of String to List of Strings representing the http
      * headers to pass (can be null).
      */
-    public GetResponse getBucketACL(String bucket, Map headers)
+    public GetResponse getBucketACL(String bucket, Map<String,List<String>> headers)
         throws MalformedURLException, IOException
     {
         return getACL(bucket, "", headers);
@@ -198,7 +198,7 @@ public class AWSAuthConnection {
      * @param headers A Map of String to List of Strings representing the http
      * headers to pass (can be null).
      */
-    public GetResponse getACL(String bucket, String key, Map headers)
+    public GetResponse getACL(String bucket, String key, Map<String,List<String>> headers)
         throws MalformedURLException, IOException
     {
         if (key == null) key = "";
@@ -214,7 +214,7 @@ public class AWSAuthConnection {
      * @param headers A Map of String to List of Strings representing the http
      * headers to pass (can be null).
      */
-    public Response putBucketACL(String bucket, String aclXMLDoc, Map headers)
+    public Response putBucketACL(String bucket, String aclXMLDoc, Map<String,List<String>> headers)
         throws MalformedURLException, IOException
     {
         return putACL(bucket, "", aclXMLDoc, headers);
@@ -228,7 +228,7 @@ public class AWSAuthConnection {
      * @param headers A Map of String to List of Strings representing the http
      * headers to pass (can be null).
      */
-    public Response putACL(String bucket, String key, String aclXMLDoc, Map headers)
+    public Response putACL(String bucket, String key, String aclXMLDoc, Map<String,List<String>> headers)
         throws MalformedURLException, IOException
     {
         S3Object object = new S3Object(aclXMLDoc.getBytes(), null);
@@ -247,7 +247,7 @@ public class AWSAuthConnection {
      * @param headers A Map of String to List of Strings representing the http
      * headers to pass (can be null).
      */
-    public ListAllMyBucketsResponse listAllMyBuckets(Map headers)
+    public ListAllMyBucketsResponse listAllMyBuckets(Map<String,List<String>> headers)
         throws MalformedURLException, IOException
     {
         return new ListAllMyBucketsResponse(makeRequest("GET", "", headers));
@@ -256,7 +256,7 @@ public class AWSAuthConnection {
     /**
      * Make a new HttpURLConnection without passing an S3Object parameter.
      */
-    private HttpURLConnection makeRequest(String method, String resource, Map headers)
+    private HttpURLConnection makeRequest(String method, String resource, Map<String,List<String>> headers)
         throws MalformedURLException, IOException
     {
         return makeRequest(method, resource, headers, null);
@@ -270,7 +270,7 @@ public class AWSAuthConnection {
      * headers to pass (can be null).
      * @param object The S3Object that is to be written (can be null).
      */
-    private HttpURLConnection makeRequest(String method, String resource, Map headers,
+    private HttpURLConnection makeRequest(String method, String resource, Map<String,List<String>> headers,
                                           S3Object object)
         throws MalformedURLException, IOException
     {
@@ -291,7 +291,7 @@ public class AWSAuthConnection {
      * @param headers A Map of String to List of Strings representing the http
      * headers to pass (can be null).
      */
-    private void addHeaders(HttpURLConnection connection, Map headers) {
+    private void addHeaders(HttpURLConnection connection, Map<String,List<String>> headers) {
         addHeaders(connection, headers, "");
     }
 
@@ -301,7 +301,7 @@ public class AWSAuthConnection {
      * @param metadata A Map of String to List of Strings representing the s3
      * metadata for this resource.
      */
-    private void addMetadataHeaders(HttpURLConnection connection, Map metadata) {
+    private void addMetadataHeaders(HttpURLConnection connection, Map<String,List<String>> metadata) {
         addHeaders(connection, metadata, Utils.METADATA_PREFIX);
     }
 
@@ -312,7 +312,7 @@ public class AWSAuthConnection {
      * headers to pass (can be null).
      * @param prefix The string to prepend to each key before adding it to the connection.
      */
-    private void addHeaders(HttpURLConnection connection, Map headers, String prefix) {
+    private void addHeaders(HttpURLConnection connection, Map<String,List<String>> headers, String prefix) {
         if (headers != null) {
             for (Iterator i = headers.keySet().iterator(); i.hasNext(); ) {
                 String key = (String)i.next();

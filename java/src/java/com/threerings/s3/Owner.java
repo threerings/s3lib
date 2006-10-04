@@ -7,7 +7,7 @@
 //  this software code. (c) 2006 Amazon Digital Services, Inc. or its
 //  affiliates.
 
-package com.amazon.s3;
+package com.threerings.s3;
 
 /**
  * A structure representing the owner of an object, used as a part of ListEntry.
