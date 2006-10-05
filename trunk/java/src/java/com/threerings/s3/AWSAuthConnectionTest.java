@@ -26,7 +26,7 @@ public class AWSAuthConnectionTest extends TestCase
     {
         _awsId = System.getProperty("aws.id");
         _awsKey = System.getProperty("aws.key");
-        _conn = new AWSAuthConnection(_awsId, _awsKey, false);
+        _conn = new AWSAuthConnection(_awsId, _awsKey);
         _testBucketName = "test-" + _awsId;
     }
 
