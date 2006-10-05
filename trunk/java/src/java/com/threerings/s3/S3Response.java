@@ -16,10 +16,10 @@ import java.io.IOException;
  * The parent class of all other Responses.  This class keeps track of the
  * HttpURLConnection response.
  */
-public class Response {
+public class S3Response {
     public HttpURLConnection connection;
 
-    public Response(HttpURLConnection connection) throws IOException {
+    public S3Response(HttpURLConnection connection) throws IOException {
         this.connection = connection;
     }
 }

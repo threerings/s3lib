@@ -11,6 +11,8 @@
 
 package com.threerings.s3;
 
+import org.apache.commons.codec.EncoderException;
+
 import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
@@ -26,6 +28,7 @@ import org.apache.commons.httpclient.protocol.Protocol;
 import java.io.InputStream;
 import java.io.IOException;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -40,85 +43,85 @@ public class AWSAuthConnection
     /**
      * Create a new interface to interact with S3 with the given credentials.
      *
-     * @param awsAccessKeyId The your user key into AWS
-     * @param awsSecretAccessKey The secret string used to generate signatures
+     * @param awsKeyId The your user key into AWS
+     * @param awsSecretKey The secret string used to generate signatures
      *        for authentication.
      */
-    public AWSAuthConnection (String awsAccessKeyId, String awsSecretAccessKey) {
-        this(awsAccessKeyId, awsSecretAccessKey, Protocol.getProtocol("https"));
+    public AWSAuthConnection (String awsKeyId, String awsSecretKey) {
+        this(awsKeyId, awsSecretKey, Protocol.getProtocol("https"));
     }
 
     /**
      * Create a new interface to interact with S3 with the given credentials and
      * connection parameters.
      *
-     * @param awsAccessKeyId The your user key into AWS
-     * @param awsSecretAccessKey The secret string used to generate signatures
+     * @param awsKeyId The your user key into AWS
+     * @param awsSecretKey The secret string used to generate signatures
      *        for authentication.
      * @param protocol Protocol to use to connect to S3.
      */
-    public AWSAuthConnection (String awsAccessKeyId, String awsSecretAccessKey, Protocol protocol) {
-        this(awsAccessKeyId, awsSecretAccessKey, protocol, Utils.DEFAULT_HOST);
+    public AWSAuthConnection (String awsKeyId, String awsSecretKey, Protocol protocol) {
+        this(awsKeyId, awsSecretKey, protocol, S3Utils.DEFAULT_HOST);
     }
 
     /**
      * Create a new interface to interact with S3 with the given credentials and
      * connection parameters.
      *
-     * @param awsAccessKeyId The your user key into AWS
-     * @param awsSecretAccessKey The secret string used to generate signatures
+     * @param awsKeyId The your user key into AWS
+     * @param awsSecretKey The secret string used to generate signatures
      *        for authentication.
      * @param protocol Protocol to use to connect to S3.
      * @param host Which host to connect to. Usually, this will be s3.amazonaws.com
      */
-    public AWSAuthConnection (String awsAccessKeyId, String awsSecretAccessKey, Protocol protocol,
+    public AWSAuthConnection (String awsKeyId, String awsSecretKey, Protocol protocol,
                              String host)
     {
-        this(awsAccessKeyId, awsSecretAccessKey, protocol, Utils.DEFAULT_HOST, protocol.getDefaultPort());
+        this(awsKeyId, awsSecretKey, protocol, S3Utils.DEFAULT_HOST, protocol.getDefaultPort());
     }
 
     /**
      * Create a new interface to interact with S3 with the given credentials and
      * connection parameters.
      *
-     * @param awsAccessKeyId The your user key into AWS
-     * @param awsSecretAccessKey The secret string used to generate signatures
+     * @param awsKeyId The your user key into AWS
+     * @param awsSecretKey The secret string used to generate signatures
      *        for authentication.
      * @param useSSL True if HTTPS should be used to connect to S3.
      * @param host Which host to connect to. Usually, this will be s3.amazonaws.com
      * @param port Port to connect to.
      */
-     public AWSAuthConnection (String awsAccessKeyId, String awsSecretAccessKey, Protocol protocol,
+     public AWSAuthConnection (String awsKeyId, String awsSecretKey, Protocol protocol,
                               String host, int port)
     {
         HostConfiguration awsHostConfig = new HostConfiguration();
         awsHostConfig.setHost(host, port, protocol);
         
         // Escape the tyranny of this() + implicit constructors.
-        _init(awsAccessKeyId, awsSecretAccessKey, awsHostConfig);
+        _init(awsKeyId, awsSecretKey, awsHostConfig);
     }
 
     /**
      * Create a new interface to interact with S3 with the given credential and connection
      * parameters
      *
-     * @param awsAccessKeyId The your user key into AWS
-     * @param awsSecretAccessKey The secret string used to generate signatures for authentication.
+     * @param awsKeyId The your user key into AWS
+     * @param awsSecretKey The secret string used to generate signatures for authentication.
      * @param awsHostConfig HttpClient HostConfig.
      */
-    public AWSAuthConnection (String awsAccessKeyId, String awsSecretAccessKey,
+    public AWSAuthConnection (String awsKeyId, String awsSecretKey,
         HostConfiguration awsHostConfig)
     {
         // Escape the tyranny of this() + implicit constructors.
-        _init(awsAccessKeyId, awsSecretAccessKey, awsHostConfig);
+        _init(awsKeyId, awsSecretKey, awsHostConfig);
     }
 
     // Private initializer
-    private void _init (String awsAccessKeyId, String awsSecretAccessKey,
+    private void _init (String awsKeyId, String awsSecretKey,
         HostConfiguration awsHostConfig)
     {
-        _awsAccessKeyId = awsAccessKeyId;
-        _awsSecretAccessKey = awsSecretAccessKey;
+        _awsKeyId = awsKeyId;
+        _awsSecretKey = awsSecretKey;
         _awsHttpClient = new HttpClient();
         _awsHttpClient.setHostConfiguration(awsHostConfig);
     }
@@ -132,9 +135,10 @@ public class AWSAuthConnection
      * metadata for this bucket (can be null).
      */
     public void createBucket (String bucket, Map<String,List<String>> headers)
-        throws IOException
+        throws IOException, S3Exception
     {
         PutMethod method = new PutMethod("/" + bucket);
+        S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, new Date());            
         try {
             int statusCode = _awsHttpClient.executeMethod(method);
             if (statusCode != HttpStatus.SC_OK) {
@@ -154,8 +158,19 @@ public class AWSAuthConnection
      * headers to pass (can be null).
      */
     public void deleteBucket (String bucket, Map<String,List<String>> headers)
+        throws IOException, S3Exception
     {
         DeleteMethod method = new DeleteMethod("/" + bucket);
+        S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, new Date());
+        try {
+            int statusCode = _awsHttpClient.executeMethod(method);
+            if (statusCode != HttpStatus.SC_OK) {
+                // Throw correct exception
+                _getExceptionForResponse(method);
+            }
+        } finally {
+            method.releaseConnection();
+        }
         //return new Response(makeRequest("DELETE", bucket, headers));
     }
     
@@ -179,10 +194,10 @@ public class AWSAuthConnection
     }
     
     /** AWS Access ID. */
-    protected String _awsAccessKeyId;
+    protected String _awsKeyId;
     
     /** AWS Access Key. */
-    protected String _awsSecretAccessKey;
+    protected String _awsSecretKey;
     
     /** S3 HTTP client. */
     protected HttpClient _awsHttpClient;
