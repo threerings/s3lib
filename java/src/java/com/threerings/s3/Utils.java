@@ -33,9 +33,6 @@ public class Utils {
     static final String AMAZON_HEADER_PREFIX = "x-amz-";
     static final String ALTERNATIVE_DATE_HEADER = "x-amz-date";
     static final String DEFAULT_HOST = "s3.amazonaws.com";
-    static final int SECURE_PORT = 443;
-    static final int INSECURE_PORT = 80;
-
 
     /**
      * HMAC/SHA1 Algorithm per RFC 2104.
