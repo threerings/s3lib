@@ -1,0 +1,5 @@
+# Properties used to run the unit tests against the live S3 service
+# Your Amazon Web Services ID
+aws.id = AWS ID
+# Your Amazon Web Services Key
+aws.key = Secret AWS Key
