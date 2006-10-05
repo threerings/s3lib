@@ -138,7 +138,7 @@ public class AWSAuthConnection
         throws IOException, S3Exception
     {
         PutMethod method = new PutMethod("/" + bucket);
-        S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, new Date());            
+        S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, null);            
         try {
             int statusCode = _awsHttpClient.executeMethod(method);
             if (statusCode != HttpStatus.SC_OK) {
@@ -161,7 +161,7 @@ public class AWSAuthConnection
         throws IOException, S3Exception
     {
         DeleteMethod method = new DeleteMethod("/" + bucket);
-        S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, new Date());
+        S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, null);
         try {
             int statusCode = _awsHttpClient.executeMethod(method);
             if (statusCode != HttpStatus.SC_OK) {
