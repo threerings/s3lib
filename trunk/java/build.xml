@@ -21,6 +21,7 @@
   <target name="prepare">
     <mkdir dir="${deploy.dir}"/>
     <mkdir dir="${deploy.dir}/classes"/>
+    <mkdir dir="${deploy.dir}/tests"/>
     <mkdir dir="${deploy.dir}/lib"/>
     <mkdir dir="${javadoc.home}"/>
     <copy todir="${deploy.dir}/classes">
@@ -40,10 +41,49 @@
   <target name="compile" depends="prepare">
     <javac srcdir="src/java" destdir="${deploy.dir}/classes"
            debug="on" optimize="${build.optimize}" deprecation="on"
-           source="1.5" target="1.5">
+           source="1.5" target="1.5" excludes="**/*Test.java">
       <classpath refid="classpath"/>
       <compilerarg value="-Xlint:unchecked"/>
     </javac>
+  </target>
+  
+  <!-- build and run the unit tests -->
+  <target name="test" depends="compile">
+    <!-- haul in our AWS id and key -->
+    <property file="test.properties"/>
+    
+    <!-- build the tests -->
+    <javac srcdir="src/java" destdir="${deploy.dir}/tests"
+           debug="on" optimize="${build.optimize}" deprecation="on"
+           source="1.5" target="1.5" includes="**/*Test.java">
+      <classpath refid="classpath"/>
+      <compilerarg value="-Xlint:unchecked"/>
+    </javac>
+
+    <!-- run the tests -->
+    <junit printsummary="yes">
+      <!-- Vend the aws. properties -->
+      <syspropertyset>
+        <propertyref prefix="aws."/>
+      </syspropertyset>
+      
+      <!-- include the tests in our class path -->
+      <classpath>
+        <pathelement location="${deploy.dir}/classes"/>
+        <pathelement location="${deploy.dir}/tests"/>
+        <fileset dir="${deploy.dir}/lib" includes="**/*.jar"/>
+      </classpath>
+
+      <!-- human output -->
+      <formatter type="brief" usefile="false"/>
+      
+      <!-- batch run our tests -->
+      <batchtest>
+        <fileset dir="src/java">
+          <include name="**/*Test.java"/>
+        </fileset>
+      </batchtest>
+    </junit>
   </target>
 
   <!-- build the javadoc documentation -->
