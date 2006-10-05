@@ -12,8 +12,12 @@ package com.threerings.s3;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.SimpleDateFormat;
+
 import java.io.IOException;
+
+import java.text.SimpleDateFormat;
+
+
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -27,12 +31,6 @@ import java.util.TimeZone;
  * manipulate S3 data.
  */
 public class AWSAuthConnection {
-
-    private String awsAccessKeyId;
-    private String awsSecretAccessKey;
-    private boolean isSecure;
-    private String server;
-    private int port;
 
     public AWSAuthConnection(String awsAccessKeyId, String awsSecretAccessKey) {
         this(awsAccessKeyId, awsSecretAccessKey, true);
@@ -62,11 +60,11 @@ public class AWSAuthConnection {
     public AWSAuthConnection(String awsAccessKeyId, String awsSecretAccessKey, boolean isSecure,
                              String server, int port)
     {
-        this.awsAccessKeyId = awsAccessKeyId;
-        this.awsSecretAccessKey = awsSecretAccessKey;
-        this.isSecure = isSecure;
-        this.server = server;
-        this.port = port;
+        _awsAccessKeyId = awsAccessKeyId;
+        _awsSecretAccessKey = awsSecretAccessKey;
+        _isSecure = isSecure;
+        _server = server;
+        _port = port;
     }
 
     /**
@@ -340,9 +338,9 @@ public class AWSAuthConnection {
 
         String canonicalString =
             Utils.makeCanonicalString(method, resource, connection.getRequestProperties());
-        String encodedCanonical = Utils.encode(this.awsSecretAccessKey, canonicalString, false);
+        String encodedCanonical = Utils.encode(_awsSecretAccessKey, canonicalString, false);
         connection.setRequestProperty("Authorization",
-                                      "AWS " + this.awsAccessKeyId + ":" + encodedCanonical);
+                                      "AWS " + _awsAccessKeyId + ":" + encodedCanonical);
     }
 
     /**
@@ -350,8 +348,8 @@ public class AWSAuthConnection {
      * @param resource The resource name (bucketName + "/" + key).
      */
     private URL makeURL(String resource) throws MalformedURLException {
-        String protocol = this.isSecure ? "https" : "http";
-        return new URL(protocol, this.server, this.port, "/" + resource);
+        String protocol = _isSecure ? "https" : "http";
+        return new URL(protocol, _server, _port, "/" + resource);
     }
 
     /**
@@ -363,4 +361,19 @@ public class AWSAuthConnection {
         format.setTimeZone( TimeZone.getTimeZone( "GMT" ) );
         return format.format( new Date() ) + "GMT";
     }
+    
+    /** AWS Access ID. */
+    protected String _awsAccessKeyId;
+    
+    /** AWS Access Key. */
+    protected String _awsSecretAccessKey;
+    
+    /** Enable HTTPS. */
+    protected boolean _isSecure;
+    
+    /** S3 server host. */
+    protected String _server;
+    
+    /** S3 server port. */
+    protected int _port;
 }
