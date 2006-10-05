@@ -56,6 +56,10 @@ public class S3Utils {
     {
 
         StringBuffer buf = new StringBuffer();
+
+        // Set the required Date header (now)
+        method.setRequestHeader("Date", rfc822Date(new Date()));
+        
         // Append method "verb"
         buf.append(method.getName() + "\n");
 
@@ -72,19 +76,8 @@ public class S3Utils {
                 key.equals("date") ||
                 key.startsWith(AMAZON_HEADER_PREFIX)) {
                     
-                HeaderElement[] headerValues = header.getElements();
-                StringBuffer concatValues = new StringBuffer();
-                
-                // Comma-separated canonical form for header values.
-                for (int j = 0; j < headerValues.length; j++) {
-                    HeaderElement headerValue = headerValues[i];
-                    if (j != 0) {
-                        concatValues.append(",");
-                    }
-                    concatValues.append(headerValue.getValue().trim());
-                }
-                // Stow the interesting header
-                interestingHeaders.put(key, concatValues.toString());
+                // Stow the header
+                interestingHeaders.put(key, header.getValue().trim());
             }
         }
 
@@ -98,10 +91,9 @@ public class S3Utils {
         // trumps the x-amz-date behavior.
         if (expires != null) {
             interestingHeaders.put("date", rfc822Date(expires));
+            // Set the expires header
+            method.setRequestHeader("Expires", rfc822Date(expires));
         }
-        
-        // Set the required Date header
-        method.setRequestHeader("Date", rfc822Date(expires));
         
         // these headers require that we still put a new line in after them,
         // even if they don't exist.
