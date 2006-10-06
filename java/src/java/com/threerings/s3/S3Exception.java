@@ -21,9 +21,12 @@ import java.lang.reflect.Constructor;
 
 import java.util.HashMap;
 
-import org.apache.xerces.parsers.DOMParser;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import org.xml.sax.InputSource;
@@ -75,11 +78,16 @@ public class S3Exception extends Exception
      * @param document A string containing the XML error document.
      */
     public static S3Exception exceptionForS3Error (String documentString) {
-        DOMParser parser;
-            
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        Document doc;
+
         try {
-            parser = new DOMParser();
-            parser.parse(new InputSource(new StringReader(documentString)));
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            doc = db.parse(new InputSource(new StringReader(documentString)));
+        } catch (ParserConfigurationException e) {
+            // This should not happen. Return a generic S3 exception
+            return new S3Exception("Error (" + e + ") parsing S3 error " +
+                "document: '" + documentString + "'");
         } catch (SAXException e) {
             // Return a generic exception
             return new S3Exception("Error (" + e + ") parsing S3 error " +
@@ -92,7 +100,6 @@ public class S3Exception extends Exception
         
         // Extract the error data. We ignore elements that we don't understand,
         // and the document structure API should be stable.
-        Document doc = parser.getDocument();
         Node node;
         String code = null;
         String errorMessage = null;
