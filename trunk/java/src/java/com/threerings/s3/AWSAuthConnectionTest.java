@@ -13,8 +13,6 @@ package com.threerings.s3;
 
 import junit.framework.TestCase;
 
-import org.apache.commons.httpclient.protocol.Protocol;
-
 public class AWSAuthConnectionTest extends TestCase
 {
     public AWSAuthConnectionTest (String name)
