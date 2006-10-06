@@ -4,8 +4,10 @@
 //  you do not remove any proprietary notices.  Your use of this software
 //  code is at your own risk and you waive any claim against Amazon
 //  Digital Services, Inc. or its affiliates with respect to your use of
-//  this software code. (c) 2006 Amazon Digital Services, Inc. or its
-//  affiliates.
+//  this software code.
+
+// (c) 2006 Three Rings Design, Inc.
+// (c) 2006 Amazon Digital Services, Inc. or its affiliates.
 
 package com.threerings.s3;
 
@@ -15,17 +17,44 @@ import java.util.Map;
 /**
  * A representation of a single object stored in S3.
  */
-public class S3Object {
-
-    public byte[] data;
-
+public abstract class S3Object {
+    
     /**
-     * A Map from String to List of Strings representing the object's metadata
+     * Instantiate an S3 object with the given key.
+     * @param key S3 object key.
      */
-    public Map<String,List<String>> metadata;
-
-    public S3Object(byte[] data, Map<String,List<String>> metadata) {
-        this.data = data;
-        this.metadata = metadata;
+    public S3Object (String key)
+    {
+        this(key, "binary/octet-stream");
     }
+    
+    /**
+     * Instantiate an S3 Object with the given key.
+     * @param key S3 object key.
+     * @param mimeType Object's MIME type.
+     */
+    public S3Object (String key, String mimeType)
+    {
+        _key = key;
+    }
+    
+    /**
+     * Returns the S3 Object Key.
+     */
+    public String getKey ()
+    {
+        return _key;
+    }
+    
+    /**
+     * Returns the number of bytes required to store the
+     * S3 Object.
+     */
+    public abstract long  length ();
+    
+    /** S3 object name. */
+    protected String _key;
+    
+    /** TODO: S3 object meta-data. */
+    protected Map<String,List<String>> _metadata;
 }
