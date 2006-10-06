@@ -164,11 +164,17 @@ public class AWSAuthConnection
         }
     }
     
+    /**
+     * Execute the provided method, translating any error response into the
+     * appropriate S3Exception.
+     * @param method HTTP method to execute.
+     */
     protected void _executeS3Method (HttpMethod method)
         throws IOException, S3Exception
     {
         int statusCode = _awsHttpClient.executeMethod(method);
-        if (!(statusCode >= HttpStatus.SC_OK && statusCode < HttpStatus.SC_MULTIPLE_CHOICES)) {
+        if (!(statusCode >= HttpStatus.SC_OK &&
+            statusCode < HttpStatus.SC_MULTIPLE_CHOICES)) {
             // Request failed, throw exception
             InputStream stream;
             byte[] errorDoc = new byte[S3_MAX_ERROR_SIZE];
@@ -176,7 +182,8 @@ public class AWSAuthConnection
             stream = method.getResponseBodyAsStream();
             if (stream == null) {
                 // We should always receive a response!
-                throw new S3Exception("S3 failed to return an error response for HTTP status code: "+ statusCode);
+                throw new S3Exception("S3 failed to return an error " +
+                    "response for HTTP status code: "+ statusCode);
             }
 
             stream.read(errorDoc, 0, errorDoc.length);
