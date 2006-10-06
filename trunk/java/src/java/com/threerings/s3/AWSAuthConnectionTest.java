@@ -11,8 +11,9 @@
 
 package com.threerings.s3;
 
-
 import junit.framework.TestCase;
+
+import org.apache.commons.httpclient.protocol.Protocol;
 
 public class AWSAuthConnectionTest extends TestCase
 {
@@ -32,23 +33,21 @@ public class AWSAuthConnectionTest extends TestCase
     public void testCreateBucket ()
         throws Exception
     {
-        // Response response;
-        
+        // No exception, all is well.
         _conn.createBucket(_testBucketName, null);
-        /*
-        assertEquals("Couldn't create bucket: " +
-            response.connection.getResponseMessage() + ".",
-            HttpURLConnection.HTTP_OK,
-            response.connection.getResponseCode());
-        */
-        
         _conn.deleteBucket(_testBucketName, null);
-        /*
-        assertEquals("Couldn't delete bucket: " +
-            response.connection.getResponseMessage() + ".",
-            HttpURLConnection.HTTP_NO_CONTENT,
-            response.connection.getResponseCode());
-        */
+    }
+    
+    public void testErrorHandling ()
+        throws Exception
+    {
+        AWSAuthConnection badConn = new AWSAuthConnection(_awsId, "bad key");
+        try {
+            badConn.createBucket(_testBucketName, null);
+            fail("Did not throw S3SignatureDoesNotMatchException");            
+        } catch (S3Exception.SignatureDoesNotMatchException e) {
+            // Do nothing
+        }
     }
     
     /** Amazon S3 Authenticated Connection */

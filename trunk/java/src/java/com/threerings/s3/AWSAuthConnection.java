@@ -141,9 +141,9 @@ public class AWSAuthConnection
         S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, null);            
         try {
             int statusCode = _awsHttpClient.executeMethod(method);
-            if (statusCode != HttpStatus.SC_OK) {
+            if (!(statusCode >= HttpStatus.SC_OK && statusCode < HttpStatus.SC_MULTIPLE_CHOICES)) {
                 // Throw correct exception
-                _getExceptionForResponse(method);
+                throw _getExceptionForResponse(method);
             }
         } finally {
             method.releaseConnection();
@@ -164,9 +164,9 @@ public class AWSAuthConnection
         S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, null);
         try {
             int statusCode = _awsHttpClient.executeMethod(method);
-            if (statusCode != HttpStatus.SC_OK) {
+            if (!(statusCode >= HttpStatus.SC_OK && statusCode < HttpStatus.SC_MULTIPLE_CHOICES)) {
                 // Throw correct exception
-                _getExceptionForResponse(method);
+                throw _getExceptionForResponse(method);
             }
         } finally {
             method.releaseConnection();
@@ -174,23 +174,21 @@ public class AWSAuthConnection
         //return new Response(makeRequest("DELETE", bucket, headers));
     }
     
-    // Fish an exception out of a REST method response
+    // Convert a REST method response to an s3lib exception
     protected S3Exception _getExceptionForResponse (HttpMethod method)
         throws IOException
     {
         InputStream stream;
-        byte[] output = new byte[S3_MAX_ERROR_SIZE];
+        byte[] errorDoc = new byte[S3_MAX_ERROR_SIZE];
 
         stream = method.getResponseBodyAsStream();
         if (stream == null) {
-            // We should always receive a response
-            return new S3Exception.S3InternalErrorException();
+            // We should always receive a response!
+            return new S3Exception("S3 failed to return an error response.");
         }
         
-        stream.read(output, 0, output.length);
-        System.out.println(new String(output));
-        
-        return null;
+        stream.read(errorDoc, 0, errorDoc.length);
+        return S3Exception.exceptionForS3Error(new String(errorDoc).trim());
     }
     
     /** AWS Access ID. */
