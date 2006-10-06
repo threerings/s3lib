@@ -43,7 +43,7 @@ public class AWSAuthConnection
     /**
      * Create a new interface to interact with S3 with the given credentials.
      *
-     * @param awsKeyId The your user key into AWS
+     * @param awsKeyId Your unique AWS user id.
      * @param awsSecretKey The secret string used to generate signatures
      *        for authentication.
      */
@@ -55,7 +55,7 @@ public class AWSAuthConnection
      * Create a new interface to interact with S3 with the given credentials and
      * connection parameters.
      *
-     * @param awsKeyId The your user key into AWS
+     * @param awsKeyId Your unique AWS user id.
      * @param awsSecretKey The secret string used to generate signatures
      *        for authentication.
      * @param protocol Protocol to use to connect to S3.
@@ -68,7 +68,7 @@ public class AWSAuthConnection
      * Create a new interface to interact with S3 with the given credentials and
      * connection parameters.
      *
-     * @param awsKeyId The your user key into AWS
+     * @param awsKeyId Your unique AWS user id.
      * @param awsSecretKey The secret string used to generate signatures
      *        for authentication.
      * @param protocol Protocol to use to connect to S3.
@@ -84,7 +84,7 @@ public class AWSAuthConnection
      * Create a new interface to interact with S3 with the given credentials and
      * connection parameters.
      *
-     * @param awsKeyId The your user key into AWS
+     * @param awsKeyId Your unique AWS user id.
      * @param awsSecretKey The secret string used to generate signatures
      *        for authentication.
      * @param useSSL True if HTTPS should be used to connect to S3.
