@@ -22,6 +22,7 @@ import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 
 import org.apache.commons.httpclient.protocol.Protocol;
 
@@ -36,6 +37,7 @@ import java.util.Map;
  * An interface into the S3 system.  It is initially configured with
  * authentication and connection parameters and exposes methods to access and
  * manipulate S3 data.
+ * TODO: URL encoding is totally missing.
  */
 public class AWSAuthConnection
 {
@@ -128,16 +130,16 @@ public class AWSAuthConnection
     
     /**
      * Creates a new bucket.
-     * @param bucket The name of the bucket to create.
+     * @param bucketName The name of the bucket to create.
      * @param headers A Map of String to List of Strings representing the http
      * headers to pass (can be null).
      * @param metadata A Map of String to List of Strings representing the s3
      * metadata for this bucket (can be null).
      */
-    public void createBucket (String bucket, Map<String,List<String>> headers)
+    public void createBucket (String bucketName, Map<String,List<String>> headers)
         throws IOException, S3Exception
     {
-        PutMethod method = new PutMethod("/" + bucket);
+        PutMethod method = new PutMethod("/" + bucketName);
         S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, null);            
         try {
             _executeS3Method(method);
@@ -148,15 +150,55 @@ public class AWSAuthConnection
     
     /**
      * Deletes a bucket.
-     * @param bucket The name of the bucket to delete.
+     * @param bucketName The name of the bucket to delete.
      * @param headers A Map of String to List of Strings representing the http
      * headers to pass (can be null).
      */
-    public void deleteBucket (String bucket, Map<String,List<String>> headers)
+    public void deleteBucket (String bucketName, Map<String,List<String>> headers)
         throws IOException, S3Exception
     {
-        DeleteMethod method = new DeleteMethod("/" + bucket);
+        DeleteMethod method = new DeleteMethod("/" + bucketName);
         S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, null);
+        try {
+            _executeS3Method(method);
+        } finally {
+            method.releaseConnection();
+        }
+    }
+    
+    /**
+     * Upload a file-backed S3 Object.
+     * @param bucketName Destination bucket.
+     * @param object S3 Object.
+     */
+    public void putObject (String bucketName, S3FileObject object)
+        throws IOException, S3Exception
+    {
+        PutMethod method = new PutMethod("/" + bucketName + "/" + object.getKey());
+        // method.setRequestHeader("Content-Length", String.valueOf(object.length()));
+        method.setRequestEntity(new InputStreamRequestEntity(object.getInputStream(), object.length()));
+        // XXX Every object is public!!! XXX
+        method.setRequestHeader(S3Utils.AMAZON_HEADER_ACL, S3Utils.AMAZON_CANNED_ACL_PUBLIC_READ);
+        
+        S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, null);
+        try {
+            _executeS3Method(method);
+        } finally {
+            method.releaseConnection();
+        }
+    }
+    
+    /**
+     * Delete a remote S3 Object.
+     * @param bucketName Remote bucket.
+     * @param object S3 Object.
+     */
+    public void deleteObject (String bucketName, S3FileObject object)
+        throws IOException, S3Exception
+    {
+        DeleteMethod method = new DeleteMethod("/" + bucketName + "/" + object.getKey());
+        S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, null);
+        
         try {
             _executeS3Method(method);
         } finally {

@@ -13,6 +13,8 @@ package com.threerings.s3;
 
 import junit.framework.TestCase;
 
+import java.io.File;
+
 public class AWSAuthConnectionTest extends TestCase
 {
     public AWSAuthConnectionTest (String name)
@@ -21,11 +23,18 @@ public class AWSAuthConnectionTest extends TestCase
     }
     
     public void setUp ()
+        throws Exception
     {
         _awsId = System.getProperty("aws.id");
         _awsKey = System.getProperty("aws.key");
         _conn = new AWSAuthConnection(_awsId, _awsKey);
         _testBucketName = "test-" + _awsId;
+        _testFile = File.createTempFile("S3FileObjectTest", null);
+    }
+    
+    public void tearDown ()
+    {
+        _testFile.delete();
     }
 
     public void testCreateBucket ()
@@ -35,6 +44,28 @@ public class AWSAuthConnectionTest extends TestCase
         _conn.createBucket(_testBucketName, null);
         _conn.deleteBucket(_testBucketName, null);
     }
+    
+    public void testPutObject ()
+        throws Exception
+    {
+        // Create a file object
+        S3FileObject fileObj = new S3FileObject("aKey", _testFile);     
+        fileObj.getOutputStream().write(TEST_DATA.getBytes());
+     
+        // Create a bucket to stuff it in
+        _conn.createBucket(_testBucketName, null);
+        
+        try {
+            // Send it to the mother ship
+            _conn.putObject(_testBucketName, fileObj);
+        
+            // Hey, you can't have that!
+            _conn.deleteObject(_testBucketName, fileObj);
+        } finally {
+            _conn.deleteBucket(_testBucketName, null);
+        }
+    }
+    
     
     public void testErrorHandling ()
         throws Exception
@@ -59,4 +90,10 @@ public class AWSAuthConnectionTest extends TestCase
     
     /** Test bucket */
     protected String _testBucketName;
+    
+    /** Test file. */
+    protected File _testFile;
+    
+    /** Test data. */
+    protected static final String TEST_DATA = "Hello, World!";
 }

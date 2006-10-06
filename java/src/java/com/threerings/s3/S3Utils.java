@@ -39,6 +39,9 @@ public class S3Utils {
     static final String ALTERNATIVE_DATE_HEADER = "x-amz-date";
     static final String DEFAULT_HOST = "s3.amazonaws.com";
     
+    static final String AMAZON_HEADER_ACL = "x-amz-acl";
+    static final String AMAZON_CANNED_ACL_PUBLIC_READ = "public-read";
+    
     /**
      * Sign (SHA-1 HMAC) a given AWS web request using the provided key.
      * The canonical request format used for signing is defined by the
