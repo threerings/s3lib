@@ -174,9 +174,15 @@ public class AWSAuthConnection
     public void putObject (String bucketName, S3FileObject object)
         throws IOException, S3Exception
     {
-        PutMethod method = new PutMethod("/" + bucketName + "/" + object.getKey());
-        // method.setRequestHeader("Content-Length", String.valueOf(object.length()));
-        method.setRequestEntity(new InputStreamRequestEntity(object.getInputStream(), object.length()));
+        PutMethod method = new PutMethod("/" + bucketName + "/" +
+            object.getKey());
+
+        method.setRequestEntity(new InputStreamRequestEntity(
+            object.getInputStream(), object.length()));
+        // We set the content-type explicitly, instead of via InputStreamRequestEntity,
+        // so that the header can be properly included in the AWS request signature.
+        method.setRequestHeader("Content-Type", object.getMimeType());
+        
         // XXX Every object is public!!! XXX
         method.setRequestHeader(S3Utils.AMAZON_HEADER_ACL, S3Utils.AMAZON_CANNED_ACL_PUBLIC_READ);
         
