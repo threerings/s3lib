@@ -140,15 +140,10 @@ public class AWSAuthConnection
         PutMethod method = new PutMethod("/" + bucket);
         S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, null);            
         try {
-            int statusCode = _awsHttpClient.executeMethod(method);
-            if (!(statusCode >= HttpStatus.SC_OK && statusCode < HttpStatus.SC_MULTIPLE_CHOICES)) {
-                // Throw correct exception
-                throw _getExceptionForResponse(method);
-            }
+            _executeS3Method(method);
         } finally {
             method.releaseConnection();
         }
-        // return new Response(makeRequest("PUT", bucket, headers));
     }
     
     /**
@@ -163,32 +158,30 @@ public class AWSAuthConnection
         DeleteMethod method = new DeleteMethod("/" + bucket);
         S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, null);
         try {
-            int statusCode = _awsHttpClient.executeMethod(method);
-            if (!(statusCode >= HttpStatus.SC_OK && statusCode < HttpStatus.SC_MULTIPLE_CHOICES)) {
-                // Throw correct exception
-                throw _getExceptionForResponse(method);
-            }
+            _executeS3Method(method);
         } finally {
             method.releaseConnection();
         }
-        //return new Response(makeRequest("DELETE", bucket, headers));
     }
     
-    // Convert a REST method response to an s3lib exception
-    protected S3Exception _getExceptionForResponse (HttpMethod method)
-        throws IOException
+    protected void _executeS3Method (HttpMethod method)
+        throws IOException, S3Exception
     {
-        InputStream stream;
-        byte[] errorDoc = new byte[S3_MAX_ERROR_SIZE];
+        int statusCode = _awsHttpClient.executeMethod(method);
+        if (!(statusCode >= HttpStatus.SC_OK && statusCode < HttpStatus.SC_MULTIPLE_CHOICES)) {
+            // Request failed, throw exception
+            InputStream stream;
+            byte[] errorDoc = new byte[S3_MAX_ERROR_SIZE];
 
-        stream = method.getResponseBodyAsStream();
-        if (stream == null) {
-            // We should always receive a response!
-            return new S3Exception("S3 failed to return an error response.");
+            stream = method.getResponseBodyAsStream();
+            if (stream == null) {
+                // We should always receive a response!
+                throw new S3Exception("S3 failed to return an error response for HTTP status code: "+ statusCode);
+            }
+
+            stream.read(errorDoc, 0, errorDoc.length);
+            throw S3Exception.exceptionForS3Error(new String(errorDoc).trim());
         }
-        
-        stream.read(errorDoc, 0, errorDoc.length);
-        return S3Exception.exceptionForS3Error(new String(errorDoc).trim());
     }
     
     /** AWS Access ID. */
