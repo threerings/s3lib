@@ -36,6 +36,7 @@ public abstract class S3Object {
     public S3Object (String key, String mimeType)
     {
         _key = key;
+        _mimeType = mimeType;
     }
     
     /**
@@ -47,13 +48,24 @@ public abstract class S3Object {
     }
     
     /**
+     * Returns the S3 Object's MIME type.
+     */
+    public String getMimeType ()
+    {
+        return _mimeType;
+    }
+    
+    /**
      * Returns the number of bytes required to store the
      * S3 Object.
      */
-    public abstract long  length ();
+    public abstract long length ();
     
     /** S3 object name. */
     protected String _key;
+    
+    /** S3 object mime-type. */
+    protected String _mimeType;
     
     /** TODO: S3 object meta-data. */
     protected Map<String,List<String>> _metadata;
