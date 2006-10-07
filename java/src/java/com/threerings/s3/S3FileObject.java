@@ -38,10 +38,10 @@ public class S3FileObject extends S3Object {
     /**
      * Instantiate an S3 file-backed object with the given key.
      * @param key S3 object key.
-     * @param mimeType Object's MIME type.
      * @param file File backing.
+     * @param mimeType Object's MIME type.
      */
-    public S3FileObject(String key, String mimeType, File file)
+    public S3FileObject(String key, File file, String mimeType)
     {
         super(key, mimeType);
         _file = file;
