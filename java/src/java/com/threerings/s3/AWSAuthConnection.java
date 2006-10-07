@@ -177,12 +177,8 @@ public class AWSAuthConnection
         PutMethod method = new PutMethod("/" + bucketName + "/" +
             object.getKey());
 
-        // Set the request entity. We must also set the content-type
-        // explicitly so that the header can be properly included
-        // in the AWS request signature.
         method.setRequestEntity(new InputStreamRequestEntity(
             object.getInputStream(), object.length(), object.getMimeType()));
-        method.setRequestHeader("Content-Type", object.getMimeType());
         
         // XXX Every object is public!!! XXX
         method.setRequestHeader(S3Utils.AMAZON_HEADER_ACL, S3Utils.AMAZON_CANNED_ACL_PUBLIC_READ);

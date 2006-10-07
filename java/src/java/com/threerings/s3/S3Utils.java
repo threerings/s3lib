@@ -17,6 +17,8 @@ import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HeaderElement;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpMethodBase;
+import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
+import org.apache.commons.httpclient.methods.RequestEntity;
 
 import javax.crypto.spec.SecretKeySpec;
 import javax.crypto.Mac;
@@ -81,6 +83,18 @@ public class S3Utils {
                     
                 // Stow the header
                 interestingHeaders.put(key, header.getValue().trim());
+            }
+        }
+        
+        // If there's a request entity, use that to find the content-type
+        // header
+        if (method instanceof EntityEnclosingMethod) {
+            RequestEntity requestEntity =
+                ((EntityEnclosingMethod) method).getRequestEntity();
+                
+            if (requestEntity != null) {
+                interestingHeaders.put("content-type",
+                    requestEntity.getContentType());
             }
         }
 
