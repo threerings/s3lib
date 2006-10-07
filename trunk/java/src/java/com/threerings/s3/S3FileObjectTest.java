@@ -39,7 +39,7 @@ public class S3FileObjectTest extends TestCase
     {
         byte[] bytes = new byte[1024];
 
-        S3FileObject fileObj = new S3FileObject("aKey", _testFile);        
+        S3FileObject fileObj = new S3FileObject("aKey", _testFile, "text/plain");        
         fileObj.getOutputStream().write(TEST_DATA.getBytes());
         int count = fileObj.getInputStream().read(bytes);        
         assertTrue(new String(bytes, 0, count).equals(TEST_DATA));
