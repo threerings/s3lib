@@ -12,6 +12,7 @@
 package com.threerings.s3;
 
 import org.apache.commons.codec.EncoderException;
+import org.apache.commons.codec.net.URLCodec;
 
 import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpClient;
@@ -139,8 +140,16 @@ public class AWSAuthConnection
     public void createBucket (String bucketName, Map<String,List<String>> headers)
         throws IOException, S3Exception
     {
-        PutMethod method = new PutMethod("/" + bucketName);
+        PutMethod method;
+        try {
+            method = new PutMethod("/" + _urlEncoder.encode(bucketName));
+        } catch (EncoderException e) {
+            throw new S3Exception.InvalidURIException(
+                "Encoding error for bucket " + bucketName + ": " + e);
+        }
+
         S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, null);            
+
         try {
             _executeS3Method(method);
         } finally {
@@ -157,7 +166,15 @@ public class AWSAuthConnection
     public void deleteBucket (String bucketName, Map<String,List<String>> headers)
         throws IOException, S3Exception
     {
-        DeleteMethod method = new DeleteMethod("/" + bucketName);
+        DeleteMethod method;
+        try {
+            method = new DeleteMethod("/" +
+                _urlEncoder.encode(bucketName));
+        } catch (EncoderException e) {
+            throw new S3Exception.InvalidURIException(
+                "Encoding error for bucket " + bucketName + ": " + e);
+        }
+
         S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, null);
         try {
             _executeS3Method(method);
@@ -174,8 +191,15 @@ public class AWSAuthConnection
     public void putObject (String bucketName, S3FileObject object)
         throws IOException, S3Exception
     {
-        PutMethod method = new PutMethod("/" + bucketName + "/" +
-            object.getKey());
+        PutMethod method;
+        try {
+            method = new PutMethod("/" + _urlEncoder.encode(bucketName) +
+                "/" + _urlEncoder.encode(object.getKey()));
+        } catch (EncoderException e) {
+            throw new S3Exception.InvalidURIException(
+                "Encoding error for bucket " + bucketName + " and key " +
+                object.getKey() + ": " + e);
+        }
 
         method.setRequestEntity(new InputStreamRequestEntity(
             object.getInputStream(), object.length(), object.getMimeType()));
@@ -184,6 +208,7 @@ public class AWSAuthConnection
         method.setRequestHeader(S3Utils.AMAZON_HEADER_ACL, S3Utils.AMAZON_CANNED_ACL_PUBLIC_READ);
         
         S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, null);
+
         try {
             _executeS3Method(method);
         } finally {
@@ -199,9 +224,19 @@ public class AWSAuthConnection
     public void deleteObject (String bucketName, S3FileObject object)
         throws IOException, S3Exception
     {
-        DeleteMethod method = new DeleteMethod("/" + bucketName + "/" + object.getKey());
+        DeleteMethod method;
+        try {
+            method = new DeleteMethod("/" +
+                _urlEncoder.encode(bucketName) + "/" +
+                _urlEncoder.encode(object.getKey()));
+        } catch (EncoderException e) {
+            throw new S3Exception.InvalidURIException(
+            "Encoding error for bucket " + bucketName + " and key " +
+            object.getKey() + ": " + e);
+        }
+
         S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, null);
-        
+
         try {
             _executeS3Method(method);
         } finally {
@@ -244,6 +279,9 @@ public class AWSAuthConnection
     
     /** S3 HTTP client. */
     protected HttpClient _awsHttpClient;
+    
+    /** URL encoder. */
+    protected URLCodec _urlEncoder = new URLCodec();
     
     /** Maximum size of S3's error output. Should never be larger than 2k!!! */
     protected static final int S3_MAX_ERROR_SIZE = 2048;
