@@ -11,6 +11,11 @@
   <property name="dist.jar"       value="${app.name}.jar"/>
   <property name="javadoc.home"   value="${deploy.dir}/docs"/>
 
+  <!-- import some targets to enumerate library dependencies -->
+  <property name="projects.root" value=".."/>
+  <property name="libs.dir" value="java/lib"/>
+  <import file="libs-incl.xml"/>
+
   <!-- declare our classpath -->
   <path id="classpath">
     <pathelement location="${deploy.dir}/classes"/>
@@ -27,8 +32,8 @@
     <copy todir="${deploy.dir}/classes">
       <fileset dir="src/java" includes="**/*.properties"/>
     </copy>
-    <copy todir="${deploy.dir}/lib">
-      <fileset dir="lib" includes="**/*.jar"/>
+    <copy todir="${deploy.dir}/lib" flatten="true">
+      <fileset refid="${app.name}.libs"/>
     </copy>
   </target>
 
