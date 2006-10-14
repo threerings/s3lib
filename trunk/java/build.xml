@@ -32,8 +32,14 @@
     </copy>
   </target>
 
-  <!-- cleans out the installed application -->
+  <!-- cleans out the intermediate build files -->
   <target name="clean">
+    <delete dir="${deploy.dir}/classes"/>
+    <delete dir="${deploy.dir}/docs"/>
+  </target>
+
+  <!-- cleans out the installed application -->
+  <target name="distclean">
     <delete dir="${deploy.dir}"/>
   </target>
 
