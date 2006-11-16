@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <!-- declares the libraries needed to build narya -->
 <project name="library-dependencies">
-  <fileset dir="${projects.root}/../" id="s3lib.libs">
-    <include name="${libs.dir}/commons-codec.jar"/>
-    <include name="${libs.dir}/commons-httpclient.jar"/>
-    <include name="${libs.dir}/commons-logging.jar"/>
-    <include name="${libs.dir}/junit-3.7.jar"/>
+  <fileset dir="../${libs.dir}/" id="s3lib.libs">
+    <include name="commons-codec.jar"/>
+    <include name="commons-httpclient.jar"/>
+    <include name="commons-logging.jar"/>
+    <include name="junit-3.7.jar"/>
   </fileset>
 </project>
