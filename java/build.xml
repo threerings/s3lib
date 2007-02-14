@@ -56,13 +56,6 @@
       <compilerarg value="-Xlint:unchecked"/>
       
       <exclude name="**/*Test.java"/>
-      <!-- XXX Temporary while I refactor from the ground up -->
-      <include name="com/threerings/s3/AWSAuthConnection.java"/>
-      <include name="com/threerings/s3/S3Object.java"/>
-      <include name="com/threerings/s3/S3FileObject.java"/>
-      <include name="com/threerings/s3/S3Exception.java"/>
-      <include name="com/threerings/s3/S3Response.java"/>
-      <include name="com/threerings/s3/S3Utils.java"/>
     </javac>
   </target>
   
