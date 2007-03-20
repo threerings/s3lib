@@ -7,7 +7,7 @@
 //  this software code. (c) 2006 Amazon Digital Services, Inc. or its
 //  affiliates.
 
-package com.threerings.s3;
+package com.threerings.s3.client;
 
 import java.net.HttpURLConnection;
 import java.io.IOException;

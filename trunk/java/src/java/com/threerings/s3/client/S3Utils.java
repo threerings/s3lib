@@ -9,7 +9,7 @@
 // (c) 2006 Three Rings Design, Inc.
 // (c) 2006 Amazon Digital Services, Inc. or its affiliates.
 
-package com.threerings.s3;
+package com.threerings.s3.client;
 
 import org.apache.commons.codec.binary.Base64;
 
