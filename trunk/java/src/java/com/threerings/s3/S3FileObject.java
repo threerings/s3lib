@@ -30,9 +30,12 @@ public class S3FileObject extends S3Object {
      * @param file File backing.
      */
     public S3FileObject(String key, File file)
+        throws FileNotFoundException
     {
         super(key);
         _file = file;
+        _input = new FileInputStream(file);
+        _output = new FileOutputStream(file);
     }
     
     /**
@@ -42,34 +45,38 @@ public class S3FileObject extends S3Object {
      * @param mimeType Object's MIME type.
      */
     public S3FileObject(String key, File file, String mimeType)
+        throws FileNotFoundException
     {
         super(key, mimeType);
         _file = file;
+        _input = new FileInputStream(file);
+        _output = new FileOutputStream(file);
     }
     
-    /**
-     * Get input stream for the file, used to read file contents.
-     */
+    @Override // From S3Object
     public FileInputStream getInputStream ()
-        throws FileNotFoundException
     {
-        return new FileInputStream(_file);
+        return _input;
     }
     
-    /**
-     * Get output stream for the file, used to write object contents.
-     */
+
+    @Override // From S3Object
     public FileOutputStream getOutputStream ()
-        throws FileNotFoundException
     {
-        return new FileOutputStream(_file);
+        return _output;
     }
     
     // Documentation inherited
     public long length () {
         return _file.length();
     }
-    
+
     /** File path. */
     protected File _file;
+
+    /** Input stream. */
+    protected FileInputStream _input;
+
+    /** Output stream. */
+    protected FileOutputStream _output;
 }
