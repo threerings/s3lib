@@ -62,12 +62,12 @@ public abstract class S3Object {
     /**
      * Get the object's input stream, used to read object contents.
      */
-    public abstract InputStream getInputStream ();
+    public abstract InputStream getInputStream () throws S3ClientException;
     
     /**
      * Get the object's output stream, used to write object contents.
      */
-    public abstract OutputStream getOutputStream ();
+    public abstract OutputStream getOutputStream () throws S3ClientException;
 
     /**
      * Returns the number of bytes required to store the

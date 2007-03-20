@@ -144,7 +144,7 @@ public class AWSAuthConnection
         try {
             method = new PutMethod("/" + _urlEncoder.encode(bucketName));
         } catch (EncoderException e) {
-            throw new S3Exception.InvalidURIException(
+            throw new S3ClientException.InvalidURIException(
                 "Encoding error for bucket " + bucketName + ": " + e);
         }
 
@@ -171,7 +171,7 @@ public class AWSAuthConnection
             method = new DeleteMethod("/" +
                 _urlEncoder.encode(bucketName));
         } catch (EncoderException e) {
-            throw new S3Exception.InvalidURIException(
+            throw new S3ClientException.InvalidURIException(
                 "Encoding error for bucket " + bucketName + ": " + e);
         }
 
@@ -196,7 +196,7 @@ public class AWSAuthConnection
             method = new PutMethod("/" + _urlEncoder.encode(bucketName) +
                 "/" + _urlEncoder.encode(object.getKey()));
         } catch (EncoderException e) {
-            throw new S3Exception.InvalidURIException(
+            throw new S3ClientException.InvalidURIException(
                 "Encoding error for bucket " + bucketName + " and key " +
                 object.getKey() + ": " + e);
         }
@@ -230,7 +230,7 @@ public class AWSAuthConnection
                 _urlEncoder.encode(bucketName) + "/" +
                 _urlEncoder.encode(object.getKey()));
         } catch (EncoderException e) {
-            throw new S3Exception.InvalidURIException(
+            throw new S3ClientException.InvalidURIException(
             "Encoding error for bucket " + bucketName + " and key " +
             object.getKey() + ": " + e);
         }
@@ -267,7 +267,7 @@ public class AWSAuthConnection
             }
 
             stream.read(errorDoc, 0, errorDoc.length);
-            throw S3Exception.exceptionForS3Error(new String(errorDoc).trim());
+            throw S3ServerException.exceptionForS3Error(new String(errorDoc).trim());
         }
     }
     

@@ -76,7 +76,7 @@ public class AWSAuthConnectionTest extends TestCase
         try {
             badConn.createBucket(_testBucketName, null);
             fail("Did not throw S3SignatureDoesNotMatchException");            
-        } catch (S3Exception.SignatureDoesNotMatchException e) {
+        } catch (S3ServerException.SignatureDoesNotMatchException e) {
             // Do nothing
         }
     }
