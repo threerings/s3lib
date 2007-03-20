@@ -34,8 +34,6 @@ public class S3FileObject extends S3Object {
     {
         super(key);
         _file = file;
-        _input = new FileInputStream(file);
-        _output = new FileOutputStream(file);
     }
     
     /**
@@ -49,21 +47,29 @@ public class S3FileObject extends S3Object {
     {
         super(key, mimeType);
         _file = file;
-        _input = new FileInputStream(file);
-        _output = new FileOutputStream(file);
     }
     
     @Override // From S3Object
     public FileInputStream getInputStream ()
+        throws S3ClientException
     {
-        return _input;
+        try {
+            return new FileInputStream(_file);            
+        } catch (FileNotFoundException fnf) {
+            throw new S3ClientException("File was not found.", fnf);
+        }
     }
     
 
     @Override // From S3Object
     public FileOutputStream getOutputStream ()
+        throws S3ClientException
     {
-        return _output;
+        try {
+            return new FileOutputStream(_file);
+        } catch (FileNotFoundException fnf) {
+            throw new S3ClientException("File was not found.", fnf);
+        }
     }
     
     // Documentation inherited
@@ -73,10 +79,4 @@ public class S3FileObject extends S3Object {
 
     /** File path. */
     protected File _file;
-
-    /** Input stream. */
-    protected FileInputStream _input;
-
-    /** Output stream. */
-    protected FileOutputStream _output;
 }
