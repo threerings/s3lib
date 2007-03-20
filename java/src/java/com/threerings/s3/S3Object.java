@@ -14,6 +14,10 @@ package com.threerings.s3;
 import java.util.List;
 import java.util.Map;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.FileNotFoundException;
+
 /**
  * A representation of a single object stored in S3.
  */
@@ -29,7 +33,7 @@ public abstract class S3Object {
     }
     
     /**
-     * Instantiate an S3 Object with the given key.
+     * Instantiate an S3 Object with the given key and mime type.
      * @param key S3 object key.
      * @param mimeType Object's MIME type.
      */
@@ -54,7 +58,17 @@ public abstract class S3Object {
     {
         return _mimeType;
     }
+
+    /**
+     * Get the object's input stream, used to read object contents.
+     */
+    public abstract InputStream getInputStream ();
     
+    /**
+     * Get the object's output stream, used to write object contents.
+     */
+    public abstract OutputStream getOutputStream ();
+
     /**
      * Returns the number of bytes required to store the
      * S3 Object.

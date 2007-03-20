@@ -188,7 +188,7 @@ public class AWSAuthConnection
      * @param bucketName Destination bucket.
      * @param object S3 Object.
      */
-    public void putObject (String bucketName, S3FileObject object)
+    public void putObject (String bucketName, S3Object object)
         throws IOException, S3Exception
     {
         PutMethod method;
@@ -221,7 +221,7 @@ public class AWSAuthConnection
      * @param bucketName Remote bucket.
      * @param object S3 Object.
      */
-    public void deleteObject (String bucketName, S3FileObject object)
+    public void deleteObject (String bucketName, S3Object object)
         throws IOException, S3Exception
     {
         DeleteMethod method;

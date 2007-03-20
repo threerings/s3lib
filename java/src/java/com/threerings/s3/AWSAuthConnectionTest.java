@@ -14,6 +14,7 @@ package com.threerings.s3;
 import junit.framework.TestCase;
 
 import java.io.File;
+import java.io.FileOutputStream;
 
 public class AWSAuthConnectionTest extends TestCase
 {
@@ -49,8 +50,9 @@ public class AWSAuthConnectionTest extends TestCase
         throws Exception
     {
         // Create a file object
+        FileOutputStream fileOutput = new FileOutputStream(_testFile);
         S3FileObject fileObj = new S3FileObject("aKey", _testFile);     
-        fileObj.getOutputStream().write(TEST_DATA.getBytes());
+        fileOutput.write(TEST_DATA.getBytes());
      
         // Create a bucket to stuff it in
         _conn.createBucket(_testBucketName, null);
