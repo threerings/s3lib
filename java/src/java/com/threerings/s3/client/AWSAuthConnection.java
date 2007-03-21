@@ -13,6 +13,7 @@ package com.threerings.s3.client;
 
 import com.threerings.s3.client.acl.AccessControlList;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.net.URLCodec;
 
@@ -196,6 +197,8 @@ public class AWSAuthConnection
         throws IOException, S3Exception
     {
         PutMethod method;
+        byte[] checksum;
+
         try {
             method = new PutMethod("/" + _urlEncoder.encode(bucketName) +
                 "/" + _urlEncoder.encode(object.getKey()));
@@ -205,11 +208,18 @@ public class AWSAuthConnection
                 object.getKey() + ": " + e);
         }
 
+        // Set the request entity
         method.setRequestEntity(new InputStreamRequestEntity(
             object.getInputStream(), object.length(), object.getMimeType()));
-        
+
+        // Set the access policy
         method.setRequestHeader(AccessControlList.StandardPolicy.AMAZON_HEADER,
             accessPolicy.toString());
+
+        // Compute and set the content-md5 value (base64 of 128bit digest)
+        // http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.15
+         checksum = Base64.encodeBase64(object.getMD5Checksum());
+         method.setRequestHeader(CONTENT_MD5_HEADER, new String(checksum, "ascii"));
         
         S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, null);
 
@@ -289,4 +299,7 @@ public class AWSAuthConnection
     
     /** Maximum size of S3's error output. Should never be larger than 2k!!! */
     protected static final int S3_MAX_ERROR_SIZE = 2048;
+
+    /** Header for MD5 checksum validation. */
+    protected static final String CONTENT_MD5_HEADER = "Content-MD5";
 }

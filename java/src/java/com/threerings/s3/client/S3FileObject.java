@@ -11,10 +11,17 @@
 
 package com.threerings.s3.client;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
+
+import java.io.InputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 
 import java.util.List;
 import java.util.Map;
@@ -35,7 +42,7 @@ public class S3FileObject extends S3Object {
         super(key);
         _file = file;
     }
-    
+
     /**
      * Instantiate an S3 file-backed object with the given key.
      * @param key S3 object key.
@@ -48,13 +55,13 @@ public class S3FileObject extends S3Object {
         super(key, mimeType);
         _file = file;
     }
-    
+
     @Override // From S3Object
-    public FileInputStream getInputStream ()
+    public InputStream getInputStream ()
         throws S3ClientException
     {
         try {
-            return new FileInputStream(_file);            
+            return new FileInputStream(_file);
         } catch (FileNotFoundException fnf) {
             throw new S3ClientException("File was not found.", fnf);
         }
@@ -62,7 +69,7 @@ public class S3FileObject extends S3Object {
     
 
     @Override // From S3Object
-    public FileOutputStream getOutputStream ()
+    public OutputStream getOutputStream ()
         throws S3ClientException
     {
         try {
@@ -71,8 +78,40 @@ public class S3FileObject extends S3Object {
             throw new S3ClientException("File was not found.", fnf);
         }
     }
-    
-    // Documentation inherited
+
+    @Override // From S3Object
+    public byte[] getMD5Checksum ()
+        throws S3ClientException
+    {
+         InputStream input;
+         MessageDigest md;
+         byte data[];
+         int nbytes;
+         byte digest[];
+
+         // Initialize
+         try {
+             md = MessageDigest.getInstance("md5");             
+         } catch (NoSuchAlgorithmException nsa) {
+             // If MD5 isn't available, we're in trouble.
+             throw new RuntimeException(nsa);
+         }
+
+         input = getInputStream();
+         data = new byte[1024];
+
+         // Compute the digest
+         try {
+             while ((nbytes = input.read(data)) > 0) {
+                 md.update(data, 0, nbytes);
+             }             
+         } catch (IOException ioe) {
+             throw new S3ClientException("Failure reading input file: " + ioe, ioe);
+         }
+         return md.digest();
+    }
+
+    @Override // From S3Object
     public long length () {
         return _file.length();
     }
