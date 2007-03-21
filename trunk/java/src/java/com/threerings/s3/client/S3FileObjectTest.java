@@ -15,6 +15,8 @@ import junit.framework.TestCase;
 
 import java.io.File;
 
+import org.apache.commons.codec.binary.Hex;
+
 public class S3FileObjectTest extends TestCase
 {
     public S3FileObjectTest (String name)
@@ -26,6 +28,8 @@ public class S3FileObjectTest extends TestCase
         throws Exception
     {
         _testFile = File.createTempFile("S3FileObjectTest", null);
+        _fileObj = new S3FileObject("aKey", _testFile, "text/plain");        
+        _fileObj.getOutputStream().write(TEST_DATA.getBytes("utf8"));
     }
     
     public void tearDown ()
@@ -39,15 +43,27 @@ public class S3FileObjectTest extends TestCase
     {
         byte[] bytes = new byte[1024];
 
-        S3FileObject fileObj = new S3FileObject("aKey", _testFile, "text/plain");        
-        fileObj.getOutputStream().write(TEST_DATA.getBytes());
-        int count = fileObj.getInputStream().read(bytes);        
-        assertTrue(new String(bytes, 0, count).equals(TEST_DATA));
+        int count = _fileObj.getInputStream().read(bytes);        
+        assertEquals(TEST_DATA, new String(bytes, 0, count));
+    }
+
+    public void testGetMD5Checksum ()
+        throws Exception
+    {
+        byte[] checksum = _fileObj.getMD5Checksum();
+        String hex = new String(Hex.encodeHex(checksum));
+        assertEquals(TEST_DATA_MD5, hex);   
     }
     
     /** Test file. */
     protected File _testFile;
-    
+
+    /** Test object. */
+    protected S3FileObject _fileObj;
+
     /** Test data. */
     protected static final String TEST_DATA = "Hello, World!";
+    
+    /** Pre-computed MD5 Checksum for test data. */
+    protected static final String TEST_DATA_MD5 = "65a8e27d8879283831b664bd8b7f0ad4";
 }

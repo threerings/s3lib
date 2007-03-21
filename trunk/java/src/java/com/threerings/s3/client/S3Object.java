@@ -11,6 +11,7 @@
 
 package com.threerings.s3.client;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,10 +40,22 @@ public abstract class S3Object {
      */
     public S3Object (String key, String mimeType)
     {
+        this(key, mimeType, new HashMap<String,List<String>>());
+    }
+
+    /**
+     * Instantiate an S3 Object with the given key, mime type, and metadata.
+     * @param key S3 object key.
+     * @param mimeType Object's MIME type.
+     * @param metadata: Object's metadata.
+     */
+    public S3Object (String key, String mimeType, Map<String,List<String>> metadata)
+    {
         _key = key;
         _mimeType = mimeType;
+        _metadata = metadata;
     }
-    
+
     /**
      * Returns the S3 Object Key.
      */
@@ -50,7 +63,7 @@ public abstract class S3Object {
     {
         return _key;
     }
-    
+
     /**
      * Returns the S3 Object's MIME type.
      */
@@ -60,14 +73,35 @@ public abstract class S3Object {
     }
 
     /**
+     * Returns the S3 Object's metadata.
+     */
+    public Map<String,List<String>> getMetaData ()
+    {
+        return _metadata;
+    }
+
+    /**
+     * Set the S3 Object's metadata.
+     */
+    public void setMetaData (Map<String,List<String>> metadata)
+    {
+        _metadata = metadata;
+    }
+
+    /**
      * Get the object's input stream, used to read object contents.
      */
     public abstract InputStream getInputStream () throws S3ClientException;
-    
+
     /**
      * Get the object's output stream, used to write object contents.
      */
     public abstract OutputStream getOutputStream () throws S3ClientException;
+
+    /**
+     * Get the object's MD5 checksum.
+     */
+    public abstract byte[] getMD5Checksum () throws S3ClientException;
 
     /**
      * Returns the number of bytes required to store the
@@ -81,6 +115,6 @@ public abstract class S3Object {
     /** S3 object mime-type. */
     protected String _mimeType;
     
-    /** TODO: S3 object meta-data. */
+    /** S3 object meta-data. */
     protected Map<String,List<String>> _metadata;
 }
