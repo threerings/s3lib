@@ -11,6 +11,8 @@
 
 package com.threerings.s3.client;
 
+import com.threerings.s3.client.acl.AccessControlList;
+
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.net.URLCodec;
 
@@ -185,10 +187,12 @@ public class AWSAuthConnection
     
     /**
      * Upload a file-backed S3 Object.
-     * @param bucketName Destination bucket.
-     * @param object S3 Object.
+     * @param bucketName: Destination bucket.
+     * @param object: S3 Object.
+     * @param accessPolicy: S3 Object's access policy. 
      */
-    public void putObject (String bucketName, S3Object object)
+    public void putObject (String bucketName, S3Object object,
+        AccessControlList.StandardPolicy accessPolicy)
         throws IOException, S3Exception
     {
         PutMethod method;
@@ -204,8 +208,8 @@ public class AWSAuthConnection
         method.setRequestEntity(new InputStreamRequestEntity(
             object.getInputStream(), object.length(), object.getMimeType()));
         
-        // XXX Every object is public!!! XXX
-        method.setRequestHeader(S3Utils.AMAZON_HEADER_ACL, S3Utils.AMAZON_CANNED_ACL_PUBLIC_READ);
+        method.setRequestHeader(AccessControlList.StandardPolicy.AMAZON_HEADER,
+            accessPolicy.toString());
         
         S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, null);
 

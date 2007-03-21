@@ -48,21 +48,6 @@ public class S3Utils {
     /** Default AWS S3 Host. */
     static final String DEFAULT_HOST = "s3.amazonaws.com";
 
-    /** Header name for the canned ACL header. */
-    static final String AMAZON_HEADER_ACL = "x-amz-acl";
-    
-    /** Owner gets full control, and anonymous principal is granted read access. */
-    static final String AMAZON_CANNED_ACL_PUBLIC_READ = "public-read";
-
-    /** Owner gets full control. No other entity has access */
-    static final String AMAZON_CANNED_ACL_PRIVATE = "private";
-
-    /** Owner gets full control, and anonymous principal is granted read and write access. */
-    static final String AMAZON_CANNED_ACL_PUBLIC_RW = "public-read-write";
-
-    /** Owner gets full control, and any principal authenticated Amazon S3 user is granted read access. */
-    static final String AMAZON_CANNED_ACL_AUTHENTICATED_READ = "authenticated-read";
-
     /**
      * Sign (SHA-1 HMAC) a given AWS web request using the provided key.
      * The canonical request format used for signing is defined by the

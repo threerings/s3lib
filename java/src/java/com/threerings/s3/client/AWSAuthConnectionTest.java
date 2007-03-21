@@ -11,6 +11,8 @@
 
 package com.threerings.s3.client;
 
+import com.threerings.s3.client.acl.AccessControlList;
+
 import junit.framework.TestCase;
 
 import java.io.File;
@@ -59,7 +61,7 @@ public class AWSAuthConnectionTest extends TestCase
         
         try {
             // Send it to the mother ship
-            _conn.putObject(_testBucketName, fileObj);
+            _conn.putObject(_testBucketName, fileObj, AccessControlList.StandardPolicy.PRIVATE);
         
             // Hey, you can't have that!
             _conn.deleteObject(_testBucketName, fileObj);
