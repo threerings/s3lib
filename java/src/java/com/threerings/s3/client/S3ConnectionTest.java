@@ -24,9 +24,9 @@ import java.util.HashMap;
 
 import org.apache.commons.codec.binary.Hex;
 
-public class AWSAuthConnectionTest extends TestCase
+public class S3ConnectionTest extends TestCase
 {
-    public AWSAuthConnectionTest (String name)
+    public S3ConnectionTest (String name)
     {
         super(name);
     }
@@ -38,7 +38,7 @@ public class AWSAuthConnectionTest extends TestCase
 
         _awsId = System.getProperty("aws.id");
         _awsKey = System.getProperty("aws.key");
-        _conn = new AWSAuthConnection(_awsId, _awsKey);
+        _conn = new S3Connection(_awsId, _awsKey);
         _testBucketName = "test-" + _awsId;
         _testFile = File.createTempFile("S3FileObjectTest", null);
 
@@ -143,7 +143,7 @@ public class AWSAuthConnectionTest extends TestCase
     public void testErrorHandling ()
         throws Exception
     {
-        AWSAuthConnection badConn = new AWSAuthConnection(_awsId, "bad key");
+        S3Connection badConn = new S3Connection(_awsId, "bad key");
         try {
             badConn.createBucket(_testBucketName, null);
             fail("Did not throw S3SignatureDoesNotMatchException");            
@@ -153,7 +153,7 @@ public class AWSAuthConnectionTest extends TestCase
     }
     
     /** Amazon S3 Authenticated Connection */
-    protected AWSAuthConnection _conn;
+    protected S3Connection _conn;
     
     /** Amazon Web Services ID */
     protected String _awsId;

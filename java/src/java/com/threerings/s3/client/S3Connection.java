@@ -47,7 +47,7 @@ import java.util.Map;
  * manipulate S3 data.
  * TODO: URL encoding is totally missing.
  */
-public class AWSAuthConnection
+public class S3Connection
 {
 
     /**
@@ -57,7 +57,7 @@ public class AWSAuthConnection
      * @param awsSecretKey The secret string used to generate signatures
      *        for authentication.
      */
-    public AWSAuthConnection (String awsKeyId, String awsSecretKey) {
+    public S3Connection (String awsKeyId, String awsSecretKey) {
         this(awsKeyId, awsSecretKey, Protocol.getProtocol("https"));
     }
 
@@ -70,7 +70,7 @@ public class AWSAuthConnection
      *        for authentication.
      * @param protocol Protocol to use to connect to S3.
      */
-    public AWSAuthConnection (String awsKeyId, String awsSecretKey, Protocol protocol) {
+    public S3Connection (String awsKeyId, String awsSecretKey, Protocol protocol) {
         this(awsKeyId, awsSecretKey, protocol, S3Utils.DEFAULT_HOST);
     }
 
@@ -84,7 +84,7 @@ public class AWSAuthConnection
      * @param protocol Protocol to use to connect to S3.
      * @param host Which host to connect to. Usually, this will be s3.amazonaws.com
      */
-    public AWSAuthConnection (String awsKeyId, String awsSecretKey, Protocol protocol,
+    public S3Connection (String awsKeyId, String awsSecretKey, Protocol protocol,
                              String host)
     {
         this(awsKeyId, awsSecretKey, protocol, S3Utils.DEFAULT_HOST, protocol.getDefaultPort());
@@ -101,7 +101,7 @@ public class AWSAuthConnection
      * @param host Which host to connect to. Usually, this will be s3.amazonaws.com
      * @param port Port to connect to.
      */
-     public AWSAuthConnection (String awsKeyId, String awsSecretKey, Protocol protocol,
+     public S3Connection (String awsKeyId, String awsSecretKey, Protocol protocol,
                               String host, int port)
     {
         HostConfiguration awsHostConfig = new HostConfiguration();
@@ -119,7 +119,7 @@ public class AWSAuthConnection
      * @param awsSecretKey The secret string used to generate signatures for authentication.
      * @param awsHostConfig HttpClient HostConfig.
      */
-    public AWSAuthConnection (String awsKeyId, String awsSecretKey,
+    public S3Connection (String awsKeyId, String awsSecretKey,
         HostConfiguration awsHostConfig)
     {
         // Escape the tyranny of this() + implicit constructors.
