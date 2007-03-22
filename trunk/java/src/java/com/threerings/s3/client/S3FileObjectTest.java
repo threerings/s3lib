@@ -14,6 +14,7 @@ package com.threerings.s3.client;
 import junit.framework.TestCase;
 
 import java.io.File;
+import java.io.FileOutputStream;
 
 import org.apache.commons.codec.binary.Hex;
 
@@ -29,7 +30,7 @@ public class S3FileObjectTest extends TestCase
     {
         _testFile = File.createTempFile("S3FileObjectTest", null);
         _fileObj = new S3FileObject("aKey", _testFile, "text/plain");        
-        _fileObj.getOutputStream().write(TEST_DATA.getBytes("utf8"));
+        new FileOutputStream(_testFile).write(TEST_DATA.getBytes("utf8"));
     }
     
     public void tearDown ()

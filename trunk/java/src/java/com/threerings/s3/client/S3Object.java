@@ -12,7 +12,6 @@
 package com.threerings.s3.client;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import java.io.InputStream;
@@ -40,16 +39,18 @@ public abstract class S3Object {
      */
     public S3Object (String key, String mimeType)
     {
-        this(key, mimeType, new HashMap<String,List<String>>());
+        this(key, mimeType, new HashMap<String,String>());
     }
 
     /**
      * Instantiate an S3 Object with the given key, mime type, and metadata.
      * @param key S3 object key.
      * @param mimeType Object's MIME type.
-     * @param metadata: Object's metadata.
+     * @param metadata: Object's metadata. Metadata keys must be a single, ASCII
+     *     string, and may not contain spaces. Metadata values must also be ASCII,
+     *     and any leading or trailing spaces may be stripped. 
      */
-    public S3Object (String key, String mimeType, Map<String,List<String>> metadata)
+    public S3Object (String key, String mimeType, Map<String,String> metadata)
     {
         _key = key;
         _mimeType = mimeType;
@@ -75,28 +76,25 @@ public abstract class S3Object {
     /**
      * Returns the S3 Object's metadata.
      */
-    public Map<String,List<String>> getMetaData ()
+    public Map<String,String> getMetadata ()
     {
         return _metadata;
     }
 
     /**
      * Set the S3 Object's metadata.
+     * Metadata keys must be a single, ASCII string, and may not contain spaces.
      */
-    public void setMetaData (Map<String,List<String>> metadata)
+    public void setMetadata (Map<String,String> metadata)
     {
         _metadata = metadata;
     }
 
     /**
-     * Get the object's input stream, used to read object contents.
+     * Get the object's input stream, used to read object contents, potentially
+     * from the remote S3 server.
      */
     public abstract InputStream getInputStream () throws S3ClientException;
-
-    /**
-     * Get the object's output stream, used to write object contents.
-     */
-    public abstract OutputStream getOutputStream () throws S3ClientException;
 
     /**
      * Get the object's MD5 checksum.
@@ -116,5 +114,5 @@ public abstract class S3Object {
     protected String _mimeType;
     
     /** S3 object meta-data. */
-    protected Map<String,List<String>> _metadata;
+    protected Map<String,String> _metadata;
 }

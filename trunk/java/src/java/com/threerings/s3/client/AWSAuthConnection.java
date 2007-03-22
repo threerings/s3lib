@@ -14,6 +14,8 @@ package com.threerings.s3.client;
 import com.threerings.s3.client.acl.AccessControlList;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.net.URLCodec;
 
@@ -22,6 +24,7 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.HttpException;
 
+import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
@@ -34,6 +37,7 @@ import java.io.InputStream;
 import java.io.IOException;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -153,11 +157,7 @@ public class AWSAuthConnection
 
         S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, null);            
 
-        try {
-            _executeS3Method(method);
-        } finally {
-            method.releaseConnection();
-        }
+        _executeS3Method(method);
     }
     
     /**
@@ -179,11 +179,7 @@ public class AWSAuthConnection
         }
 
         S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, null);
-        try {
-            _executeS3Method(method);
-        } finally {
-            method.releaseConnection();
-        }
+        _executeS3Method(method);
     }
     
     /**
@@ -218,17 +214,101 @@ public class AWSAuthConnection
 
         // Compute and set the content-md5 value (base64 of 128bit digest)
         // http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.15
-         checksum = Base64.encodeBase64(object.getMD5Checksum());
-         method.setRequestHeader(CONTENT_MD5_HEADER, new String(checksum, "ascii"));
-        
+        checksum = Base64.encodeBase64(object.getMD5Checksum());
+        method.setRequestHeader(CONTENT_MD5_HEADER, new String(checksum, "ascii"));
+
+        // Set any metadata fields
+        for (Map.Entry<String,String> entry : object.getMetadata().entrySet()) {
+            String header = S3_METADATA_PREFIX + entry.getKey();
+            method.setRequestHeader(header, entry.getValue());
+        }
+
+        // Sign the request
         S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, null);
 
-        try {
-            _executeS3Method(method);
-        } finally {
-            method.releaseConnection();
-        }
+        _executeS3Method(method);
     }
+
+
+    /**
+     * Retrieve a S3Object.
+     * @param bucketName: Source bucket.
+     * @param objectKey: Object key.
+     */
+    public S3RemoteObject getObject (String bucketName, String objectKey)
+        throws IOException, S3Exception
+    {
+        GetMethod method;
+        InputStream response;
+        HashMap<String,String> metadata;
+        String mimeType;
+        byte digest[];
+        long length;
+
+        try {
+            method = new GetMethod("/" + _urlEncoder.encode(bucketName) +
+                "/" + _urlEncoder.encode(objectKey));
+        } catch (EncoderException e) {
+            throw new S3ClientException.InvalidURIException(
+                "Encoding error for bucket " + bucketName + " and key " +
+                objectKey + ": " + e);
+        }
+        
+        // Sign the request
+        S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, null);
+
+
+        // Execute the get request and retrieve all metadata from the response
+        _executeS3Method(method);
+
+
+        // Mime type
+        mimeType = _getResponseHeader(method, CONTENT_TYPE_HEADER, true);
+
+        // Data length
+        length = method.getResponseContentLength();
+        if (length == -1) {
+            throw new S3Exception("S3 failed to supply the Content-Length header");            
+        }
+
+        // MD5 Checksum. S3 returns this as the standard 128bit hex string, enclosed
+        // in quotes.
+        try {
+            String hex;
+            
+            hex = _getResponseHeader(method, S3_MD5_HEADER, true);
+            // Strip the surrounding quotes
+            hex = hex.substring(1, hex.length() - 1);
+            digest = new Hex().decode(hex.getBytes("utf8"));
+        } catch (DecoderException de) {
+            throw new S3Exception("S3 returned an invalid " + S3_MD5_HEADER + " header: " +
+                de);
+        }
+
+        // Retrieve metadata
+        metadata = new HashMap<String,String>();
+        for (Header header : method.getResponseHeaders()) {
+            String name;
+
+            name = header.getName();
+            if (name.startsWith(S3_METADATA_PREFIX)) {
+                // Strip the S3 prefix
+                String key = name.substring(S3_METADATA_PREFIX.length());
+                metadata.put(key, header.getValue());
+            }
+        }
+
+        // Get the response body. This is an "auto closing" stream --
+        // it will close the HTTP connection when the stream is closed.
+        response = method.getResponseBodyAsStream();
+        if (response == null) {
+            // We should always receive a response!
+            throw new S3Exception("S3 failed to return any document body");
+        }
+
+        return new S3RemoteObject(objectKey, mimeType, length, digest, metadata, response);
+    }
+
     
     /**
      * Delete a remote S3 Object.
@@ -251,11 +331,7 @@ public class AWSAuthConnection
 
         S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, null);
 
-        try {
-            _executeS3Method(method);
-        } finally {
-            method.releaseConnection();
-        }
+        _executeS3Method(method);
     }
     
     /**
@@ -281,10 +357,31 @@ public class AWSAuthConnection
             }
 
             stream.read(errorDoc, 0, errorDoc.length);
+            method.releaseConnection();
             throw S3ServerException.exceptionForS3Error(new String(errorDoc).trim());
         }
     }
-    
+
+    /**
+     * Pull the header value out of the HTTP method response.
+     */
+    protected String _getResponseHeader (HttpMethod method, String name, boolean required)
+        throws S3Exception
+    {
+        Header header;
+
+        header = method.getResponseHeader(name);
+        if (header == null) {
+            if (required) {
+                throw new S3Exception("S3 failed to return a " + name + " header");
+            } else {
+                return null;
+            }
+        }
+
+        return header.getValue();
+    }
+
     /** AWS Access ID. */
     protected String _awsKeyId;
     
@@ -302,4 +399,14 @@ public class AWSAuthConnection
 
     /** Header for MD5 checksum validation. */
     protected static final String CONTENT_MD5_HEADER = "Content-MD5";
+
+    /** Mime Type Header. */
+    protected static final String CONTENT_TYPE_HEADER = "Content-Type";
+
+    /** Header for the MD5 digest in S3 GET responses. Not to be confused
+     * with the Content-MD5 header that we use in PUT requests. */
+    protected static final String S3_MD5_HEADER = "ETag";
+
+    /** Header prefix for object metadata. */
+    static final String S3_METADATA_PREFIX = "x-amz-meta-";
 }

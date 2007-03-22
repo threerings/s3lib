@@ -36,9 +36,6 @@ import java.util.TimeZone;
 import java.util.TreeMap;
 
 public class S3Utils {
-    /** Header prefix for object metadata. */
-    static final String METADATA_PREFIX = "x-amz-meta-";
-    
     /** Header prefix for generic S3 headers. */
     static final String AMAZON_HEADER_PREFIX = "x-amz-";
 

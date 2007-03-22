@@ -16,7 +16,6 @@ import java.security.NoSuchAlgorithmException;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
 
 import java.io.InputStream;
@@ -62,18 +61,6 @@ public class S3FileObject extends S3Object {
     {
         try {
             return new FileInputStream(_file);
-        } catch (FileNotFoundException fnf) {
-            throw new S3ClientException("File was not found.", fnf);
-        }
-    }
-    
-
-    @Override // From S3Object
-    public OutputStream getOutputStream ()
-        throws S3ClientException
-    {
-        try {
-            return new FileOutputStream(_file);
         } catch (FileNotFoundException fnf) {
             throw new S3ClientException("File was not found.", fnf);
         }
