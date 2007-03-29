@@ -155,11 +155,28 @@ public class S3Connection
                 "Encoding error for bucket " + bucketName + ": " + e);
         }
 
-        S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, null);            
-
-        _executeS3Method(method);
+        executeS3Method(method);
     }
-    
+
+
+    /**
+     * List a bucket's contents.
+     */
+    public void listBucket (String bucketName, String prefix, String marker, String delimiter, int max)
+        throws IOException, S3Exception
+    {
+        GetMethod method;
+        try {
+            method = new GetMethod("/" + _urlEncoder.encode(bucketName));
+        } catch (EncoderException e) {
+            throw new S3ClientException.InvalidURIException(
+                "Encoding error for bucket " + bucketName + ": " + e);            
+        }
+
+        executeS3Method(method);
+    }
+
+
     /**
      * Deletes a bucket.
      * @param bucketName The name of the bucket to delete.
@@ -178,8 +195,7 @@ public class S3Connection
                 "Encoding error for bucket " + bucketName + ": " + e);
         }
 
-        S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, null);
-        _executeS3Method(method);
+        executeS3Method(method);
     }
     
     /**
@@ -223,10 +239,7 @@ public class S3Connection
             method.setRequestHeader(header, entry.getValue());
         }
 
-        // Sign the request
-        S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, null);
-
-        _executeS3Method(method);
+        executeS3Method(method);
     }
 
 
@@ -253,17 +266,13 @@ public class S3Connection
                 "Encoding error for bucket " + bucketName + " and key " +
                 objectKey + ": " + e);
         }
-        
-        // Sign the request
-        S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, null);
-
 
         // Execute the get request and retrieve all metadata from the response
-        _executeS3Method(method);
+        executeS3Method(method);
 
 
         // Mime type
-        mimeType = _getResponseHeader(method, CONTENT_TYPE_HEADER, true);
+        mimeType = getResponseHeader(method, CONTENT_TYPE_HEADER, true);
 
         // Data length
         length = method.getResponseContentLength();
@@ -276,7 +285,7 @@ public class S3Connection
         try {
             String hex;
             
-            hex = _getResponseHeader(method, S3_MD5_HEADER, true);
+            hex = getResponseHeader(method, S3_MD5_HEADER, true);
             // Strip the surrounding quotes
             hex = hex.substring(1, hex.length() - 1);
             digest = new Hex().decode(hex.getBytes("utf8"));
@@ -329,9 +338,7 @@ public class S3Connection
             object.getKey() + ": " + e);
         }
 
-        S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, null);
-
-        _executeS3Method(method);
+        executeS3Method(method);
     }
     
     /**
@@ -339,10 +346,16 @@ public class S3Connection
      * appropriate S3Exception.
      * @param method HTTP method to execute.
      */
-    protected void _executeS3Method (HttpMethod method)
+    protected void executeS3Method (HttpMethod method)
         throws IOException, S3Exception
     {
-        int statusCode = _awsHttpClient.executeMethod(method);
+        int statusCode;
+        
+        // Sign the request
+        S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, null);
+        
+        // Execute the request
+        statusCode = _awsHttpClient.executeMethod(method);
         if (!(statusCode >= HttpStatus.SC_OK &&
             statusCode < HttpStatus.SC_MULTIPLE_CHOICES)) {
             // Request failed, throw exception
@@ -365,7 +378,7 @@ public class S3Connection
     /**
      * Pull the header value out of the HTTP method response.
      */
-    protected String _getResponseHeader (HttpMethod method, String name, boolean required)
+    private String getResponseHeader (HttpMethod method, String name, boolean required)
         throws S3Exception
     {
         Header header;

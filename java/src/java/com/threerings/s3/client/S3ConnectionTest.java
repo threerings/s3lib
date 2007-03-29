@@ -65,7 +65,15 @@ public class S3ConnectionTest extends TestCase
         _conn.createBucket(_testBucketName + "testCreateBucket", null);
         _conn.deleteBucket(_testBucketName + "testCreateBucket", null);
     }
-    
+
+
+    public void testListBucket ()
+        throws Exception
+    {
+        _conn.listBucket(_testBucketName);
+    }
+
+
     public void testPutObject ()
         throws Exception
     {
