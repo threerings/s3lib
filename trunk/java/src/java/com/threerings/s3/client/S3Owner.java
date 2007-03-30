@@ -7,12 +7,29 @@
 //  this software code. (c) 2006 Amazon Digital Services, Inc. or its
 //  affiliates.
 
-package com.amazon.s3;
+package com.threerings.s3.client;
 
 /**
- * A structure representing the owner of an object, used as a part of ListEntry.
+ * A structure representing the Amazon Web Services owner of an object.
  */
 public class S3Owner {
-    public String id;
-    public String displayName;
+
+    public S3Owner (String id, String displayName) {
+        _id = id;
+        _displayName = displayName;
+    }
+
+    public String getId () {
+        return _id;
+    }
+
+    public String getDisplayName () {
+        return _displayName;
+    }
+
+    /** Canonical AWS ID. */
+    protected String _id;
+
+    /** AWS display name. */
+    protected String _displayName;
 }

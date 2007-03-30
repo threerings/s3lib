@@ -70,7 +70,25 @@ public class S3ConnectionTest extends TestCase
     public void testListBucket ()
         throws Exception
     {
-        _conn.listBucket(_testBucketName);
+        S3ObjectListing listing;
+
+        // Send an object to the mother ship
+        _conn.putObject(_testBucketName, _fileObj, AccessControlList.StandardPolicy.PRIVATE);
+
+        try {
+            listing = _conn.listObjects(_testBucketName);
+        } finally {
+            _conn.deleteObject(_testBucketName, _fileObj);   
+        }
+
+        try {
+            System.out.println(listing.name);
+            for (S3ObjectEntry entry : listing.entries) {
+                System.out.println(entry);
+            }
+        } catch (Exception e) {
+            System.out.println(e);
+        }
     }
 
 

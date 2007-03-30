@@ -13,6 +13,14 @@ package com.threerings.s3.client;
 
 import com.threerings.s3.client.acl.AccessControlList;
 
+import java.io.InputStream;
+import java.io.IOException;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.DecoderException;
@@ -33,13 +41,7 @@ import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 
 import org.apache.commons.httpclient.protocol.Protocol;
 
-import java.io.InputStream;
-import java.io.IOException;
-
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import org.xml.sax.SAXException;
 
 /**
  * An interface into the S3 system.  It is initially configured with
@@ -162,7 +164,7 @@ public class S3Connection
     /**
      * List a bucket's contents.
      */
-    public void listBucket (String bucketName)
+    public S3ObjectListing listObjects (String bucketName)
         throws IOException, S3Exception
     {
         GetMethod method;
@@ -176,7 +178,12 @@ public class S3Connection
         }
 
         executeS3Method(method);
-        stream = method.getResponseBodyAsStream();
+
+        try {
+            return new S3ObjectListing(method.getResponseBodyAsStream());            
+        } catch (SAXException se) {
+            throw new S3ClientException("Error parsing bucket GET response: " + se, se);
+        }
     }
 
 
