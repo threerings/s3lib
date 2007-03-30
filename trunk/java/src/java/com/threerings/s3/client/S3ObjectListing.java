@@ -33,55 +33,53 @@ import org.xml.sax.SAXException;
 public class S3ObjectListing {
 
     /**
-     * The name of the bucket being listed.  Null if request fails.
+     * The name of the bucket being listed.
      */
-    public String name = null;
+    public String name;
 
     /**
-     * The prefix echoed back from the request.  Null if request fails.
+     * The prefix echoed back from the request.
      */
-    public String prefix = null;
+    public String prefix;
 
     /**
-     * The marker echoed back from the request.  Null if request fails.
+     * The marker echoed back from the request.
      */
-    public String marker = null;
+    public String marker;
 
     /**
      * The delimiter echoed back from the request.  Null if not specified in
-     * the request, or if it fails.
+     * the request.
      */
     public String delimiter = null;
 
     /**
-     * The maxKeys echoed back from the request if specified.  0 if request fails.
+     * The maxKeys echoed back from the request if specified.
      */
-    public int maxKeys = 0;
+    public int maxKeys;
 
     /**
      * Indicates if there are more results to the list.  True if the current
-     * list results have been truncated.  false if request fails.
+     * list results have been truncated.
      */
-    public boolean isTruncated = false;
+    public boolean isTruncated;
 
     /**
      * Indicates what to use as a marker for subsequent list requests in the event
      * that the results are truncated.  Present only when a delimiter is specified.  
-     * Null if request fails.
      */
     public String nextMarker = null;
 
     /**
      * A List of objects in the given bucket.  
-     * Null if the request fails.
      */
-    public List<S3ObjectEntry> entries = null;
+    public List<S3ObjectEntry> entries;
 
     /**
      * A List of prefixes representing the common prefixes of the
-     * keys that matched up to the delimiter.  Null if the request fails.
+     * keys that matched up to the delimiter.
      */
-    public List<String> commonPrefixes = null;
+    public List<String> commonPrefixes;
 
     public S3ObjectListing (InputStream dataStream)
         throws IOException, SAXException
