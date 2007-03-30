@@ -162,10 +162,12 @@ public class S3Connection
     /**
      * List a bucket's contents.
      */
-    public void listBucket (String bucketName, String prefix, String marker, String delimiter, int max)
+    public void listBucket (String bucketName)
         throws IOException, S3Exception
     {
         GetMethod method;
+        InputStream stream;
+        
         try {
             method = new GetMethod("/" + _urlEncoder.encode(bucketName));
         } catch (EncoderException e) {
@@ -174,6 +176,7 @@ public class S3Connection
         }
 
         executeS3Method(method);
+        stream = method.getResponseBodyAsStream();
     }
 
 
