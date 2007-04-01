@@ -13,17 +13,22 @@ package com.threerings.s3.client;
 import java.util.Date;
 
 /**
- * A structure representing a single object stored in S3.
+ * A simple represention of a single remote object stored in S3.
  */
 public class S3ObjectEntry {
 
-    public S3ObjectEntry (String key, Date lastModified, long size, String storageClass, S3Owner owner)
+    /**
+     * Create a new S3ObjectEntry instance, with the provided remote properties.
+     */
+    public S3ObjectEntry (String key, Date lastModified, String eTag, long size,
+        String storageClass, S3Owner owner)
     {
         _key = key;
         _lastModified = lastModified;
         _size = size;
         _storageClass = storageClass;
         _owner = owner;
+        _eTag = eTag;
     }
 
     /**
@@ -61,6 +66,14 @@ public class S3ObjectEntry {
         return _storageClass;
     }
 
+    /**
+     * Returns the object's S3 Owner.
+     */
+    public S3Owner getOwner () {
+        return _owner;
+    }
+
+    @Override
     public String toString() {
         return _key;
     }

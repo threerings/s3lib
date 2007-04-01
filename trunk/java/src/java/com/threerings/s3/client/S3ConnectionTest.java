@@ -20,7 +20,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 
+import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 import org.apache.commons.codec.binary.Hex;
 
@@ -45,12 +47,13 @@ public class S3ConnectionTest extends TestCase
         // Create a file object
         fileOutput = new FileOutputStream(_testFile);
         fileOutput.write(TEST_DATA.getBytes("utf8"));
+        fileOutput.close();
         _fileObj = new S3FileObject("aKey", _testFile);
         
         // Create the test bucket
         _conn.createBucket(_testBucketName, null);
     }
-    
+
     public void tearDown ()
         throws Exception
     {
@@ -67,28 +70,61 @@ public class S3ConnectionTest extends TestCase
     }
 
 
+    /**
+     * Test listBucket.
+     * @TODO: Move of these tests to a S3ObjectListingTest class.
+     */
     public void testListBucket ()
         throws Exception
     {
         S3ObjectListing listing;
+        List<S3ObjectEntry> entries;
+        S3ObjectEntry entry;
+        S3Owner owner;
 
         // Send an object to the mother ship
         _conn.putObject(_testBucketName, _fileObj, AccessControlList.StandardPolicy.PRIVATE);
 
         try {
             listing = _conn.listObjects(_testBucketName);
+            entries = listing.getEntries();
         } finally {
             _conn.deleteObject(_testBucketName, _fileObj);   
         }
 
-        try {
-            System.out.println(listing.name);
-            for (S3ObjectEntry entry : listing.entries) {
-                System.out.println(entry);
-            }
-        } catch (Exception e) {
-            System.out.println(e);
-        }
+        /* Validate the bucket name */
+        assertEquals(_testBucketName, listing.getBucketName());
+
+        /* Validate the entries. There should only be one. */
+        assertEquals(1, entries.size());
+        entry = entries.get(0);
+
+        /* Key name. */
+        assertEquals(_fileObj.getKey(), entry.getKey());
+
+        /* Last modified -- should be within the last 5 minutes. (5 minutes * 60 seconds * 1000 milliseconds)*/
+        assertTrue(
+            "Object's last modified date is not within the last 5 minutes: " + entry.getLastModified(),
+            (new Date().getTime() - entry.getLastModified().getTime()) < 5 * 60 * 1000
+        );
+
+        /* ETag (MD5) */
+        String md5 = new String(Hex.encodeHex(_fileObj.getMD5Checksum()));
+        assertEquals(md5, entry.getETag());
+
+        /* Size */
+        assertEquals(_testFile.length(), entry.getSize());
+
+        /* Storage Class */
+        assertEquals(STORAGE_CLASS, entry.getStorageClass());
+        
+        /* 
+         * Test the object's owner, too.
+         * We can't really test much here, besides that it has one.
+         */
+        owner = entry.getOwner();
+        assertNotNull(owner.getId());
+        assertNotNull(owner.getDisplayName());
     }
 
 
@@ -179,7 +215,7 @@ public class S3ConnectionTest extends TestCase
     }
     
     /** Amazon S3 Authenticated Connection */
-    protected S3Connection _conn;
+    private S3Connection _conn;
     
     /** Amazon Web Services ID */
     protected String _awsId;
@@ -198,4 +234,7 @@ public class S3ConnectionTest extends TestCase
 
     /** Test data. */
     protected static final String TEST_DATA = "Hello, World!";
+
+    /** Standard S3 storage class. */
+    protected static final String STORAGE_CLASS = "STANDARD";
 }
