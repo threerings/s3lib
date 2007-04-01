@@ -42,6 +42,43 @@ public class S3ObjectListingHandler extends DefaultHandler {
         _text = new StringBuffer();
     }
 
+
+    public String getBucketName () {
+        return _data.bucketName;
+    }
+
+    public String getPrefix () {
+        return _data.prefix;
+    }
+
+    public String getMarker () {
+        return _data.marker;
+    }
+
+    public String getDelimiter () {
+        return _data.delimiter;
+    }
+
+    public int getMaxKeys () {
+        return _data.maxKeys;
+    }
+
+    public boolean getTruncated () {
+        return _data.truncated;
+    }
+
+    public String getNextMarker () {
+        return _data.nextMarker;
+    }
+
+    public List<S3ObjectEntry> getObjectEntries () {
+        return _data.entries;
+    }
+
+    public List<String> getCommonPrefixes () {
+        return _data.commonPrefixes;
+    }
+
     public void startDocument ()
         throws SAXException
     {
@@ -308,10 +345,10 @@ public class S3ObjectListingHandler extends DefaultHandler {
         public String bucketName;
 
         /** ListBucketResult.Prefix */
-        public String prefix;
+        public String prefix = "";
 
         /** ListBucketResult.Marker */
-        public String marker;
+        public String marker = "";
 
         /** ListBucketResult.MaxKeys */
         public int maxKeys;
@@ -334,15 +371,12 @@ public class S3ObjectListingHandler extends DefaultHandler {
         /** Current ListBucketResult.Contents entry */
         public Entry entry;
 
-        public S3ObjectListing validate ()
+        public void validate ()
             throws MissingElementException
         {
-            /* The bucket name is the only required value? */
             if (bucketName == null) {
                 throw new MissingElementException("Name");
             }
-            
-            return null;
         }
 
         /**
@@ -381,7 +415,11 @@ public class S3ObjectListingHandler extends DefaultHandler {
                 if (lastModified == null) {
                     throw new MissingElementException("LastModified");
                 }
-                
+
+                if (eTag == null) {
+                    throw new MissingElementException("ETag");
+                }
+
                 if (size == -1) {
                     throw new MissingElementException("Size");
                 }
@@ -395,7 +433,7 @@ public class S3ObjectListingHandler extends DefaultHandler {
                 }
 
                 S3Owner owner = new S3Owner(ownerId, ownerDisplayName);
-                return new S3ObjectEntry(key, lastModified, size, storageClass, owner);
+                return new S3ObjectEntry(key, lastModified, eTag, size, storageClass, owner);
             }
         }
     }

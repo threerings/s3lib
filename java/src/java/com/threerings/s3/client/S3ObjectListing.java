@@ -32,97 +32,100 @@ import org.xml.sax.SAXException;
  */
 public class S3ObjectListing {
 
-    /** The name of the bucket being listed. */
-    public String name;
-
-    /** The prefix echoed back from the request. */
-    public String prefix;
-
-    /** The marker echoed back from the request. */
-    public String marker;
-
-    /** The request delimiter (echoed from the request). Null if not specified
-     * in the request. */
-    public String delimiter = null;
-
-    /** The maximum number of returned keys (echoed from the request). 0 if not
-     * specified. */
-    public int maxKeys = 0;
-
-    /** Indicates if there are more results to the list.  True if the current
-     * list results have been truncated. */
-    public boolean isTruncated;
-
-    /** Indicates what to use as a marker for subsequent list requests in the
-     * event that the results are truncated.  Present only when a delimiter is
-     * specified. (XXX Is the delimiter comment actually true?) */
-    public String nextMarker = null;
-
-    /** The list of object entries. */  
-    public List<S3ObjectEntry> entries;
-
-    /** A List of prefixes representing the common prefixes of the keys that
-     * matched up to the delimiter. */
-    public List<String> commonPrefixes;
-
-
     public S3ObjectListing (InputStream dataStream)
         throws IOException, SAXException
     {
+        /* Configure our SAX parser. */
         XMLReader xr = XMLReaderFactory.createXMLReader();
         S3ObjectListingHandler handler = new S3ObjectListingHandler();
         xr.setContentHandler(handler);
         xr.setErrorHandler(handler);
 
-        xr.parse(new InputSource(dataStream));
-/*
-        this.name = handler.getName();
-        this.prefix = handler.getPrefix();
-        this.marker = handler.getMarker();
-        this.delimiter = handler.getDelimiter();
-        this.maxKeys = handler.getMaxKeys();
-        this.isTruncated = handler.getIsTruncated();
-        this.nextMarker = handler.getNextMarker();
-        this.entries = handler.getKeyEntries();
-        this.commonPrefixes = handler.getCommonPrefixes();
-*/
+        /* Parse the XML. Will throw a SAXException if it fails. */
+        xr.parse(new InputSource(dataStream));            
+
+        /* Fetch the newly parsed data. */
+        _bucketName = handler.getBucketName();
+        _prefix = handler.getPrefix();
+        _marker = handler.getMarker();
+        _delimiter = handler.getDelimiter();
+        _maxKeys = handler.getMaxKeys();
+        _truncated = handler.getTruncated();
+        _nextMarker = handler.getNextMarker();
+        _entries = handler.getObjectEntries();
+        _commonPrefixes = handler.getCommonPrefixes();
     }
     
-    /*
-    public String getName () {
-        return this.name;
+
+    public String getBucketName () {
+        return _bucketName;
     }
 
     public String getPrefix () {
-        return this.prefix;
+        return _prefix;
     }
 
     public String getMarker () {
-        return this.marker;
+        return _marker;
     }
 
     public String getDelimiter () {
-        return this.delimiter;
+        return _delimiter;
     }
 
     public int getMaxKeys () {
-        return this.maxKeys;
+        return _maxKeys;
     }
 
-    public boolean getIsTruncated () {
-        return this.isTruncated;
+    public boolean getTruncated () {
+        return _truncated;
     }
 
     public String getNextMarker () {
-        return this.nextMarker;
+        return _nextMarker;
     }
 
-    public List<S3ObjectEntry> getKeyEntries () {
-        return this.keyEntries;
+    public List<S3ObjectEntry> getEntries () {
+        return _entries;
     }
 
     public List<String> getCommonPrefixes () {
-        return this.commonPrefixes;
+        return _commonPrefixes;
     }
-    */
+
+
+    /** The name of the bucket being listed. */
+    private String _bucketName;
+
+    /** The prefix echoed back from the request. Null if not specified in the
+     * request */
+    private String _prefix = null;
+
+    /** The marker echoed back from the request. Null if not specified in the
+     * request. */
+    private String _marker = null;
+
+    /** The request delimiter (echoed from the request). Null if not specified
+     * in the request. */
+    private String _delimiter = null;
+
+    /** The maximum number of returned keys (echoed from the request). 0 if not
+     * specified. */
+    private int _maxKeys = 0;
+
+    /** Indicates if there are more results to the list.  True if the current
+     * list results have been truncated. */
+    private boolean _truncated;
+
+    /** Indicates what to use as a marker for subsequent list requests in the
+     * event that the results are truncated.  Present only when a delimiter is
+     * specified. (XXX Is the delimiter comment actually true?) */
+    private String _nextMarker = null;
+
+    /** The list of object entries. */  
+    private List<S3ObjectEntry> _entries;
+
+    /** A List of prefixes representing the common prefixes of the keys that
+     * matched up to the delimiter. */
+    private List<String> _commonPrefixes;
 }
