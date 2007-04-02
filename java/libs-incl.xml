@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!-- declares the libraries needed to build s3lib -->
 <project name="library-dependencies">
-  <fileset dir="../${libs.dir}/" id="s3lib.libs">
+  <fileset dir="${libs.dir}" id="s3lib.libs">
     <include name="commons-codec.jar"/>
     <include name="commons-httpclient.jar"/>
     <include name="commons-logging.jar"/>
