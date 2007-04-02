@@ -3,13 +3,17 @@
 <project name="s3lib" default="compile" basedir=".">
 
     <!-- configuration properties -->
-    <property name="app.name"     value="s3lib"/>
-    <property name="deploy.dir"   value="dist"/>
-    <property name="savedoc.dir"  value="docs"/>
+    <property name="app.name"       value="s3lib"/>
+    <property name="deploy.dir"     value="dist"/>
+    <property name="savedoc.dir"    value="docs"/>
+    <property name="libs.dir.ant"   value="lib/ant"/>
+    <property name="s3pipe.classdir" value="com/threerings/s3/pipe"/>
+    <property name="s3pipe.main"    value="com.threerings.s3.pipe.Main"/>
 
     <!-- derived properties -->  
     <property name="dist.jar"       value="${app.name}.jar"/>
     <property name="javadoc.home"   value="${deploy.dir}/docs"/>
+    <property name="s3pipe.manifest"    value="${deploy.dir}/s3pipe.mf"/>
 
     <!-- enumerate library dependencies -->
     <property name="libs.dir"       value="lib"/>
@@ -26,11 +30,17 @@
         <fileset dir="${deploy.dir}/lib" includes="**/*.jar"/>
     </path>
 
+    <path id="classpath.ant">
+        <fileset dir="${libs.dir.ant}" includes="**/*.jar"/>
+    </path>
+
+    <!-- Ant tasks -->
+    <taskdef name="one-jar" classname="com.simontuffs.onejar.ant.OneJarTask" onerror="report" classpathref="classpath.ant"/>
+
     <!-- prepares the application directories -->
     <target name="prepare">
         <mkdir dir="${deploy.dir}"/>
         <mkdir dir="${deploy.dir}/classes"/>
-        <mkdir dir="${deploy.dir}/tests"/>
         <mkdir dir="${deploy.dir}/lib"/>
         <mkdir dir="${javadoc.home}"/>
         <copy todir="${deploy.dir}/classes">
@@ -59,23 +69,13 @@
             source="1.5" target="1.5">
             <classpath refid="classpath"/>
             <compilerarg value="-Xlint:unchecked"/>
-
-            <exclude name="**/*Test.java"/>
         </javac>
     </target>
 
-    <!-- build and run the unit tests -->
+    <!-- run the unit tests -->
     <target name="test" depends="compile">
         <!-- haul in our AWS id and key -->
         <property file="test.properties"/>
-
-        <!-- build the tests -->
-        <javac srcdir="src/java" destdir="${deploy.dir}/tests"
-            debug="on" optimize="${build.optimize}" deprecation="on"
-            source="1.5" target="1.5" includes="**/*Test.java">
-            <classpath refid="classpath"/>
-            <compilerarg value="-Xlint:unchecked"/>
-        </javac>
 
         <!-- run the tests -->
         <junit printsummary="yes">
@@ -87,7 +87,6 @@
             <!-- include the tests in our class path -->
             <classpath>
                 <pathelement location="${deploy.dir}/classes"/>
-                <pathelement location="${deploy.dir}/tests"/>
                 <fileset dir="${deploy.dir}/lib" includes="**/*.jar"/>
             </classpath>
 
@@ -127,9 +126,30 @@
     <!-- the default target is to rebuild everything -->
     <target name="all" depends="clean,prepare,compile,javadoc"/>
 
-    <!-- builds our distribution files (war and jar) -->
+    <!-- builds our distribution files -->
     <target name="dist" depends="prepare,compile">
-        <jar destfile="${deploy.dir}/${dist.jar}"
-            basedir="${deploy.dir}/classes"/>
+        <!-- Build the s3lib jar -->
+        <jar destfile="${deploy.dir}/${dist.jar}">
+            <fileset dir="${deploy.dir}/classes">
+                <include name="**/*.class"/>
+                <exclude name="**/*Test.class"/>
+                <exclude name="${s3pipe.classdir}"/>
+            </fileset>
+        </jar>
+
+        <!-- Build the s3pipe application jar -->
+        <manifest file="${s3pipe.manifest}">
+            <attribute name="One-Jar-Main-Class" value="${s3pipe.main}"/>
+        </manifest>
+        <one-jar destfile="${deploy.dir}/s3pipe.jar" manifest="${s3pipe.manifest}">
+            <main>
+                <fileset dir="${deploy.dir}/classes">
+                    <include name="${s3pipe.classdir}/**/*.class"/>
+                </fileset>
+            </main>
+            <lib>
+                <fileset file="${deploy.dir}/${dist.jar}"/>
+            </lib>
+        </one-jar>
     </target>
 </project>
