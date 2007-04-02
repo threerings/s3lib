@@ -79,7 +79,8 @@ public class S3ConnectionTest extends TestCase
 
     /**
      * Test listBucket.
-     * @TODO: Move of these tests to a S3ObjectListingTest class.
+     * Detailed testing of the response parsing, using static test data, is
+     * also done in the S3ObjectListingHandler unit tests.
      */
     public void testListBucket ()
         throws Exception
