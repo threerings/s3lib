@@ -3,17 +3,22 @@
 <project name="s3lib" default="compile" basedir=".">
 
   <!-- configuration properties -->
-  <property name="app.name"       value="s3lib"/>
-  <property name="deploy.dir"     value="dist"/>
-  <property name="savedoc.dir"    value="docs"/>
+  <property name="app.name"     value="s3lib"/>
+  <property name="deploy.dir"   value="dist"/>
+  <property name="savedoc.dir"  value="docs"/>
+  <property name="libs.dir"     value="lib"/>
 
   <!-- derived properties -->  
   <property name="dist.jar"       value="${app.name}.jar"/>
   <property name="javadoc.home"   value="${deploy.dir}/docs"/>
 
-  <!-- import some targets to enumerate library dependencies -->
-  <property name="libs.dir" value="java/lib"/>
-  <import file="libs-incl.xml"/>
+  <!-- enumerate library dependencies -->
+  <fileset dir="${libs.dir}" id="s3lib.libs">
+    <include name="commons-codec.jar"/>
+    <include name="commons-httpclient.jar"/>
+    <include name="commons-logging.jar"/>
+    <include name="junit-3.7.jar"/>
+  </fileset>
 
   <!-- declare our classpath -->
   <path id="classpath">
@@ -58,7 +63,7 @@
       <exclude name="**/*Test.java"/>
     </javac>
   </target>
-  
+
   <!-- build and run the unit tests -->
   <target name="test" depends="compile">
     <!-- haul in our AWS id and key -->
