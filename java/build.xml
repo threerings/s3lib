@@ -6,19 +6,15 @@
     <property name="app.name"     value="s3lib"/>
     <property name="deploy.dir"   value="dist"/>
     <property name="savedoc.dir"  value="docs"/>
-    <property name="libs.dir"     value="java/lib"/>
 
     <!-- derived properties -->  
     <property name="dist.jar"       value="${app.name}.jar"/>
     <property name="javadoc.home"   value="${deploy.dir}/docs"/>
 
-    <!-- enumerate library dependencies -->    
-    <fileset dir="${libs.dir}" id="s3lib.libs">
-        <include name="commons-codec.jar"/>
-        <include name="commons-httpclient.jar"/>
-        <include name="commons-logging.jar"/>
-        <include name="junit-3.7.jar"/>
-    </fileset>
+    <!-- import some targets to enumerate library dependencies -->
+    <!-- this is magic to support building within an enclosing project, don't touch it. -->
+    <property name="libs.dir" value="java/lib"/>
+    <import file="libs-incl.xml"/>
 
     <!-- declare our classpath -->
     <path id="classpath">
