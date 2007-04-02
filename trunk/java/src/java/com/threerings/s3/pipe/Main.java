@@ -31,8 +31,40 @@
 
 package com.threerings.s3.pipe;
 
+import com.threerings.s3.client.S3Connection;
+
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
+
+import java.io.File;
+
 public class Main {
+    /** Standard C99 EXIT_SUCCESS value. */
+    public static final int EXIT_SUCCESS = 0;
+    
+    /** Standard C99 EXIT_FAILURE value. */
+    public static final int EXIT_FAILURE = 1;
+
     public static void main (String[] args) {
-        // Do something
+        new Main().doMain(args);
     }
+
+    public void doMain (String[] args) {
+        CmdLineParser parser = new CmdLineParser(this);
+
+        try {
+            parser.parseArgument(args);
+        } catch (CmdLineException cle) {
+            System.err.println("Error parsing arguments: " + cle.getMessage());
+            System.err.println("Usage:");
+            parser.printUsage(System.err);
+            System.err.println();
+            System.exit(EXIT_FAILURE);
+        }
+    }
+
+    /** Path to AWS properties file. */
+    @Option(name="--keyfile", usage="Specify the properties file containing the AWS ID and secret key.", required=true)
+    private File _keyFile;
 }

@@ -18,6 +18,7 @@
     <!-- enumerate library dependencies -->
     <property name="libs.dir"       value="lib"/>
     <fileset dir="${libs.dir}" id="s3lib.libs">
+        <include name="args4j-2.0.7.jar"/>
         <include name="commons-codec.jar"/>
         <include name="commons-httpclient.jar"/>
         <include name="commons-logging.jar"/>
@@ -148,7 +149,12 @@
                 </fileset>
             </main>
             <lib>
+                <!-- The main s3lib jar -->
                 <fileset file="${deploy.dir}/${dist.jar}"/>
+                <!-- Libraries that s3lib depends upon -->
+                <fileset dir="${deploy.dir}/lib">
+                    <include name="**/*.jar"/>
+                </fileset>
             </lib>
         </one-jar>
     </target>
