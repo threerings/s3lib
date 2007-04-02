@@ -180,7 +180,7 @@ public class S3Connection
         executeS3Method(method);
 
         try {
-            return new S3ObjectListing(method.getResponseBodyAsStream());            
+            return new S3ObjectListing(method.getResponseBodyAsStream());          
         } catch (SAXException se) {
             throw new S3ClientException("Error parsing bucket GET response: " + se, se);
         }
