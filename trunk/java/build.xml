@@ -6,13 +6,13 @@
     <property name="app.name"     value="s3lib"/>
     <property name="deploy.dir"   value="dist"/>
     <property name="savedoc.dir"  value="docs"/>
-    <property name="libs.dir"     value="lib"/>
+    <property name="libs.dir"     value="java/lib"/>
 
     <!-- derived properties -->  
     <property name="dist.jar"       value="${app.name}.jar"/>
     <property name="javadoc.home"   value="${deploy.dir}/docs"/>
 
-    <!-- enumerate library dependencies -->
+    <!-- enumerate library dependencies -->    
     <fileset dir="${libs.dir}" id="s3lib.libs">
         <include name="commons-codec.jar"/>
         <include name="commons-httpclient.jar"/>
