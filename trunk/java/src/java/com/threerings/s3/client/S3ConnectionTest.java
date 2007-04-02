@@ -57,6 +57,13 @@ public class S3ConnectionTest extends TestCase
     public void tearDown ()
         throws Exception
     {
+        /* Delete all objects in the test bucket. */
+        S3ObjectListing listing = _conn.listObjects(_testBucketName);
+        for (S3ObjectEntry entry : listing.getEntries()) {
+            _conn.deleteObject(_testBucketName, entry.getKey());
+        }
+
+        /* Delete the test bucket. */
         _conn.deleteBucket(_testBucketName, null);
         _testFile.delete();
     }
@@ -85,12 +92,8 @@ public class S3ConnectionTest extends TestCase
         // Send an object to the mother ship
         _conn.putObject(_testBucketName, _fileObj, AccessControlList.StandardPolicy.PRIVATE);
 
-        try {
-            listing = _conn.listObjects(_testBucketName);
-            entries = listing.getEntries();
-        } finally {
-            _conn.deleteObject(_testBucketName, _fileObj);   
-        }
+        listing = _conn.listObjects(_testBucketName);
+        entries = listing.getEntries();
 
         /* Validate the bucket name */
         assertEquals(_testBucketName, listing.getBucketName());
@@ -133,9 +136,6 @@ public class S3ConnectionTest extends TestCase
     {
         // Send it to the mother ship
         _conn.putObject(_testBucketName, _fileObj, AccessControlList.StandardPolicy.PRIVATE);
-
-        // Hey, you can't have that!
-        _conn.deleteObject(_testBucketName, _fileObj);
     }
 
 
@@ -147,34 +147,29 @@ public class S3ConnectionTest extends TestCase
         // Send it to the mother ship
         _conn.putObject(_testBucketName, _fileObj, AccessControlList.StandardPolicy.PRIVATE);
 
-        try {
-            // Fetch it back out again
-            S3Object obj = _conn.getObject(_testBucketName, _fileObj.getKey());
+        // Fetch it back out again
+        S3Object obj = _conn.getObject(_testBucketName, _fileObj.getKey());
 
-            // Ensure that it is equal to the object we uploaded
-            S3ObjectTest.testEquals(_fileObj, obj, this);
+        // Ensure that it is equal to the object we uploaded
+        S3ObjectTest.testEquals(_fileObj, obj, this);
 
-            // Validate the object file data, too.
-            ByteArrayOutputStream output = new ByteArrayOutputStream();
-            InputStream input = obj.getInputStream();
-            byte[] data = new byte[1024];
-            int nread;
+        // Validate the object file data, too.
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        InputStream input = obj.getInputStream();
+        byte[] data = new byte[1024];
+        int nread;
 
-            while ((nread = input.read(data)) > 0) {
-                output.write(data, 0, nread);
+        while ((nread = input.read(data)) > 0) {
+            output.write(data, 0, nread);
 
-                // Sanity check. We didn't upload more than 2 megs!
-                if (output.size() > 2048) {
-                    break;
-                }
+            // Sanity check. We didn't upload more than 2 megs!
+            if (output.size() > 2048) {
+                break;
             }
-
-            input.close();
-            assertEquals(TEST_DATA, output.toString("utf8"));
-        } finally {
-            // Hey, you can't have that!
-            _conn.deleteObject(_testBucketName, _fileObj);            
         }
+
+        input.close();
+        assertEquals(TEST_DATA, output.toString("utf8"));
     }
 
     public void testObjectMetadata ()
@@ -190,16 +185,11 @@ public class S3ConnectionTest extends TestCase
         // Send it to the mother ship
         _conn.putObject(_testBucketName, _fileObj, AccessControlList.StandardPolicy.PRIVATE);
 
-        try {
-            // Fetch it back out again and validate the metadata
-            S3Object obj = _conn.getObject(_testBucketName, _fileObj.getKey());
+        // Fetch it back out again and validate the metadata
+        S3Object obj = _conn.getObject(_testBucketName, _fileObj.getKey());
 
-            // Ensure that it is equal to the object we uploaded
-            S3ObjectTest.testEquals(_fileObj, obj, this);
-        } finally {
-            // Hey, you can't have that!
-            _conn.deleteObject(_testBucketName, _fileObj);            
-        }
+        // Ensure that it is equal to the object we uploaded
+        S3ObjectTest.testEquals(_fileObj, obj, this);
     }
 
     public void testErrorHandling ()

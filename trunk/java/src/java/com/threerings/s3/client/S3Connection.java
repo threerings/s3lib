@@ -334,18 +334,18 @@ public class S3Connection
      * @param bucketName Remote bucket.
      * @param object S3 Object.
      */
-    public void deleteObject (String bucketName, S3Object object)
+    public void deleteObject (String bucketName, String key)
         throws IOException, S3Exception
     {
         DeleteMethod method;
         try {
             method = new DeleteMethod("/" +
                 _urlEncoder.encode(bucketName) + "/" +
-                _urlEncoder.encode(object.getKey()));
+                _urlEncoder.encode(key));
         } catch (EncoderException e) {
             throw new S3ClientException.InvalidURIException(
             "Encoding error for bucket " + bucketName + " and key " +
-            object.getKey() + ": " + e);
+            key + ": " + e);
         }
 
         executeS3Method(method);
