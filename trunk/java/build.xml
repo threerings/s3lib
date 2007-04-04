@@ -22,7 +22,6 @@
         <include name="commons-codec.jar"/>
         <include name="commons-httpclient.jar"/>
         <include name="commons-logging.jar"/>
-        <include name="junit-3.7.jar"/>
     </fileset>
 
     <!-- declare our classpath -->
@@ -37,6 +36,7 @@
 
     <!-- Ant tasks -->
     <taskdef name="one-jar" classname="com.simontuffs.onejar.ant.OneJarTask" onerror="report" classpathref="classpath.ant"/>
+    <taskdef resource="net/sf/antcontrib/antlib.xml" onerror="report" classpathref="classpath.ant"/>
 
     <!-- prepares the application directories -->
     <target name="prepare">
@@ -78,29 +78,55 @@
         <!-- haul in our AWS id and key -->
         <property file="test.properties"/>
 
-        <!-- run the tests -->
-        <junit printsummary="yes">
-            <!-- Vend the aws. properties -->
-            <syspropertyset>
-                <propertyref prefix="aws."/>
-            </syspropertyset>
+        <if>
+            <isset property="test"/>
+            <then>
+                <!-- run one test -->
+                <junit printsummary="yes">
+                    <!-- Vend the aws. properties -->
+                    <syspropertyset>
+                        <propertyref prefix="aws."/>
+                    </syspropertyset>
 
-            <!-- include the tests in our class path -->
-            <classpath>
-                <pathelement location="${deploy.dir}/classes"/>
-                <fileset dir="${deploy.dir}/lib" includes="**/*.jar"/>
-            </classpath>
+                    <!-- include the tests in our class path -->
+                    <classpath>
+                        <pathelement location="${deploy.dir}/classes"/>
+                        <fileset dir="${deploy.dir}/lib" includes="**/*.jar"/>
+                    </classpath>
 
-            <!-- human output -->
-            <formatter type="brief" usefile="false"/>
+                    <!-- human output -->
+                    <formatter type="brief" usefile="false"/>
 
-            <!-- batch run our tests -->
-            <batchtest>
-                <fileset dir="src/java">
-                    <include name="**/*Test.java"/>
-                </fileset>
-            </batchtest>
-        </junit>
+                    <!-- run the requested test -->
+                    <test name="${test}"/>
+                </junit>
+            </then>
+            <else>
+                <!-- run all tests -->
+                <junit printsummary="yes">
+                    <!-- Vend the aws. properties -->
+                    <syspropertyset>
+                        <propertyref prefix="aws."/>
+                    </syspropertyset>
+
+                    <!-- include the tests in our class path -->
+                    <classpath>
+                        <pathelement location="${deploy.dir}/classes"/>
+                        <fileset dir="${deploy.dir}/lib" includes="**/*.jar"/>
+                    </classpath>
+
+                    <!-- human output -->
+                    <formatter type="brief" usefile="false"/>
+
+                    <!-- batch run our tests -->
+                    <batchtest>
+                        <fileset dir="src/java">
+                            <include name="**/*Test.java"/>
+                        </fileset>
+                    </batchtest>
+                </junit>
+            </else>
+        </if>
     </target>
 
     <!-- build the javadoc documentation -->
