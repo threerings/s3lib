@@ -39,6 +39,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.IOException;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -48,6 +49,50 @@ import org.apache.commons.codec.binary.Hex;
 
 public class S3ConnectionTest extends TestCase
 {
+    /**
+     * Return the test-supplied AWS id
+     */
+    public static String getId ()
+    {
+        return System.getProperty("aws.id");
+    }
+
+    /**
+     * Create a new S3 connection using the test
+     * AWS key and id.
+     */
+    public static S3Connection createConnection ()
+        throws S3Exception
+    {
+        String id = getId();
+        String key = System.getProperty("aws.key");
+        return new S3Connection(id, key);        
+    }
+
+    /**
+     * Recursively delete a bucket and all of its keys.
+     */
+    public static void deleteBucket (S3Connection conn, String bucketName)
+        throws S3Exception, IOException
+    {
+        /* Delete all objects in the bucket. */
+        S3ObjectListing listing = conn.listObjects(bucketName);
+        for (S3ObjectEntry entry : listing.getEntries()) {
+            conn.deleteObject(bucketName, entry.getKey());
+        }
+
+        /* Delete the bucket. */
+        conn.deleteBucket(bucketName, null);
+    }
+
+    /**
+     * Generate a unique-ish test bucket name.
+     */
+    public static String generateTestBucketName ()
+    {
+        return  "test-" + getId();
+    }
+
     public S3ConnectionTest (String name)
     {
         super(name);
@@ -58,10 +103,8 @@ public class S3ConnectionTest extends TestCase
     {
         FileOutputStream fileOutput;
 
-        _awsId = System.getProperty("aws.id");
-        _awsKey = System.getProperty("aws.key");
-        _conn = new S3Connection(_awsId, _awsKey);
-        _testBucketName = "test-" + _awsId;
+        _conn = createConnection();
+        _testBucketName = generateTestBucketName();
         _testFile = File.createTempFile("S3FileObjectTest", null);
 
         // Create a file object
@@ -77,14 +120,7 @@ public class S3ConnectionTest extends TestCase
     public void tearDown ()
         throws Exception
     {
-        /* Delete all objects in the test bucket. */
-        S3ObjectListing listing = _conn.listObjects(_testBucketName);
-        for (S3ObjectEntry entry : listing.getEntries()) {
-            _conn.deleteObject(_testBucketName, entry.getKey());
-        }
-
-        /* Delete the test bucket. */
-        _conn.deleteBucket(_testBucketName, null);
+        deleteBucket(_conn, _testBucketName);
         _testFile.delete();
     }
 
@@ -159,7 +195,6 @@ public class S3ConnectionTest extends TestCase
         _conn.putObject(_testBucketName, _fileObj, AccessControlList.StandardPolicy.PRIVATE);
     }
 
-
     public void testGetObject ()
         throws Exception
     {
@@ -216,7 +251,7 @@ public class S3ConnectionTest extends TestCase
     public void testErrorHandling ()
         throws Exception
     {
-        S3Connection badConn = new S3Connection(_awsId, "bad key");
+        S3Connection badConn = new S3Connection(getId(), "bad key");
         try {
             badConn.createBucket(_testBucketName, null);
             fail("Did not throw S3SignatureDoesNotMatchException");            
@@ -227,12 +262,6 @@ public class S3ConnectionTest extends TestCase
     
     /** Amazon S3 Authenticated Connection */
     private S3Connection _conn;
-    
-    /** Amazon Web Services ID */
-    protected String _awsId;
-    
-    /** Amazon Web Services Key */
-    protected String _awsKey;
     
     /** Test bucket */
     protected String _testBucketName;

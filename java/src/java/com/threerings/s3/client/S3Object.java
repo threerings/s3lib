@@ -42,16 +42,17 @@ import java.io.FileNotFoundException;
  * A representation of a single object stored in S3.
  */
 public abstract class S3Object {
-    
+    public static final String DEFAULT_MIME_TYPE = "binary/octet-stream";
+
     /**
      * Instantiate an S3 object with the given key.
      * @param key S3 object key.
      */
     public S3Object (String key)
     {
-        this(key, "binary/octet-stream");
+        this(key, DEFAULT_MIME_TYPE);
     }
-    
+
     /**
      * Instantiate an S3 Object with the given key and mime type.
      * @param key S3 object key.
