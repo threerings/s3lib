@@ -62,6 +62,6 @@ public class StreamUtilsTest extends TestCase
     }
 
     public void testStreamBlockKey () {
-        assertEquals("encodedname.0", StreamUtils.streamBlockKey("encodedname", 0));
+        assertEquals("encodedname.block.0", StreamUtils.streamBlockKey("encodedname", 0));
     }
 }
