@@ -37,6 +37,15 @@ import org.apache.commons.codec.binary.Base64;
 
 /*
  * Re-usable stream-related utilities.
+ *
+ * Stream key names are heirarchical, using "." as a delimiter, in order to leverage S3's
+ * support for condensing common prefixes and dropping suffixes when listing objects.
+ * This allows for the creation of per-stream "structures". Example:
+ *  stream.info
+ *  stream.block.0
+ *  stream.block.1
+ *
+ * We base64-encode the stream name to ensure that it does not contain any "." delimiters.
  */
 class StreamUtils {
     /**
@@ -71,8 +80,15 @@ class StreamUtils {
      * Return the S3 key for a given encoded stream name and block id.
      */
     public static String streamBlockKey (String encodedName, long blockId) {
-        return encodedName + "." + Long.toString(blockId);
+        return encodedName + FIELD_DELIMETER + BLOCK_FIELD +
+            FIELD_DELIMETER + Long.toString(blockId);
     }
+
+    /** Field delimiter. */
+    private static final String FIELD_DELIMETER = ".";
+
+    /** Block data field. */
+    private static final String BLOCK_FIELD = "block";
 
     /** Character set encoding used for base64'd stream names. */
     private static final String NAME_ENCODING = "utf-8";
