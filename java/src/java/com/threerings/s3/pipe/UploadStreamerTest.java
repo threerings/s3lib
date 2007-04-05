@@ -33,6 +33,9 @@ package com.threerings.s3.pipe;
 
 import junit.framework.TestCase;
 
+import com.threerings.s3.client.S3Connection;
+import com.threerings.s3.client.S3ConnectionTest;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -47,28 +50,42 @@ public class UploadStreamerTest extends TestCase
     public void setUp ()
         throws Exception
     {
+        _conn = S3ConnectionTest.createConnection();
+        _bucket = S3ConnectionTest.generateTestBucketName();
         _testFile = File.createTempFile("s3pipe", "data");
-        
-        /* Populate the file with 512k of something */
+
+        /* Set up our test bucket. */
+        _conn.createBucket(_bucket, null);
+
+        /* Populate the file with 10 bytes. We use a very small stream in
+         * order to save bandwidth -- S3 requests cost money! */
         RandomAccessFile file = new RandomAccessFile(_testFile, "rw");
-        file.setLength(512 * 1024);
+        file.setLength(10);
+        file.close();
     }
 
-    public void tearDown () {
+    public void tearDown ()
+        throws Exception
+    {
+        S3ConnectionTest.deleteBucket(_conn, _bucket);
         _testFile.delete();
     }
 
     public void testUpload ()
         throws Exception
     {
-        /* Fire up an uploader with a 5k block size. */
+        /* Fire up an uploader with a 1 byte block size. */
         InputStream input = new FileInputStream(_testFile);
-        UploadStreamer streamer = new UploadStreamer(5*1024);
-        streamer.upload(input);
+        UploadStreamer streamer = new UploadStreamer(_conn, _bucket, 2);
+        streamer.upload("test stream", input);
     }
 
     /** Temporary test data file. */
     protected File _testFile;
 
-    /** Test data stream */
+    /** AWS S3 Connection. */
+    S3Connection _conn;
+
+    /** Test bucket name */
+    String _bucket;
 }

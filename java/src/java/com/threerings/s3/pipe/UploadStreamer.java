@@ -31,154 +31,87 @@
 
 package com.threerings.s3.pipe;
 
+import com.threerings.s3.client.acl.AccessControlList;
+import com.threerings.s3.client.S3ByteArrayObject;
+import com.threerings.s3.client.S3Connection;
+import com.threerings.s3.client.S3Exception;
+
 import java.io.InputStream;
 import java.io.IOException;
 
 import java.nio.ByteBuffer;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
-
 /*
  * Uploads streams as a series of S3Objects.
+ * UploadStreams are re-usable, but not thread-safe.
  */
 public class UploadStreamer {
     /*
-     * The QueuedStreamReader buffers input from the given stream into byte[] blocks,
-     * placing them in the supplied blocking queue.
-     */
-    static private class QueuedStreamReader
-        implements Runnable
-    {
-        public QueuedStreamReader (InputStream input, int blocksize,
-            BlockingQueue<ByteBuffer> queue, Thread caller) {
-            _input = input;
-            _queue = queue;
-            _blocksize = blocksize;
-            _caller = caller;
-        }
-
-
-        private void readStream ()
-        {
-            boolean eof = false;
-
-            while (!eof) {
-                ByteBuffer block;
-                byte[] backing;
-                int read;
-                
-                block = ByteBuffer.allocate(_blocksize);
-                assert(block.hasArray()); // Always true with allocate()
-                backing = block.array();
-
-                /* Read in one complete block */
-                read = 0;
-                while (_blocksize - read > 0) {
-                    int len;
-
-                    /* If we've been interrupted, exit the thread. */
-                    if (Thread.interrupted()) {
-                        return;
-                    }
-
-                    /* Read in more data. */
-                    try {
-                        len = _input.read(backing, read, _blocksize - read);                        
-                    } catch (IOException ioe) {
-                        /* Save the exception, notify our caller, and exit. */
-                        _streamError = ioe;
-                        return;
-                    }
-
-                    /* End of file reached? */
-                    if (len < 0) {
-                        /* Notify outer loop of eof. */
-                        eof = true;
-
-                        /* Break out of inner loop. */
-                        break;
-                    }
-
-                    /* Add the new data to the read length and continue. */
-                    read += len;
-                }
-
-                /* Block complete, add it to the queue. */
-                block.limit(read);
-
-                try {
-                    _queue.put(block);                    
-                } catch (InterruptedException ie) {
-                    /* Exit on interrupt */
-                    return;
-                }
-            } 
-        }
-
-        public void run () {
-            /* Read in the stream. */
-            readStream();
-            
-            /* Notify caller of completion. */
-            _caller.interrupt();
-        }
-
-        /**
-         * Returns the stream error, null if none.
-         */
-        public IOException getStreamError () {
-            return _streamError;
-        }
-
-        /** If an IOException occurs, it will be saved here, and then the caller will be
-         * interrupted. Object assignments are atomic, so we don't lock here. */
-        private IOException _streamError = null;
-
-        /** Caller notified on error. */
-        private final Thread _caller;
-
-        /** Data block size. */
-        private final int _blocksize;
-        
-        /** Block queue. */
-        private final BlockingQueue<ByteBuffer> _queue;
-        
-        /* Data input stream. */
-        private final InputStream _input;
-    }
-
-    /*
      * Instantiate a new stream uploader.
-     * @param input: Input stream.
-     * @param blocksize: Memory block size, in bytes.
+     * S3 transactions are expensive -- the block size should be large.
+     * @param connect: S3 Connection.
+     * @param bucket: Destination S3 bucket.
+     * @param blocksize: Upload block size, in bytes.
      */
-    public UploadStreamer (int blocksize) {
+    public UploadStreamer (S3Connection connection, String bucket,
+        int blocksize)
+    {
+        _connection = connection;
+        _bucket = bucket;
         _blocksize = blocksize;
     }
 
-    public void upload (InputStream input)
+    /**
+     * Upload a stream, using the given streamName.
+     */
+    public void upload (String streamName, InputStream stream)
         throws IOException
     {
-        BlockingQueue<ByteBuffer> queue;
         QueuedStreamReader reader;
         Thread readerThread;
-        ByteBuffer block;   
-        int retry;
-
-        /* Buffer up to 4 blocks */
-        queue = new LinkedBlockingQueue<ByteBuffer>(4);
 
         /* Create and start the stream reader. */
-        reader = new QueuedStreamReader(input, _blocksize, queue, Thread.currentThread());
-        readerThread = new Thread(reader, "Queue Stream Reader");
+        reader = new QueuedStreamReader(stream, _blocksize, QUEUE_SIZE);
+        readerThread = new Thread(reader, streamName + " Queue");
         readerThread.start();
 
         /* Read blocks off the queue. */
-        while ((block = readBlock(queue)) != null) {
-            // S3ByteArrayObject obj = new S3ByteArrayObject();
-            System.out.println("Got block: " + block);
+        try {
+            ByteBuffer block;
+            long blockId = 0;
+
+            while ((block = reader.readBlock()) != null) {
+                byte[] data;
+                int length;
+                
+                /* Get access to the byte[] data. */
+                length = block.limit();
+                if (!block.hasArray()) {
+                    /* No backing array, copy the data. */
+                    data = new byte[length];
+                    block.get(data);
+                } else {
+                    /* Backing array, no copying required. */
+                    data = block.array();
+                }
+
+                /* Upload the S3 Object. */
+                S3ByteArrayObject obj = new S3ByteArrayObject(streamName + "." +
+                    Long.toString(blockId), data, 0, length);
+
+                try {
+                    _connection.putObject(_bucket, obj, AccessControlList.StandardPolicy.PRIVATE);                    
+                } catch (S3Exception s3e) {
+                    // XXX Retry
+                    readerThread.interrupt();
+                    throw new IOException("S3 Upload failure: " + s3e.getMessage());
+                }
+
+                /* Increment the block id. */
+                blockId++;
+            }
+        } catch (InterruptedException ie) {
+            // This will exit our loop, which is sufficient.
         }
 
         /* Check for error and exit */
@@ -187,32 +120,14 @@ public class UploadStreamer {
         }
     }
 
-    /**
-     * Loop until we've read a block off the queue, or the thread has been interrupted.
-     * Returns null if interrupted.
-     */
-    static private ByteBuffer readBlock (BlockingQueue<ByteBuffer> queue) {
-        ByteBuffer block;
+    /** Queue size. */
+    private final int QUEUE_SIZE = 4;
 
-        while (!Thread.interrupted()) {
-            /* Read blocks off the queue. */
-            try {
-                /* Wait for a block */
-                if ((block = queue.poll(10, TimeUnit.SECONDS)) == null) {
-                    /* Timed out, re-poll */
-                    continue;                    
-                } else {
-                    /* Return the new block. */
-                    return block;                    
-                }
-            } catch (InterruptedException ie) {
-                /* Exit the loop. */
-                break;
-            }            
-        }
+    /** S3 Connection. */
+    private S3Connection _connection;
 
-        return null;
-    }
+    /** S3 Bucket. */
+    private String _bucket;
 
     /** Read block size. */
     private final int _blocksize;
