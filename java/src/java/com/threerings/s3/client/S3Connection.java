@@ -279,7 +279,7 @@ public class S3Connection
      * @param bucketName: Source bucket.
      * @param objectKey: Object key.
      */
-    public S3RemoteObject getObject (String bucketName, String objectKey)
+    public S3Object getObject (String bucketName, String objectKey)
         throws IOException, S3Exception
     {
         GetMethod method;
