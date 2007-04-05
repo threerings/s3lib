@@ -31,21 +31,26 @@
 
 package com.threerings.s3.pipe;
 
+import java.io.UnsupportedEncodingException;
+
+import org.apache.commons.codec.binary.Base64;
+
 import junit.framework.TestCase;
 
 /**
  * Most of these tests are hardwired to fail if encoding/decoding routines are
  * changed, as any changes will result in lost access to old data.
  */
-public class StreamUtilsTest extends TestCase
+public class StreamUtilTest extends TestCase
 {
-    public StreamUtilsTest (String name) {
+    public StreamUtilTest (String name) {
         super(name);
     }
 
     public void setUp ()
         throws Exception
     {
+        _streamUtil = new StreamUtil(STREAM_NAME);
     }
 
     public void tearDown ()
@@ -53,15 +58,31 @@ public class StreamUtilsTest extends TestCase
     {
     }
 
-    public void testEncodeName () {
-        assertEquals("YVN0cmVhbU5hbWU=", StreamUtils.encodeName("aStreamName"));
-    }
-
-    public void testDecodeName () {
-        assertEquals("aStreamName", StreamUtils.decodeName("YVN0cmVhbU5hbWU="));        
+    public void testStreamInfoKey () {
+        assertEquals(ENCODED_STREAM_NAME + ".info", _streamUtil.streamInfoKey());
     }
 
     public void testStreamBlockKey () {
-        assertEquals("encodedname.block.0", StreamUtils.streamBlockKey("encodedname", 0));
+        assertEquals(ENCODED_STREAM_NAME + ".block.0", _streamUtil.streamBlockKey(0));
     }
+
+    private StreamUtil _streamUtil;
+
+    /** Test stream name. */
+    private static final String STREAM_NAME = "aStreamName";
+    
+    /** Encoded (base64) test stream name. */
+    private static final String ENCODED_STREAM_NAME;
+    
+    /* Base64 encode the stream name. */
+    static {
+        try {
+            Base64 encoder = new Base64();
+            byte[] data = STREAM_NAME.getBytes("utf-8");
+            ENCODED_STREAM_NAME = new String(encoder.encode(data), "ascii");            
+        } catch (UnsupportedEncodingException uee) {
+            // utf-8 and ascii must always be available.
+            throw new RuntimeException("Missing a standard encoding", uee);
+        }
+    }    
 }

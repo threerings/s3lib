@@ -1,5 +1,5 @@
 /* 
- * DownloadStreamer.java vi:ts=4:sw=4:expandtab:
+ * StreamUtil.java vi:ts=4:sw=4:expandtab:
  *
  * Copyright (c) 2007 Three Rings Design, Inc.
  * All rights reserved.
@@ -47,15 +47,18 @@ import org.apache.commons.codec.binary.Base64;
  *
  * We base64-encode the stream name to ensure that it does not contain any "." delimiters.
  */
-class StreamUtils {
-    /**
-     * Encode a stream name for S3.
-     */
-    public static String encodeName (String streamName) {
+class StreamUtil {
+    
+    protected StreamUtil (String streamName) {
+
+        /* Save the unencoded stream name. */
+        _streamName = streamName;
+
+        /* Cache the encoded stream name. */
         try {
             Base64 encoder = new Base64();
-            byte[] data = streamName.getBytes(NAME_ENCODING);
-            return new String(encoder.encode(data), "ascii");            
+            byte[] data = _streamName.getBytes(NAME_ENCODING);
+            _encodedStreamName = new String(encoder.encode(data), "ascii");            
         } catch (UnsupportedEncodingException uee) {
             // utf-8 and ascii must always be available.
             throw new RuntimeException("Missing a standard encoding", uee);
@@ -63,32 +66,35 @@ class StreamUtils {
     }
 
     /**
-     * Decode a stream name for S3.
+     * Return the S3 key for a given encoded stream name's info field.
      */
-     public static String decodeName (String key) {
-         try {
-             Base64 decoder = new Base64();
-             byte[] data = decoder.decode(key.getBytes("ascii"));
-             return new String(data, NAME_ENCODING);            
-         } catch (UnsupportedEncodingException uee) {
-             // utf-8 and ascii must always be available.
-             throw new RuntimeException("Missing a standard encoding", uee);
-         }
-     }
+    public String streamInfoKey () {
+        return _encodedStreamName + FIELD_DELIMETER + INFO_FIELD;
+    }
+
 
     /**
      * Return the S3 key for a given encoded stream name and block id.
      */
-    public static String streamBlockKey (String encodedName, long blockId) {
-        return encodedName + FIELD_DELIMETER + BLOCK_FIELD +
+    public String streamBlockKey (long blockId) {
+        return _encodedStreamName + FIELD_DELIMETER + BLOCK_FIELD +
             FIELD_DELIMETER + Long.toString(blockId);
     }
+
+    /** Stream name. */
+    private String _streamName;
+
+    /** Stream encoded name. */
+    private String _encodedStreamName;
 
     /** Field delimiter. */
     private static final String FIELD_DELIMETER = ".";
 
     /** Block data field. */
     private static final String BLOCK_FIELD = "block";
+
+    /** Info data field. */
+    private static final String INFO_FIELD = "info";
 
     /** Character set encoding used for base64'd stream names. */
     private static final String NAME_ENCODING = "utf-8";
