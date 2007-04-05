@@ -1,5 +1,5 @@
 /* 
- * StreamUtil.java vi:ts=4:sw=4:expandtab:
+ * Stream.java vi:ts=4:sw=4:expandtab:
  *
  * Copyright (c) 2007 Three Rings Design, Inc.
  * All rights reserved.
@@ -47,9 +47,9 @@ import org.apache.commons.codec.binary.Base64;
  *
  * We base64-encode the stream name to ensure that it does not contain any "." delimiters.
  */
-class StreamUtil {
+class Stream {
     
-    protected StreamUtil (String streamName) {
+    protected Stream (String streamName) {
 
         /* Save the unencoded stream name. */
         _streamName = streamName;
