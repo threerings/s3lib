@@ -73,11 +73,15 @@ public class UploadStreamer {
     {
         QueuedStreamReader reader;
         Thread readerThread;
+        String encodedName;
 
         /* Create and start the stream reader. */
         reader = new QueuedStreamReader(stream, _blocksize, QUEUE_SIZE);
         readerThread = new Thread(reader, streamName + " Queue");
         readerThread.start();
+
+        /* Encode the stream name. */
+        encodedName = StreamUtils.encodeName(streamName);
 
         /*
          * Read blocks off the queue, upload the block,
@@ -107,8 +111,8 @@ public class UploadStreamer {
                 /*
                  * Upload the S3 Object.
                  */
-                S3ByteArrayObject obj = new S3ByteArrayObject(streamName + "." +
-                    Long.toString(blockId), data, 0, length);
+                S3ByteArrayObject obj = new S3ByteArrayObject(
+                    StreamUtils.streamBlockKey(encodedName, blockId), data, 0, length);
 
                 for (int i = 0; i < retry; i++) {
                     try {
