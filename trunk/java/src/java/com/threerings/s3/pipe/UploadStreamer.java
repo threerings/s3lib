@@ -65,23 +65,24 @@ public class UploadStreamer {
     /**
      * Upload a stream, using the given streamName.
      * @param streamName: Arbitrary stream name.
-     * @param stream: Stream to upload.
+     * @param inputData: Stream to upload.
      * @param retry: Number of times to retry failed S3 operations.
      */
-    public void upload (String streamName, InputStream stream, int retry)
+    public void upload (String streamName, InputStream inputData, int retry)
         throws IOException
     {
         QueuedStreamReader reader;
         Thread readerThread;
         String encodedName;
+        Stream stream;
 
         /* Create and start the stream reader. */
-        reader = new QueuedStreamReader(stream, _blocksize, QUEUE_SIZE);
+        reader = new QueuedStreamReader(inputData, _blocksize, QUEUE_SIZE);
         readerThread = new Thread(reader, streamName + " Queue");
         readerThread.start();
 
-        /* Encode the stream name. */
-        encodedName = StreamUtils.encodeName(streamName);
+        /* Instantiate a stream reference */
+        stream = new Stream(streamName);
 
         /*
          * Read blocks off the queue, upload the block,
@@ -112,7 +113,7 @@ public class UploadStreamer {
                  * Upload the S3 Object.
                  */
                 S3ByteArrayObject obj = new S3ByteArrayObject(
-                    StreamUtils.streamBlockKey(encodedName, blockId), data, 0, length);
+                    stream.streamBlockKey(blockId), data, 0, length);
 
                 for (int i = 0; i < retry; i++) {
                     try {

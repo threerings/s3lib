@@ -59,10 +59,10 @@ public class DownloadStreamer {
     /**
      * Download the given streamName.
      */
-    public void download (String streamName, OutputStream stream)
+    public void download (String streamName, OutputStream output)
         throws IOException
     {
-        String encodedName = StreamUtils.encodeName(streamName);
+        Stream stream = new Stream(streamName);
         long blockId = 0;
     }
 

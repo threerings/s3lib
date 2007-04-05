@@ -1,5 +1,5 @@
 /* 
- * StreamUtilsTest.java vi:ts=4:sw=4:expandtab:
+ * StreamTest.java vi:ts=4:sw=4:expandtab:
  *
  * Copyright (c) 2005 - 2007 Three Rings Design, Inc.
  * All rights reserved.
@@ -41,16 +41,16 @@ import junit.framework.TestCase;
  * Most of these tests are hardwired to fail if encoding/decoding routines are
  * changed, as any changes will result in lost access to old data.
  */
-public class StreamUtilTest extends TestCase
+public class StreamTest extends TestCase
 {
-    public StreamUtilTest (String name) {
+    public StreamTest (String name) {
         super(name);
     }
 
     public void setUp ()
         throws Exception
     {
-        _streamUtil = new StreamUtil(STREAM_NAME);
+        _stream = new Stream(STREAM_NAME);
     }
 
     public void tearDown ()
@@ -59,14 +59,14 @@ public class StreamUtilTest extends TestCase
     }
 
     public void testStreamInfoKey () {
-        assertEquals(ENCODED_STREAM_NAME + ".info", _streamUtil.streamInfoKey());
+        assertEquals(ENCODED_STREAM_NAME + ".info", _stream.streamInfoKey());
     }
 
     public void testStreamBlockKey () {
-        assertEquals(ENCODED_STREAM_NAME + ".block.0", _streamUtil.streamBlockKey(0));
+        assertEquals(ENCODED_STREAM_NAME + ".block.0", _stream.streamBlockKey(0));
     }
 
-    private StreamUtil _streamUtil;
+    private Stream _stream;
 
     /** Test stream name. */
     private static final String STREAM_NAME = "aStreamName";
