@@ -61,10 +61,14 @@ public class UploadStreamer {
         _blocksize = blocksize;
     }
 
+
     /**
      * Upload a stream, using the given streamName.
+     * @param streamName: Arbitrary stream name.
+     * @param stream: Stream to upload.
+     * @param retry: Number of times to retry failed S3 operations.
      */
-    public void upload (String streamName, InputStream stream)
+    public void upload (String streamName, InputStream stream, int retry)
         throws IOException
     {
         QueuedStreamReader reader;
@@ -75,7 +79,10 @@ public class UploadStreamer {
         readerThread = new Thread(reader, streamName + " Queue");
         readerThread.start();
 
-        /* Read blocks off the queue. */
+        /*
+         * Read blocks off the queue, upload the block,
+         * and increment the block ID accordingly.
+         */
         try {
             ByteBuffer block;
             long blockId = 0;
@@ -84,7 +91,9 @@ public class UploadStreamer {
                 byte[] data;
                 int length;
                 
-                /* Get access to the byte[] data. */
+                /*
+                 * Get access to the byte[] data.
+                 */
                 length = block.limit();
                 if (!block.hasArray()) {
                     /* No backing array, copy the data. */
@@ -95,19 +104,34 @@ public class UploadStreamer {
                     data = block.array();
                 }
 
-                /* Upload the S3 Object. */
+                /*
+                 * Upload the S3 Object.
+                 */
                 S3ByteArrayObject obj = new S3ByteArrayObject(streamName + "." +
                     Long.toString(blockId), data, 0, length);
 
-                try {
-                    _connection.putObject(_bucket, obj, AccessControlList.StandardPolicy.PRIVATE);                    
-                } catch (S3Exception s3e) {
-                    // XXX Retry
-                    readerThread.interrupt();
-                    throw new IOException("S3 Upload failure: " + s3e.getMessage());
+                for (int i = 0; i < retry; i++) {
+                    try {
+                        _connection.putObject(_bucket, obj, AccessControlList.StandardPolicy.PRIVATE);
+                        break; // Succeeded, exit the retry loop.
+
+                    } catch (S3Exception s3e) {
+                        /* Error occured. If the next loop will hit the maximum
+                         * retry count, throw an exception. Otherwise, log an
+                         * error */
+                        if (i < retry - 1) {
+                            System.err.println("S3 Failure uploading " +
+                                obj.getKey() + ": " + s3e.getMessage());
+                        } else {
+                            readerThread.interrupt();
+                            throw new IOException("S3 Upload failure: " + s3e.getMessage());                            
+                        }
+                    }
                 }
 
-                /* Increment the block id. */
+                /*
+                 * Increment the block id.
+                 */
                 blockId++;
             }
         } catch (InterruptedException ie) {

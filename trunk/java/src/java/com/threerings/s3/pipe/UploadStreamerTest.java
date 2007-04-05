@@ -77,7 +77,7 @@ public class UploadStreamerTest extends TestCase
         /* Fire up an uploader with a 1 byte block size. */
         InputStream input = new FileInputStream(_testFile);
         UploadStreamer streamer = new UploadStreamer(_conn, _bucket, 2);
-        streamer.upload("test stream", input);
+        streamer.upload("test stream", input, 5);
     }
 
     /** Temporary test data file. */
