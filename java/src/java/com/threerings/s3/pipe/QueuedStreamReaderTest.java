@@ -54,10 +54,10 @@ public class QueuedStreamReaderTest extends TestCase
     {
         _testFile = File.createTempFile("s3pipe", "data");
         
-        /* Populate the file with 512k of data */
+        /* Populate the file with 100K of data */
         FileOutputStream output = new FileOutputStream(_testFile);
         int written = 0;
-        while (written < 512 * 1024) {
+        while (written < 100 * 1024) {
             output.write(TEST_DATA);
             written += TEST_DATA.length;
         }
