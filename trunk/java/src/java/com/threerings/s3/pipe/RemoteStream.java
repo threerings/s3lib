@@ -107,6 +107,13 @@ public class RemoteStream {
     }
 
 
+    /**
+     * Retrieve a remote stream info record.
+     * Will return null if the stream is not found.
+     *
+     * Throws RemoteStreamException.UnsupportedVersionException if the info
+     * record version is unsupported.
+     */
     public RemoteStreamInfo getStreamInfo ()
         throws RemoteStreamException, IOException, S3Exception
     {
@@ -130,29 +137,9 @@ public class RemoteStream {
             return new RemoteStreamInfo(version);
 
         } catch (S3ServerException.NoSuchKeyException nsk) {
-            throw new RemoteStreamException.StreamNotFoundException("No such stream (" + _streamName + ")");
+            return null;
         } catch (NumberFormatException nfe) {
             throw new RemoteStreamException.UnsupportedVersionException("Unsupported version: " + versionString);
-        }
-    }
-
-
-    /**
-     * Returns true if the stream exists on the remote server.
-     * False otherwise.
-     */
-    public boolean exists ()
-        throws RemoteStreamException
-    {
-        try {
-            getStreamInfo();
-            return true;
-        } catch (RemoteStreamException.StreamNotFoundException snf) {
-            return false;
-        } catch (S3Exception s3e) {
-            throw new RemoteStreamException.ServiceException("S3 failure: " + s3e.getMessage(), s3e);
-        } catch (IOException ioe) {
-            throw new RemoteStreamException.ServiceException("Network failure: " + ioe.getMessage(), ioe);            
         }
     }
 
