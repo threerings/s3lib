@@ -228,9 +228,22 @@ public class S3Connection
 
         executeS3Method(method);
     }
-    
+
     /**
-     * Upload a file-backed S3 Object.
+     * Upload an S3 Object, using a PRIVATE access policy.
+     * Equivalent to calling putObject(bucketName, object, AccessControlList.StandardPolicy.PRIVATE)
+     *
+     * @param bucketName: Destination bucket.
+     * @param object: S3 Object.
+     */
+    public void putObject (String bucketName, S3Object object)
+        throws IOException, S3Exception
+    {
+        putObject(bucketName, object, AccessControlList.StandardPolicy.PRIVATE);
+    }
+
+    /**
+     * Upload an S3 Object.
      * @param bucketName: Destination bucket.
      * @param object: S3 Object.
      * @param accessPolicy: S3 Object's access policy. 

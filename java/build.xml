@@ -133,7 +133,7 @@
     <!-- build the javadoc documentation -->
     <target name="javadoc" depends="prepare">
         <javadoc sourcepath="src/java"
-            packagenames="com.threerings.*"
+            packagenames="com.threerings.s3.client.*"
             destdir="${javadoc.home}"
             additionalparam="-breakiterator"
             link="http://dev.threerings.net/devel/docs/s3lib/">
