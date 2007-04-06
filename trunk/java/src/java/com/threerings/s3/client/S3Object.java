@@ -42,6 +42,7 @@ import java.io.FileNotFoundException;
  * A representation of a single object stored in S3.
  */
 public abstract class S3Object {
+    /** Default binary mime type. */
     public static final String DEFAULT_MIME_TYPE = "binary/octet-stream";
 
     /**

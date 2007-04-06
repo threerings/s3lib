@@ -1,5 +1,5 @@
 /* 
- * DownloadStreamer.java vi:ts=4:sw=4:expandtab:
+ * RemoteStreamException.java vi:ts=4:sw=4:expandtab:
  *
  * Copyright (c) 2007 Three Rings Design, Inc.
  * All rights reserved.
@@ -31,44 +31,40 @@
 
 package com.threerings.s3.pipe;
 
-import com.threerings.s3.client.acl.AccessControlList;
-import com.threerings.s3.client.S3ByteArrayObject;
-import com.threerings.s3.client.S3Connection;
-import com.threerings.s3.client.S3Exception;
-
-import java.io.OutputStream;
-import java.io.IOException;
-
-import java.nio.ByteBuffer;
-
-/*
- * Downloads a series of S3Objects and re-assembles them as a stream.
+/**
+ * Remote stream error.
  */
-class DownloadStreamer {
-    /*
-     * Instantiate a new stream downloader.
-     * @param connect: S3 Connection.
-     * @param bucket: Destination S3 bucket.
-     */
-    public DownloadStreamer (S3Connection connection, String bucket)
-    {
-        _connection = connection;
-        _bucket = bucket;
+public class RemoteStreamException extends Exception {
+    public RemoteStreamException (String message) {
+        super(message);
     }
 
-    /**
-     * Download the given streamName.
-     */
-    public void download (String streamName, OutputStream output)
-        throws IOException
-    {
-        RemoteStream stream = new RemoteStream(_connection, _bucket, streamName);
-        long blockId = 0;
+    public RemoteStreamException (String message, Throwable cause) {
+        super(message, cause);
     }
 
-    /** S3 Connection. */
-    private S3Connection _connection;
+    /** The requested stream was not found.  */
+    public static class StreamNotFoundException extends RemoteStreamException {
+        public StreamNotFoundException (String message) {
+            super(message);
+        }
+    }
 
-    /** S3 Bucket. */
-    private String _bucket;
+    /** A service exception occured. */
+    public static class ServiceException extends RemoteStreamException {
+        public ServiceException (String message) {
+            super(message);
+        }
+
+        public ServiceException (String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
+
+    /** The stream version is not supported. */
+    public static class UnsupportedVersionException extends RemoteStreamException {
+        public UnsupportedVersionException (String message) {
+            super(message);
+        }
+    }
 }

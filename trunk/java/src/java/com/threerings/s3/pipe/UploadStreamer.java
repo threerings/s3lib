@@ -45,7 +45,7 @@ import java.nio.ByteBuffer;
  * Uploads streams as a series of S3Objects.
  * UploadStreams are re-usable, but not thread-safe.
  */
-public class UploadStreamer {
+class UploadStreamer {
     /*
      * Instantiate a new stream uploader.
      * S3 transactions are expensive -- the block size should be large.
@@ -74,15 +74,31 @@ public class UploadStreamer {
         QueuedStreamReader reader;
         Thread readerThread;
         String encodedName;
-        Stream stream;
+        RemoteStream stream;
+        RemoteStreamInfo streamRecord;
 
         /* Create and start the stream reader. */
         reader = new QueuedStreamReader(inputData, _blocksize, QUEUE_SIZE);
         readerThread = new Thread(reader, streamName + " Queue");
         readerThread.start();
 
-        /* Instantiate a stream reference */
-        stream = new Stream(streamName);
+        /* Instantiate a stream reference. */
+        streamRecord = null;
+        stream = new RemoteStream(_connection, _bucket, streamName);
+
+        /*
+        for (int i = 0; i < retry; i++) {
+            try {
+                stream = new RemoteStream(_connection, _bucket, streamName);
+            } catch (IOException ioe) {
+
+            } catch (S3Exception s3e) {
+
+            } catch (RemoteStreamException rse) {
+
+            }            
+        }
+        */
 
         /*
          * Read blocks off the queue, upload the block,
@@ -116,20 +132,28 @@ public class UploadStreamer {
                     stream.streamBlockKey(blockId), data, 0, length);
 
                 for (int i = 0; i < retry; i++) {
+                    Exception e = null;
+
                     try {
                         _connection.putObject(_bucket, obj, AccessControlList.StandardPolicy.PRIVATE);
                         break; // Succeeded, exit the retry loop.
 
                     } catch (S3Exception s3e) {
+                        e = s3e;
+                    } catch (IOException ioe) {
+                        e = ioe;
+                    }
+                    
+                    if (e != null) {
                         /* Error occured. If the next loop will hit the maximum
                          * retry count, throw an exception. Otherwise, log an
                          * error */
                         if (i < retry - 1) {
                             System.err.println("S3 Failure uploading " +
-                                obj.getKey() + ": " + s3e.getMessage());
+                                obj.getKey() + ": " + e.getMessage());
                         } else {
                             readerThread.interrupt();
-                            throw new IOException("S3 Upload failure: " + s3e.getMessage());                            
+                            throw new IOException("S3 Upload failure: " + e.getMessage());                            
                         }
                     }
                 }

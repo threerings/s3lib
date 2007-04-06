@@ -1,5 +1,5 @@
 /* 
- * StreamTest.java vi:ts=4:sw=4:expandtab:
+ * RemoteStreamTest.java vi:ts=4:sw=4:expandtab:
  *
  * Copyright (c) 2005 - 2007 Three Rings Design, Inc.
  * All rights reserved.
@@ -31,42 +31,89 @@
 
 package com.threerings.s3.pipe;
 
+import com.threerings.s3.client.S3Connection;
+import com.threerings.s3.client.S3ConnectionTest;
+
+import junit.framework.TestCase;
+
 import java.io.UnsupportedEncodingException;
 
 import org.apache.commons.codec.binary.Base64;
-
-import junit.framework.TestCase;
 
 /**
  * Most of these tests are hardwired to fail if encoding/decoding routines are
  * changed, as any changes will result in lost access to old data.
  */
-public class StreamTest extends TestCase
+public class RemoteStreamTest extends TestCase
 {
-    public StreamTest (String name) {
+    public RemoteStreamTest (String name) {
         super(name);
     }
 
     public void setUp ()
         throws Exception
     {
-        _stream = new Stream(STREAM_NAME);
+        _conn = S3ConnectionTest.createConnection();
+        _bucket = S3ConnectionTest.generateTestBucketName();
+        _stream = new RemoteStream(_conn, _bucket, STREAM_NAME);
+
+        /* Set up our test bucket. */
+        _conn.createBucket(_bucket, null);
     }
 
     public void tearDown ()
         throws Exception
     {
+        S3ConnectionTest.deleteBucket(_conn, _bucket);
+    }
+
+    public void testPutStreamInfo ()
+        throws Exception
+    {
+        _stream.putStreamInfo();
+    }
+
+    public void testGetStreamInfoRecord ()
+        throws Exception
+    {
+        RemoteStreamInfo info;
+
+        try {
+            info = _stream.getStreamInfo();
+            fail("getStreamInfo() on a nonexistent stream did not throw a StreamNotFoundException");
+        } catch (RemoteStreamException.StreamNotFoundException snf) {
+            // Expected
+        }
+
+        _stream.putStreamInfo();
+        info = _stream.getStreamInfo();
+        assertEquals(RemoteStream.VERSION, info.getVersion());
+    }
+
+    public void testExists ()
+        throws Exception
+    {
+        assertTrue(!_stream.exists());
+        _stream.putStreamInfo();
+        assertTrue(_stream.exists());
     }
 
     public void testStreamInfoKey () {
-        assertEquals(ENCODED_STREAM_NAME + ".info", _stream.streamInfoKey());
+        assertEquals("stream." + ENCODED_STREAM_NAME + ".info", _stream.streamInfoKey());
     }
 
     public void testStreamBlockKey () {
-        assertEquals(ENCODED_STREAM_NAME + ".block.0", _stream.streamBlockKey(0));
+        assertEquals("stream." + ENCODED_STREAM_NAME + ".block.0", _stream.streamBlockKey(0));
     }
 
-    private Stream _stream;
+    /** Test stream. */
+    private RemoteStream _stream;
+
+    /** AWS S3 Connection. */
+    S3Connection _conn;
+
+    /** Test bucket name */
+    String _bucket;
 
     /** Test stream name. */
     private static final String STREAM_NAME = "aStreamName";
