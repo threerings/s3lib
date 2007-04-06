@@ -29,9 +29,6 @@ public class AccessControlList {
         /** Owner gets full control, and any principal authenticated Amazon S3 user is granted read access. */
         AUTHENTICATED_READ("authenticated-read");
 
-        /** Header name for the canned access policy header. */
-        public static final String AMAZON_HEADER = "x-amz-acl";
-
         /**
          * Construct the standard policy with the provided S3 API string representation.
          * See http://docs.amazonwebservices.com/AmazonS3/2006-03-01/

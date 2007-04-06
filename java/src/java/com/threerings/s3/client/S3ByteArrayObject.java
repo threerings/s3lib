@@ -53,8 +53,8 @@ public class S3ByteArrayObject extends S3Object {
      * Instantiate an S3 byte object with the given key and data.
      * The data is not copied, and a reference is retained.
      *
-     * @param key: S3 object key.
-     * @param data: Object data.
+     * @param key S3 object key.
+     * @param data Object data.
      */
     public S3ByteArrayObject(String key, byte[] data) {
         this(key, data, S3Object.DEFAULT_MIME_TYPE);
@@ -73,7 +73,7 @@ public class S3ByteArrayObject extends S3Object {
      * The data is not copied, and a reference is retained.
      *
      * @param key S3 object key.
-     * @param data: Object data;
+     * @param data Object data;
      * @param mimeType Object's MIME type.
      */
     public S3ByteArrayObject(String key, byte[] data, int offset, int length, String mimeType)

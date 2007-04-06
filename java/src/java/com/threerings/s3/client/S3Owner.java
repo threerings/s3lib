@@ -50,8 +50,8 @@ public class S3Owner {
     }
 
     /** Canonical AWS ID. */
-    protected String _id;
+    private String _id;
 
     /** AWS display name. */
-    protected String _displayName;
+    private String _displayName;
 }

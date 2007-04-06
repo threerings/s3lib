@@ -132,13 +132,11 @@
 
     <!-- build the javadoc documentation -->
     <target name="javadoc" depends="prepare">
-        <javadoc sourcepath="src/java"
-            packagenames="com.threerings.s3.client.*"
-            destdir="${javadoc.home}"
-            additionalparam="-breakiterator"
-            link="http://dev.threerings.net/devel/docs/s3lib/">
+        <javadoc sourcepath="src/java" packagenames="com.threerings.s3.client.*" destdir="${javadoc.home}" additionalparam="-breakiterator">
             <classpath refid="classpath"/>
-            <link href="http://java.sun.com/j2se/1.4/docs/api/"/>
+    	    <link href="http://java.sun.com/j2se/1.5/docs/api/"/>
+    	    <!-- Exclude private packages from the java docs -->
+            <excludepackage name="com.threerings.s3.client.xml"/>
         </javadoc>
     </target>
 

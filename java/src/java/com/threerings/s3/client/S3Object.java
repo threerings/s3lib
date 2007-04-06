@@ -68,7 +68,7 @@ public abstract class S3Object {
      * Instantiate an S3 Object with the given key, mime type, and metadata.
      * @param key S3 object key.
      * @param mimeType Object's MIME type.
-     * @param metadata: Object's metadata. Metadata keys must be a single, ASCII
+     * @param metadata Object's metadata. Metadata keys must be a single, ASCII
      *     string, and may not contain spaces. Metadata values must also be ASCII,
      *     and any leading or trailing spaces may be stripped. 
      */
@@ -130,11 +130,11 @@ public abstract class S3Object {
     public abstract long length ();
     
     /** S3 object name. */
-    protected String _key;
+    private String _key;
     
     /** S3 object mime-type. */
-    protected String _mimeType;
+    private String _mimeType;
     
     /** S3 object meta-data. */
-    protected Map<String,String> _metadata;
+    private Map<String,String> _metadata;
 }

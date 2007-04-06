@@ -55,7 +55,7 @@ public class UploadStreamerTest extends TestCase
         _testFile = File.createTempFile("s3pipe", "data");
 
         /* Set up our test bucket. */
-        _conn.createBucket(_bucket, null);
+        _conn.createBucket(_bucket);
 
         /* Populate the file with 10 bytes. We use a very small stream in
          * order to save bandwidth -- S3 requests cost money! */
