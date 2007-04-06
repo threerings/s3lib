@@ -82,14 +82,16 @@ class UploadStreamer {
         readerThread = new Thread(reader, streamName + " Queue");
         readerThread.start();
 
-        /* Instantiate a stream reference. */
+        /* Instantiate a stream reference, with a retry block */
         streamRecord = null;
         stream = new RemoteStream(_connection, _bucket, streamName);
 
-        /*
         for (int i = 0; i < retry; i++) {
             try {
                 stream = new RemoteStream(_connection, _bucket, streamName);
+                if (stream.getStreamInfo() != null) {
+                    throw new IOException("Stream \"" + streamName + "\" exits.");
+                }
             } catch (IOException ioe) {
 
             } catch (S3Exception s3e) {
@@ -98,7 +100,6 @@ class UploadStreamer {
 
             }            
         }
-        */
 
         /*
          * Read blocks off the queue, upload the block,
