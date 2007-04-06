@@ -138,11 +138,8 @@ class UploadStreamer {
                     try {
                         _connection.putObject(_bucket, obj, AccessControlList.StandardPolicy.PRIVATE);
                         break; // Succeeded, exit the retry loop.
-
                     } catch (S3Exception s3e) {
                         e = s3e;
-                    } catch (IOException ioe) {
-                        e = ioe;
                     }
                     
                     if (e != null) {

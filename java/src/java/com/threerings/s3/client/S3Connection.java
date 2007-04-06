@@ -36,6 +36,7 @@ import com.threerings.s3.client.acl.AccessControlList;
 
 import java.io.InputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -168,7 +169,7 @@ public class S3Connection
      * metadata for this bucket (can be null).
      */
     public void createBucket (String bucketName, Map<String,List<String>> headers)
-        throws IOException, S3Exception
+        throws S3Exception
     {
         PutMethod method;
         try {
@@ -186,7 +187,7 @@ public class S3Connection
      * List a bucket's contents.
      */
     public S3ObjectListing listObjects (String bucketName)
-        throws IOException, S3Exception
+        throws S3Exception
     {
         GetMethod method;
         InputStream stream;
@@ -203,7 +204,10 @@ public class S3Connection
         try {
             return new S3ObjectListing(method.getResponseBodyAsStream());          
         } catch (SAXException se) {
-            throw new S3ClientException("Error parsing bucket GET response: " + se, se);
+            throw new S3ClientException("Error parsing bucket GET response: " + se.getMessage(), se);
+        } catch (IOException ioe) {
+            throw new S3ClientException.NetworkException("Error receiving bucket GET response: " +
+                ioe.getMessage(), ioe);
         }
     }
 
@@ -215,7 +219,7 @@ public class S3Connection
      * headers to pass (can be null).
      */
     public void deleteBucket (String bucketName, Map<String,List<String>> headers)
-        throws IOException, S3Exception
+        throws S3Exception
     {
         DeleteMethod method;
         try {
@@ -237,7 +241,7 @@ public class S3Connection
      * @param object: S3 Object.
      */
     public void putObject (String bucketName, S3Object object)
-        throws IOException, S3Exception
+        throws S3Exception
     {
         putObject(bucketName, object, AccessControlList.StandardPolicy.PRIVATE);
     }
@@ -250,7 +254,7 @@ public class S3Connection
      */
     public void putObject (String bucketName, S3Object object,
         AccessControlList.StandardPolicy accessPolicy)
-        throws IOException, S3Exception
+        throws S3Exception
     {
         PutMethod method;
         byte[] checksum;
@@ -274,8 +278,13 @@ public class S3Connection
 
         // Compute and set the content-md5 value (base64 of 128bit digest)
         // http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.15
-        checksum = Base64.encodeBase64(object.getMD5Checksum());
-        method.setRequestHeader(CONTENT_MD5_HEADER, new String(checksum, "ascii"));
+        try {
+            checksum = Base64.encodeBase64(object.getMD5Checksum());
+            method.setRequestHeader(CONTENT_MD5_HEADER, new String(checksum, "ascii"));            
+        } catch (UnsupportedEncodingException uee) {
+            // ASCII must always be supported.
+            throw new RuntimeException("Missing ASCII encoding");
+        }
 
         // Set any metadata fields
         for (Map.Entry<String,String> entry : object.getMetadata().entrySet()) {
@@ -293,7 +302,7 @@ public class S3Connection
      * @param objectKey: Object key.
      */
     public S3Object getObject (String bucketName, String objectKey)
-        throws IOException, S3Exception
+        throws S3Exception
     {
         GetMethod method;
         InputStream response;
@@ -336,6 +345,9 @@ public class S3Connection
         } catch (DecoderException de) {
             throw new S3Exception("S3 returned an invalid " + S3_MD5_HEADER + " header: " +
                 de);
+        } catch (UnsupportedEncodingException uee) {
+            // UTF8 must always be supported.
+            throw new RuntimeException("Missing UTF8 encoding");
         }
 
         // Retrieve metadata
@@ -353,7 +365,13 @@ public class S3Connection
 
         // Get the response body. This is an "auto closing" stream --
         // it will close the HTTP connection when the stream is closed.
-        response = method.getResponseBodyAsStream();
+        try {
+            response = method.getResponseBodyAsStream();            
+        } catch (IOException ioe) {
+            throw new S3ClientException.NetworkException("Error receiving object GET response: " +
+                ioe.getMessage(), ioe);
+        }
+
         if (response == null) {
             // We should always receive a response!
             throw new S3Exception("S3 failed to return any document body");
@@ -369,7 +387,7 @@ public class S3Connection
      * @param object S3 Object.
      */
     public void deleteObject (String bucketName, String key)
-        throws IOException, S3Exception
+        throws S3Exception
     {
         DeleteMethod method;
         try {
@@ -391,7 +409,7 @@ public class S3Connection
      * @param method HTTP method to execute.
      */
     protected void executeS3Method (HttpMethod method)
-        throws IOException, S3Exception
+        throws S3Exception
     {
         int statusCode;
         
@@ -399,21 +417,32 @@ public class S3Connection
         S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, null);
         
         // Execute the request
-        statusCode = _awsHttpClient.executeMethod(method);
+        try {
+            statusCode = _awsHttpClient.executeMethod(method);            
+        } catch (IOException ioe) {
+            throw new S3ClientException.NetworkException("Network error executing S3 method: " +
+                ioe.getMessage(), ioe);
+        }
+
         if (!(statusCode >= HttpStatus.SC_OK &&
             statusCode < HttpStatus.SC_MULTIPLE_CHOICES)) {
             // Request failed, throw exception
             InputStream stream;
             byte[] errorDoc = new byte[S3_MAX_ERROR_SIZE];
 
-            stream = method.getResponseBodyAsStream();
-            if (stream == null) {
-                // We should always receive a response!
-                throw new S3Exception("S3 failed to return an error " +
-                    "response for HTTP status code: "+ statusCode);
+            try {
+                stream = method.getResponseBodyAsStream();
+                if (stream == null) {
+                    // We should always receive a response!
+                    throw new S3Exception("S3 failed to return an error " +
+                        "response for HTTP status code: "+ statusCode);
+                }
+
+                stream.read(errorDoc, 0, errorDoc.length);
+            } catch (IOException ioe) {
+                throw new S3ClientException.NetworkException("Network error receiving S3 error response: " + ioe.getMessage(), ioe);
             }
 
-            stream.read(errorDoc, 0, errorDoc.length);
             method.releaseConnection();
             throw S3ServerException.exceptionForS3Error(new String(errorDoc).trim());
         }
