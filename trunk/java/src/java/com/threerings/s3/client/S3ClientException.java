@@ -54,4 +54,12 @@ public class S3ClientException extends S3Exception
             super(message, cause);
         }
     }
+
+    /** Network IO Failure.
+      * NetworkException.getCause() will generally return an IOException. */
+    public static class NetworkException extends S3ClientException {
+        public NetworkException (String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
 }
