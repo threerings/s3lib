@@ -78,24 +78,13 @@ public class RemoteStreamTest extends TestCase
     {
         RemoteStreamInfo info;
 
-        try {
-            info = _stream.getStreamInfo();
-            fail("getStreamInfo() on a nonexistent stream did not throw a StreamNotFoundException");
-        } catch (RemoteStreamException.StreamNotFoundException snf) {
-            // Expected
-        }
+        /* No info record. */
+        assertNull(_stream.getStreamInfo());
 
+        /* With an info record. */
         _stream.putStreamInfo();
         info = _stream.getStreamInfo();
         assertEquals(RemoteStream.VERSION, info.getVersion());
-    }
-
-    public void testExists ()
-        throws Exception
-    {
-        assertTrue(!_stream.exists());
-        _stream.putStreamInfo();
-        assertTrue(_stream.exists());
     }
 
     public void testStreamInfoKey () {
