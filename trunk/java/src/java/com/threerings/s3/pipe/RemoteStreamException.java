@@ -43,21 +43,10 @@ public class RemoteStreamException extends Exception {
         super(message, cause);
     }
 
-    /** The requested stream was not found.  */
-    public static class StreamNotFoundException extends RemoteStreamException {
-        public StreamNotFoundException (String message) {
+    /** The stream (already) exists. */
+    public static class StreamExists extends RemoteStreamException {
+        public StreamExists (String message) {
             super(message);
-        }
-    }
-
-    /** A service exception occured. */
-    public static class ServiceException extends RemoteStreamException {
-        public ServiceException (String message) {
-            super(message);
-        }
-
-        public ServiceException (String message, Throwable cause) {
-            super(message, cause);
         }
     }
 

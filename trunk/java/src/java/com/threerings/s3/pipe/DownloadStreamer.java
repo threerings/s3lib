@@ -60,10 +60,14 @@ class DownloadStreamer {
      * Download the given streamName.
      */
     public void download (String streamName, OutputStream output)
-        throws IOException
+        throws S3Exception, RemoteStreamException
     {
-        RemoteStream stream = new RemoteStream(_connection, _bucket, streamName);
+        RemoteStream stream;
+        RemoteStreamInfo info;
         long blockId = 0;
+
+        stream = new RemoteStream(_connection, _bucket, streamName);
+        info = stream.getStreamInfo();
     }
 
     /** S3 Connection. */

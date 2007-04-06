@@ -93,7 +93,7 @@ public class RemoteStream {
      * that are attached to a zero-length object.
      */
     public void putStreamInfo ()
-        throws RemoteStreamException, IOException, S3Exception
+        throws S3Exception, RemoteStreamException
     {
         Map<String,String> metadata = new HashMap<String,String>();
         S3ByteArrayObject infoObject = new S3ByteArrayObject(streamInfoKey(), new byte[0], S3Object.DEFAULT_MIME_TYPE);
@@ -115,7 +115,7 @@ public class RemoteStream {
      * record version is unsupported.
      */
     public RemoteStreamInfo getStreamInfo ()
-        throws RemoteStreamException, IOException, S3Exception
+        throws S3Exception, RemoteStreamException
     {
         S3Object object;
         Map<String,String> metadata;
