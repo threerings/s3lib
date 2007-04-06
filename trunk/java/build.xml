@@ -66,6 +66,8 @@
 
     <!-- build the java class files -->
     <target name="compile" depends="prepare">
+        <depend srcdir="src/java" destdir="${deploy.dir}/classes"
+            cache="${deploy.dir}/depcache"/>
         <javac srcdir="src/java" destdir="${deploy.dir}/classes"
             debug="on" optimize="${build.optimize}" deprecation="on"
             source="1.5" target="1.5">
