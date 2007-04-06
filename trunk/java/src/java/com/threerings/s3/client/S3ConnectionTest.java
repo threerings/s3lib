@@ -82,7 +82,7 @@ public class S3ConnectionTest extends TestCase
         }
 
         /* Delete the bucket. */
-        conn.deleteBucket(bucketName, null);
+        conn.deleteBucket(bucketName);
     }
 
     /**
@@ -114,7 +114,7 @@ public class S3ConnectionTest extends TestCase
         _fileObj = new S3FileObject("aKey", _testFile);
         
         // Create the test bucket
-        _conn.createBucket(_testBucketName, null);
+        _conn.createBucket(_testBucketName);
     }
 
     public void tearDown ()
@@ -128,8 +128,8 @@ public class S3ConnectionTest extends TestCase
         throws Exception
     {
         // No exception, all is well.
-        _conn.createBucket(_testBucketName + "testCreateBucket", null);
-        _conn.deleteBucket(_testBucketName + "testCreateBucket", null);
+        _conn.createBucket(_testBucketName + "testCreateBucket");
+        _conn.deleteBucket(_testBucketName + "testCreateBucket");
     }
 
 
@@ -253,7 +253,7 @@ public class S3ConnectionTest extends TestCase
     {
         S3Connection badConn = new S3Connection(getId(), "bad key");
         try {
-            badConn.createBucket(_testBucketName, null);
+            badConn.createBucket(_testBucketName);
             fail("Did not throw S3SignatureDoesNotMatchException");            
         } catch (S3ServerException.SignatureDoesNotMatchException e) {
             // Do nothing

@@ -56,7 +56,7 @@ import java.util.SortedMap;
 import java.util.TimeZone;
 import java.util.TreeMap;
 
-public class S3Utils {
+class S3Utils {
     /** Header prefix for generic S3 headers. */
     static final String AMAZON_HEADER_PREFIX = "x-amz-";
 
@@ -66,6 +66,9 @@ public class S3Utils {
     /** Default AWS S3 Host. */
     static final String DEFAULT_HOST = "s3.amazonaws.com";
 
+    /** Header for S3 access settings. */
+    static final String ACL_HEADER = "x-amz-acl";
+
     /**
      * Sign (SHA-1 HMAC) a given AWS web request using the provided key.
      * The canonical request format used for signing is defined by the
@@ -74,7 +77,8 @@ public class S3Utils {
      *
      * TODO: Fix expires vs. date handling.
      *
-     * @param awsSecretAccessKey The secret string used to generate the HMAC.
+     * @param awsKeyId AWS ID
+     * @param awsSecretKey The secret string used to generate the HMAC.
      * @param method The HTTP method (request) to sign.
      * @param expires The expiration date for the signature
      */

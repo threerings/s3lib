@@ -58,7 +58,7 @@ public class RemoteStreamTest extends TestCase
         _stream = new RemoteStream(_conn, _bucket, STREAM_NAME);
 
         /* Set up our test bucket. */
-        _conn.createBucket(_bucket, null);
+        _conn.createBucket(_bucket);
     }
 
     public void tearDown ()

@@ -73,7 +73,6 @@ import org.xml.sax.SAXException;
  */
 public class S3Connection
 {
-
     /**
      * Create a new interface to interact with S3 with the given credentials.
      *
@@ -121,7 +120,6 @@ public class S3Connection
      * @param awsKeyId Your unique AWS user id.
      * @param awsSecretKey The secret string used to generate signatures
      *        for authentication.
-     * @param useSSL True if HTTPS should be used to connect to S3.
      * @param host Which host to connect to. Usually, this will be s3.amazonaws.com
      * @param port Port to connect to.
      */
@@ -163,12 +161,8 @@ public class S3Connection
     /**
      * Creates a new bucket.
      * @param bucketName The name of the bucket to create.
-     * @param headers A Map of String to List of Strings representing the http
-     * headers to pass (can be null).
-     * @param metadata A Map of String to List of Strings representing the s3
-     * metadata for this bucket (can be null).
      */
-    public void createBucket (String bucketName, Map<String,List<String>> headers)
+    public void createBucket (String bucketName)
         throws S3Exception
     {
         PutMethod method;
@@ -215,10 +209,8 @@ public class S3Connection
     /**
      * Deletes a bucket.
      * @param bucketName The name of the bucket to delete.
-     * @param headers A Map of String to List of Strings representing the http
-     * headers to pass (can be null).
      */
-    public void deleteBucket (String bucketName, Map<String,List<String>> headers)
+    public void deleteBucket (String bucketName)
         throws S3Exception
     {
         DeleteMethod method;
@@ -237,8 +229,8 @@ public class S3Connection
      * Upload an S3 Object, using a PRIVATE access policy.
      * Equivalent to calling putObject(bucketName, object, AccessControlList.StandardPolicy.PRIVATE)
      *
-     * @param bucketName: Destination bucket.
-     * @param object: S3 Object.
+     * @param bucketName Destination bucket.
+     * @param object S3 Object.
      */
     public void putObject (String bucketName, S3Object object)
         throws S3Exception
@@ -248,9 +240,9 @@ public class S3Connection
 
     /**
      * Upload an S3 Object.
-     * @param bucketName: Destination bucket.
-     * @param object: S3 Object.
-     * @param accessPolicy: S3 Object's access policy. 
+     * @param bucketName Destination bucket.
+     * @param object S3 Object.
+     * @param accessPolicy S3 Object's access policy. 
      */
     public void putObject (String bucketName, S3Object object,
         AccessControlList.StandardPolicy accessPolicy)
@@ -273,8 +265,7 @@ public class S3Connection
             object.getInputStream(), object.length(), object.getMimeType()));
 
         // Set the access policy
-        method.setRequestHeader(AccessControlList.StandardPolicy.AMAZON_HEADER,
-            accessPolicy.toString());
+        method.setRequestHeader(S3Utils.ACL_HEADER, accessPolicy.toString());
 
         // Compute and set the content-md5 value (base64 of 128bit digest)
         // http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.15
@@ -298,8 +289,8 @@ public class S3Connection
 
     /**
      * Retrieve a S3Object.
-     * @param bucketName: Source bucket.
-     * @param objectKey: Object key.
+     * @param bucketName Source bucket.
+     * @param objectKey Object key.
      */
     public S3Object getObject (String bucketName, String objectKey)
         throws S3Exception
@@ -384,20 +375,20 @@ public class S3Connection
     /**
      * Delete a remote S3 Object.
      * @param bucketName Remote bucket.
-     * @param object S3 Object.
+     * @param objectKey S3 object key.
      */
-    public void deleteObject (String bucketName, String key)
+    public void deleteObject (String bucketName, String objectKey)
         throws S3Exception
     {
         DeleteMethod method;
         try {
             method = new DeleteMethod("/" +
                 _urlEncoder.encode(bucketName) + "/" +
-                _urlEncoder.encode(key));
+                _urlEncoder.encode(objectKey));
         } catch (EncoderException e) {
             throw new S3ClientException.InvalidURIException(
             "Encoding error for bucket " + bucketName + " and key " +
-            key + ": " + e);
+            objectKey + ": " + e);
         }
 
         executeS3Method(method);
@@ -469,30 +460,30 @@ public class S3Connection
     }
 
     /** AWS Access ID. */
-    protected String _awsKeyId;
+    private String _awsKeyId;
     
     /** AWS Access Key. */
-    protected String _awsSecretKey;
+    private String _awsSecretKey;
     
     /** S3 HTTP client. */
-    protected HttpClient _awsHttpClient;
+    private HttpClient _awsHttpClient;
     
     /** URL encoder. */
-    protected URLCodec _urlEncoder = new URLCodec();
+    private URLCodec _urlEncoder = new URLCodec();
     
     /** Maximum size of S3's error output. Should never be larger than 2k!!! */
-    protected static final int S3_MAX_ERROR_SIZE = 2048;
+    private static final int S3_MAX_ERROR_SIZE = 2048;
 
     /** Header for MD5 checksum validation. */
-    protected static final String CONTENT_MD5_HEADER = "Content-MD5";
+    private static final String CONTENT_MD5_HEADER = "Content-MD5";
 
     /** Mime Type Header. */
-    protected static final String CONTENT_TYPE_HEADER = "Content-Type";
+    private static final String CONTENT_TYPE_HEADER = "Content-Type";
 
     /** Header for the MD5 digest in S3 GET responses. Not to be confused
      * with the Content-MD5 header that we use in PUT requests. */
-    protected static final String S3_MD5_HEADER = "ETag";
+    private static final String S3_MD5_HEADER = "ETag";
 
     /** Header prefix for object metadata. */
-    static final String S3_METADATA_PREFIX = "x-amz-meta-";
+    private static final String S3_METADATA_PREFIX = "x-amz-meta-";
 }
