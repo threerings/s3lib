@@ -42,6 +42,8 @@ import com.threerings.s3.client.S3ByteArrayObject;
 import com.threerings.s3.client.S3Connection;
 import com.threerings.s3.client.S3Exception;
 import com.threerings.s3.client.S3Object;
+import com.threerings.s3.client.S3ObjectEntry;
+import com.threerings.s3.client.S3ObjectListing;
 import com.threerings.s3.client.S3ServerException;
 
 import org.apache.commons.codec.binary.Base64;
@@ -144,7 +146,36 @@ public class RemoteStream {
     }
 
     /**
-     * Return the S3 key for a given encoded stream name's info field.
+     * Delete the remote stream data.
+     * May be called multiple times if a failure occurs.
+     */
+    public void delete ()
+        throws S3Exception, RemoteStreamException
+    {
+        S3ObjectListing listing;
+        String marker = null;
+
+        do {
+            /* List and delete all stream keys. */
+            listing = _connection.listObjects(_bucketName, streamPrefix(), marker, 1000, null);
+
+            for (S3ObjectEntry entry : listing.getEntries()) {
+                _connection.deleteObject(_bucketName, entry.getKey());
+            }
+
+            marker = listing.getNextMarker();
+        } while (listing.truncated());
+    }
+
+    /**
+     * Return the complete S3 prefix for this stream.
+     */
+    public String streamPrefix () {
+        return STREAM_PREFIX + FIELD_DELIMETER + _encodedStreamName + FIELD_DELIMETER;
+    }
+
+    /**
+     * Return the S3 key for the stream's info field.
      */
     public String streamInfoKey () {
         /* stream.<encoded stream name>.info */
@@ -154,7 +185,7 @@ public class RemoteStream {
 
 
     /**
-     * Return the S3 key for a given encoded stream name and block id.
+     * Return the S3 key for the stream's corresponding data block.
      */
     public String streamBlockKey (long blockId) {
         /* stream.<encoded stream name>.block.<blockId> */

@@ -33,9 +33,12 @@ package com.threerings.s3.pipe;
 
 import com.threerings.s3.client.S3Connection;
 import com.threerings.s3.client.S3ConnectionTest;
+import com.threerings.s3.client.S3ObjectListing;
 
 import junit.framework.TestCase;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 
 import org.apache.commons.codec.binary.Base64;
@@ -85,6 +88,21 @@ public class RemoteStreamTest extends TestCase
         _stream.putStreamInfo();
         info = _stream.getStreamInfo();
         assertEquals(RemoteStream.VERSION, info.getVersion());
+    }
+
+    public void testDeleteStream ()
+        throws Exception
+    {
+        /* Fire up an uploader with a 1 byte block size. */
+        InputStream input = new ByteArrayInputStream(new byte[10]);
+        UploadStreamer streamer = new UploadStreamer(_conn, _bucket, 2);
+        streamer.upload(STREAM_NAME, input, 5);
+    
+        RemoteStream stream = new RemoteStream(_conn, _bucket, STREAM_NAME);
+        stream.putStreamInfo();
+        stream.delete();
+        S3ObjectListing listing = _conn.listObjects(_bucket);
+        assertEquals(0, listing.getEntries().size());
     }
 
     public void testStreamInfoKey () {
