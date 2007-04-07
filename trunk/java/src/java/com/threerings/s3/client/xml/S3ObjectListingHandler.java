@@ -210,6 +210,10 @@ public class S3ObjectListingHandler extends DefaultHandler {
                     _data.nextMarker = getElementString();
                 }
 
+                else if (name.equals("Delimiter")) {
+                    _data.delimiter = getElementString();
+                }
+
                 else {
                     throw new UnsupportedElementException(name);
                 }
@@ -367,10 +371,10 @@ public class S3ObjectListingHandler extends DefaultHandler {
         public String bucketName;
 
         /** ListBucketResult.Prefix */
-        public String prefix = "";
+        public String prefix;
 
         /** ListBucketResult.Marker */
-        public String marker = "";
+        public String marker;
 
         /** ListBucketResult.MaxKeys */
         public int maxKeys;

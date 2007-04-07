@@ -117,6 +117,7 @@ public class S3ObjectListingHandlerTest extends TestCase
 "   <Prefix>aPrefix</Prefix>\n" +
 "   <Marker>aMarker</Marker>\n" +
 "   <MaxKeys>1000</MaxKeys>\n" +
+"   <Delimiter>.</Delimiter>" +
 "   <IsTruncated>false</IsTruncated>\n" +
 "   <Contents>\n" +
 "       <Key>aKey</Key>\n" +
