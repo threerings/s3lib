@@ -43,9 +43,16 @@ public class RemoteStreamException extends Exception {
         super(message, cause);
     }
 
+    /** The stream doesn't exist. */
+    public static class NoSuchStreamException extends RemoteStreamException {
+        public NoSuchStreamException (String message) {
+            super(message);
+        }
+    }
+
     /** The stream (already) exists. */
-    public static class StreamExists extends RemoteStreamException {
-        public StreamExists (String message) {
+    public static class StreamExistsException extends RemoteStreamException {
+        public StreamExistsException (String message) {
             super(message);
         }
     }
