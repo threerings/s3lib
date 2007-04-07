@@ -55,6 +55,9 @@ import org.xml.sax.SAXException;
  * can not be properly validated, thus, malformed input may result in invalid output,
  * possibly without reporting an error.
  * See http://docs.amazonwebservices.com/AmazonS3/2006-03-01/ListingKeysResponse.html
+ *
+ * @todo Validate max-keys, and restrict total data read, to ensure that a remote server
+ * can't fill our heap with a result set.
  */
 public class S3ObjectListingHandler extends DefaultHandler {
     public S3ObjectListingHandler () {
