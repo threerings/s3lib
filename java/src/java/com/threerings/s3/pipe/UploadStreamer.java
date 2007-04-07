@@ -78,7 +78,6 @@ class UploadStreamer {
         Thread readerThread;
         String encodedName;
         RemoteStream stream;
-        RemoteStreamInfo streamRecord;
 
         /* Create and start the stream reader. */
         reader = new QueuedStreamReader(inputData, _blocksize, QUEUE_SIZE);
@@ -86,18 +85,21 @@ class UploadStreamer {
         readerThread.start();
 
         /* Instantiate a stream reference, with a retry block */
-        streamRecord = null;
         stream = new RemoteStream(_connection, _bucket, streamName);
 
         for (int i = 0; i < retry; i++) {
-            stream = new RemoteStream(_connection, _bucket, streamName);
-
             /* The caller must handle any remote stream exceptions. */
             try {
                 /* Check if the stream exists */
                 if (stream.getStreamInfo() != null) {
                     throw new RemoteStreamException.StreamExistsException("Stream \"" + streamName + "\" exits.");
                 }
+                
+                /* Create the stream info record. */
+                stream.putStreamInfo();
+                
+                /* Success, exit the retry loop. */
+                break;
             } catch (S3Exception s3e) {
                 /* Transient error occured. If the next loop will hit the maximum
                  * retry count, throw an exception. Otherwise, log an
