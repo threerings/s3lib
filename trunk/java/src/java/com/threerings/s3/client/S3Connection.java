@@ -38,6 +38,7 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -56,6 +57,7 @@ import org.apache.commons.httpclient.HttpException;
 
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -178,19 +180,61 @@ public class S3Connection
 
 
     /**
-     * List a bucket's contents.
+     * List a bucket's contents. May return a truncated list.
      */
     public S3ObjectListing listObjects (String bucketName)
         throws S3Exception
     {
+        return listObjects(bucketName, null, null, 0, null);
+    }
+
+    /**
+     * List a bucket's contents.
+     * @param prefix Limits response to keys beginning with the provided prefix.
+     * @param marker Indicates where in the bucket to begin listing. The list
+     *  will only include keys that occur lexicographically after marker.
+     *  Specify null for no marker.
+     * @param maxKeys Maximum number of keys to return. The server may return
+     *  fewer keys, but never more. Specify 0 for no limit.
+     * @param delimiter Keys that contain the same string between the prefix
+     *  and the first occurence of the delimiter will be rolled up into a
+     *  single result element in the CommonPrefixes data. Specify null for no
+     *  delimiter.
+     */
+    public S3ObjectListing listObjects (String bucketName, String prefix, String marker, int maxKeys, String delimiter)
+        throws S3Exception
+    {
         GetMethod method;
         InputStream stream;
-        
+        List<NameValuePair> parameters = new ArrayList<NameValuePair>(4);
+
         try {
             method = new GetMethod("/" + _urlEncoder.encode(bucketName));
         } catch (EncoderException e) {
             throw new S3ClientException.InvalidURIException(
                 "Encoding error for bucket " + bucketName + ": " + e);            
+        }
+    
+        if (prefix != null) {
+            parameters.add(new NameValuePair(LIST_PREFIX_PARAMETER, prefix));
+        }
+
+        if (marker != null) {
+            parameters.add(new NameValuePair(LIST_MARKER_PARAMETER, marker));
+        }
+
+        if (maxKeys != 0) {
+            parameters.add(new NameValuePair(LIST_MAXKEYS_PARAMETER, Integer.toString(maxKeys)));
+        }
+
+        if (delimiter != null) {
+            parameters.add(new NameValuePair(LIST_DELIMITER_PARAMETER, delimiter));
+        }
+
+        if (parameters.size() > 0) {
+            method.setQueryString(
+                (NameValuePair[]) parameters.toArray(new NameValuePair[parameters.size()])
+            );
         }
 
         executeS3Method(method);
@@ -470,7 +514,19 @@ public class S3Connection
     
     /** URL encoder. */
     private URLCodec _urlEncoder = new URLCodec();
+
+    /** Prefix parameter. */
+    private static final String LIST_PREFIX_PARAMETER = "prefix";
+
+    /** Marker parameter. */
+    private static final String LIST_MARKER_PARAMETER = "marker";
     
+    /** Max Keys parameter. */
+    private static final String LIST_MAXKEYS_PARAMETER = "max-keys";
+
+    /** Delimiter parameter. */
+    private static final String LIST_DELIMITER_PARAMETER = "delimiter";
+
     /** Maximum size of S3's error output. Should never be larger than 2k!!! */
     private static final int S3_MAX_ERROR_SIZE = 2048;
 
