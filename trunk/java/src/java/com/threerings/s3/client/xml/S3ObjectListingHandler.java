@@ -457,8 +457,9 @@ public class S3ObjectListingHandler extends DefaultHandler {
                     throw new MissingElementException("Owner ID");
                 }
 
+                /* Display name might be missing. If so, we provide the ownerId */
                 if (ownerDisplayName == null) {
-                    throw new MissingElementException("Owner DisplayName");
+                    ownerDisplayName = ownerId;
                 }
 
                 S3Owner owner = new S3Owner(ownerId, ownerDisplayName);
