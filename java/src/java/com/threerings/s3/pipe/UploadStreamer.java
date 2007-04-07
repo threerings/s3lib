@@ -67,7 +67,7 @@ class UploadStreamer {
      * @param streamName: Arbitrary stream name.
      * @param inputData: Stream to upload.
      * @param retry: Number of times to retry failed S3 operations.
-     * @throws RemoteStreamException.StreamExists Thrown if the given stream
+     * @throws RemoteStreamException.StreamExistsException Thrown if the given stream
      *  currently exists.
      * @throws S3Exception Thrown if an S3 error occurs.
      */
@@ -96,15 +96,15 @@ class UploadStreamer {
             try {
                 /* Check if the stream exists */
                 if (stream.getStreamInfo() != null) {
-                    throw new RemoteStreamException.StreamExists("Stream \"" + streamName + "\" exits.");
+                    throw new RemoteStreamException.StreamExistsException("Stream \"" + streamName + "\" exits.");
                 }
             } catch (S3Exception s3e) {
                 /* Transient error occured. If the next loop will hit the maximum
                  * retry count, throw an exception. Otherwise, log an
                  * error */
                 if (i < retry - 1) {
-                    System.err.println("S3 Failure creating stream info record " +
-                        streamName + ": " + s3e.getMessage());
+                    System.err.println("S3 Failure creating stream info record for '" +
+                        streamName + "': " + s3e.getMessage());
                 } else {
                     throw s3e;                            
                 }
