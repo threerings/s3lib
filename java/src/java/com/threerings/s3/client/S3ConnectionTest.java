@@ -112,7 +112,7 @@ public class S3ConnectionTest extends TestCase
         fileOutput.write(TEST_DATA.getBytes("utf8"));
         fileOutput.close();
         _fileObj = new S3FileObject("aKey", _testFile);
-        
+
         // Create the test bucket
         _conn.createBucket(_testBucketName);
     }
@@ -187,6 +187,96 @@ public class S3ConnectionTest extends TestCase
         assertNotNull(owner.getDisplayName());
     }
 
+    /**
+     * Test bucket listing with a prefix
+     */
+    public void testListBucketPrefix ()
+        throws Exception
+    {
+        S3ObjectListing listing;
+        S3ByteArrayObject obj1;
+        S3ByteArrayObject obj2;
+        List<S3ObjectEntry> entries;
+        S3ObjectEntry entry;
+
+        obj1 = new S3ByteArrayObject("test.obj1", new byte[0]);
+        obj2 = new S3ByteArrayObject("ignore.obj2", new byte[0]);
+        _conn.putObject(_testBucketName, obj1, AccessControlList.StandardPolicy.PRIVATE);
+        _conn.putObject(_testBucketName, obj2, AccessControlList.StandardPolicy.PRIVATE);
+        listing = _conn.listObjects(_testBucketName, "test", null, 0, null);
+
+        /* Can't be truncated */
+        assertTrue("Listing is truncated", !listing.truncated());
+        assertEquals("test", listing.getPrefix());
+
+        /* Must only return a single object. */
+        entries = listing.getEntries();
+        assertEquals(1, entries.size());
+        entry = entries.get(0);
+        assertEquals("test.obj1", entry.getKey());
+    }
+
+
+    /**
+     * Test bucket listing with max keys and marker.
+     */
+    public void testListBucketMaxMarker ()
+        throws Exception
+    {
+        S3ObjectListing listing;
+        S3ByteArrayObject obj1;
+        S3ByteArrayObject obj2;
+
+        /* Upload two objects. */
+        obj1 = new S3ByteArrayObject("A", new byte[0]);
+        obj2 = new S3ByteArrayObject("B", new byte[0]);
+        _conn.putObject(_testBucketName, obj1, AccessControlList.StandardPolicy.PRIVATE);
+        _conn.putObject(_testBucketName, obj2, AccessControlList.StandardPolicy.PRIVATE);
+
+        /* List one key. Objects are ordered lexographically, so we know what to expect */
+        listing = _conn.listObjects(_testBucketName, null, null, 1, null);
+        assertEquals(1, listing.getEntries().size());
+        assertEquals(1, listing.getMaxKeys());
+        assertTrue("Listing is not truncated", listing.truncated());
+        assertEquals("A", listing.getEntries().get(0).getKey());
+
+        /* List the next one. */
+        listing = _conn.listObjects(_testBucketName, null, listing.getNextMarker(), 1, null);
+        assertEquals(1, listing.getEntries().size());
+        assertEquals(1, listing.getMaxKeys());
+        assertEquals("B", listing.getEntries().get(0).getKey());
+        assertTrue("Listing is truncated", !listing.truncated());
+
+        assertEquals("A", listing.getMarker());
+        assertNull(listing.getNextMarker());
+    }
+
+    /**
+     * Test bucket listing with a prefix and delimiter
+     */
+    public void testListPrefixDelimiter ()
+        throws Exception
+    {
+        S3ObjectListing listing;
+        S3ByteArrayObject obj1;
+        S3ByteArrayObject obj2;
+        S3ByteArrayObject obj3;
+
+        /* Upload two objects. */
+        obj1 = new S3ByteArrayObject("prefix.item0.0", new byte[0]);
+        obj2 = new S3ByteArrayObject("prefix.item0.1", new byte[0]);
+        obj3 = new S3ByteArrayObject("prefix.item1.0", new byte[0]);
+        _conn.putObject(_testBucketName, obj1, AccessControlList.StandardPolicy.PRIVATE);
+        _conn.putObject(_testBucketName, obj2, AccessControlList.StandardPolicy.PRIVATE);
+        _conn.putObject(_testBucketName, obj3, AccessControlList.StandardPolicy.PRIVATE);
+
+        listing = _conn.listObjects(_testBucketName, "prefix.", null, 0, ".");
+        assertEquals("prefix.item0.", listing.getCommonPrefixes().get(0));
+
+        listing = _conn.listObjects(_testBucketName, "prefix.item0.", null, 0, ".");
+        assertEquals("prefix.item0.0", listing.getEntries().get(0).getKey());
+        assertEquals("prefix.item0.1", listing.getEntries().get(1).getKey());
+    }
 
     public void testPutObject ()
         throws Exception
