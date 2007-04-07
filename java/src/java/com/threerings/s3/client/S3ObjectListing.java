@@ -49,12 +49,13 @@ import org.xml.sax.helpers.XMLReaderFactory;
 import org.xml.sax.XMLReader;
 import org.xml.sax.SAXException;
 
-
 /**
  * Returned by S3Connection.listBucket()
  */
 public class S3ObjectListing {
-
+    /**
+     * Initialize an S3ObjectListing from the S3 XML GET bucket response.
+     */
     public S3ObjectListing (InputStream dataStream)
         throws IOException, SAXException
     {
@@ -65,7 +66,7 @@ public class S3ObjectListing {
         xr.setErrorHandler(handler);
 
         /* Parse the XML. Will throw a SAXException if it fails. */
-        xr.parse(new InputSource(dataStream));            
+        xr.parse(new InputSource(dataStream));
 
         /* Fetch the newly parsed data. */
         _bucketName = handler.getBucketName();
@@ -77,45 +78,124 @@ public class S3ObjectListing {
         _nextMarker = handler.getNextMarker();
         _entries = handler.getObjectEntries();
         _commonPrefixes = handler.getCommonPrefixes();
-    }
-    
 
+        /* Determine the correct nextMarker() value. */
+        determineNextMarker();
+    }
+
+    /** Returns the request-echoed bucket name. */
     public String getBucketName () {
         return _bucketName;
     }
 
+    /** Returns the request-echoed prefix. If not supplied by the server,
+      * the prefix will be null. */
     public String getPrefix () {
         return _prefix;
     }
 
+    /** Returns the request-echoed marker. If not supplied by the server,
+      * the marker will be null. */
     public String getMarker () {
         return _marker;
     }
 
+    /** Returns the request-echoed delimiter. If not supplied by the server,
+      * the delimiter will be null. */
     public String getDelimiter () {
         return _delimiter;
     }
 
+    /** Returns the request-echoed maximum number of keys. If not set in the
+      * bucket listing request, max keys will be 0. */
     public int getMaxKeys () {
         return _maxKeys;
     }
 
-    public boolean getTruncated () {
+    /** Returns true if the listing result was truncated. */
+    public boolean truncated () {
         return _truncated;
     }
 
+    /** If the result was truncated, returns the next pagination marker. */
     public String getNextMarker () {
         return _nextMarker;
     }
 
+    /** Returns the retrieved S3 entries. */
     public List<S3ObjectEntry> getEntries () {
         return _entries;
     }
 
+    /** Returns a list of common prefixes. */
     public List<String> getCommonPrefixes () {
         return _commonPrefixes;
     }
 
+    /**
+     * If marker is "", isTruncated is true, and a delimiter was not
+     * specified, we need to determine the pagination marker ourselves.
+     *
+     * The marker is simply the last (lexographically) listed object key
+     * and/or commonPrefix:
+     *  marker = max(entries, commonPrefixes)
+     *
+     * See http://docs.amazonwebservices.com/AmazonS3/2006-03-01/ListingKeysPaginated.html
+     */
+    private void determineNextMarker () {
+        String lastKey = null;
+        String lastPrefix = null;
+
+        /* If the results were not truncated, we don't need a pagination marker. */
+        if (!_truncated) {
+            return;
+        }
+
+        /* If the marker was specified by Amazon, we don't need to figure it out. */
+        if (_nextMarker != null) {
+            return;
+        }
+
+        /* If there are neither entries nor common prefixes, we can't do anything. */
+        if (_entries.size() <= 0 && _commonPrefixes.size() <= 0) {
+            return;
+        }
+
+
+        /* Retrieve the last object key */
+        if (_entries.size() > 0) {
+            S3ObjectEntry entry = _entries.get(_entries.size() - 1);
+            lastKey = entry.getKey();                
+        }
+
+        /* Retrieve the last common prefix */
+        if (_commonPrefixes.size() > 0) {
+            lastPrefix = _commonPrefixes.get(_commonPrefixes.size() - 1);
+        }
+
+        /* If there are no entries, the prefix is the marker. */
+        if (lastKey == null) {
+            _nextMarker = lastPrefix;
+            return;
+        }
+
+        /* If there are no prefixes, the last key is the marker. */
+        if (lastPrefix == null) {
+            _nextMarker = lastKey;
+            return;
+        }
+
+        /* Otherwise, compare the two lexographically. */
+        if (lastKey.compareTo(lastPrefix) > 0) {
+            /* Entry > Prefix */
+            _nextMarker = lastKey;
+        } else {
+            /* Prefix > Entry */
+            _nextMarker = lastPrefix;
+        }
+
+        return;
+    }
 
     /** The name of the bucket being listed. */
     private String _bucketName;
@@ -141,8 +221,7 @@ public class S3ObjectListing {
     private boolean _truncated;
 
     /** Indicates what to use as a marker for subsequent list requests in the
-     * event that the results are truncated.  Present only when a delimiter is
-     * specified. (XXX Is the delimiter comment actually true?) */
+     * event that the results are truncated. */
     private String _nextMarker = null;
 
     /** The list of object entries. */  
