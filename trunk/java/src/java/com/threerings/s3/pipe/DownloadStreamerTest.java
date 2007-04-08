@@ -70,6 +70,7 @@ public class DownloadStreamerTest extends TestCase
     {
         S3ConnectionTest.deleteBucket(_conn, _bucket);
         _testFile.delete();
+        _outputFile.delete();
     }
 
     public void testDownload ()
