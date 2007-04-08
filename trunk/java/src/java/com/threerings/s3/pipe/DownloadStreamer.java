@@ -61,7 +61,7 @@ class DownloadStreamer {
     /**
      * Download the given streamName.
      */
-    public void download (String streamName, OutputStream output, int retry)
+    public void download (String streamName, OutputStream output, int maxRetry)
         throws S3Exception, RemoteStreamException
     {
         RemoteStream stream;
@@ -69,28 +69,35 @@ class DownloadStreamer {
 
         stream = new RemoteStream(_connection, _bucket, streamName);
 
-        /* Fetch the stream info record.
-         * The caller must handle any remote stream exceptions. We only
-         * retry on transient S3 exceptions. */
-        for (int i = 0; i < retry; i++) {
-            try {
-                /* Fetch the stream info */
-                info = stream.getStreamInfo();
-                if (info == null) {
-                    throw new RemoteStreamException.NoSuchStreamException("Stream \"" + streamName + "\" does not exist.");
+        /* Fetch the stream info record. The caller must handle any RemoteStreamExceptions */
+        try {
+            S3RetryHandler retry = new S3RetryHandler(maxRetry);
+            S3Exception retryError = null;
+
+            do {
+                /* Log the last error. */
+                if (retryError != null) {
+                    System.err.println("S3 error occured creating stream info record, retrying: " + retryError);                    
                 }
-    
-            } catch (S3Exception s3e) {
-                /* Transient error occured. If the next loop will hit the maximum
-                 * retry count, throw an exception. Otherwise, log an
-                 * error */
-                if (i < retry - 1) {
-                    System.err.println("S3 Failure fetching stream info record for '" +
-                        streamName + "': " + s3e.getMessage());
-                } else {
-                    throw s3e;                            
+
+                try {
+                    /* Fetch the stream info */
+                    info = stream.getStreamInfo();
+                    
+                    if (info == null) {
+                        throw new RemoteStreamException.NoSuchStreamException("Stream \"" + streamName + "\" does not exist.");
+                    }             
+                } catch (S3Exception s3e) {
+                    /* Let the retry handler check the exception */
+                    retryError = s3e;
+                    continue;
                 }
-            }
+
+                break;
+            } while (retry.shouldRetry(retryError));
+        } catch (S3Exception s3e) {
+            throw new RemoteStreamException("S3 failure fetching stream info record for '" +
+                streamName + "': " + s3e.getMessage());            
         }
 
 
@@ -100,30 +107,36 @@ class DownloadStreamer {
         boolean finished = false;
         for (long blockId = 0; !finished; blockId++) {
             /* Fetch the next block, with a retry */
-            for (int i = 0; i < retry; i++) {
-                try {
-                    S3Object object = _connection.getObject(_bucket, stream.streamBlockKey(blockId));
-                    break; // Succeeded, exit the retry loop.
-                } catch (S3ServerException.NoSuchKeyException nsk) {
-                    /* Block doesn't exist, we're done. */
-                    finished = true;
-                } catch (S3Exception s3e) {
-                    /* Error occured. If the next loop will hit the maximum
-                     * retry count, throw an exception. Otherwise, log an
-                     * error */
-                    if (i < retry - 1) {
-                        System.err.println("S3 Failure downloading " + stream.streamBlockKey(blockId) + ": " + s3e.getMessage());
-                    } else {
-                        throw s3e;                            
+            S3RetryHandler retry = new S3RetryHandler(maxRetry);
+            S3Exception retryError = null;
+
+            try {
+                do {
+                    /* Log the last error. */
+                    if (retryError != null) {
+                        System.err.println("S3 error fetching stream block " + Long.toString(blockId) 
+                            + ", retrying: " + retryError);                    
                     }
-                }
+
+                    try {
+                        S3Object object = _connection.getObject(_bucket, stream.streamBlockKey(blockId));
+                        break; // Succeeded, exit the retry loop.
+                    } catch (S3ServerException.NoSuchKeyException nsk) {
+                        /* Block doesn't exist, we're done. */
+                        finished = true; // Exit the outer-loop
+                        break; // Exit the inner loop
+                    } catch (S3Exception s3e) {
+                        /* Let the retry handler check the exception */
+                        retryError = s3e;
+                        continue;
+                    }
+                } while (retry.shouldRetry(retryError));
+                /* Block fetched, stream in the data. */
+            } catch (S3Exception e) {
+                throw new RemoteStreamException("S3 failure fetching stream block " + Long.toString(blockId) +
+                    ": " + e.getMessage());
             }
-            
-            /* Block fetched, stream in the data. */
-            
         }
-
-
     }
 
     /** S3 Connection. */

@@ -71,7 +71,7 @@ class UploadStreamer {
      *  currently exists.
      * @throws S3Exception Thrown if an S3 error occurs.
      */
-    public void upload (String streamName, InputStream inputData, int retry)
+    public void upload (String streamName, InputStream inputData, int maxRetry)
         throws S3Exception, RemoteStreamException
     {
         QueuedStreamReader reader;
@@ -87,30 +87,36 @@ class UploadStreamer {
         /* Instantiate a stream reference, with a retry block */
         stream = new RemoteStream(_connection, _bucket, streamName);
 
-        for (int i = 0; i < retry; i++) {
-            /* The caller must handle any remote stream exceptions. */
-            try {
-                /* Check if the stream exists */
-                if (stream.getStreamInfo() != null) {
-                    throw new RemoteStreamException.StreamExistsException("Stream \"" + streamName + "\" exits.");
+        /* Check if the stream exists, and if not, create the stream info record. */
+        try {
+            S3RetryHandler retry = new S3RetryHandler(maxRetry);
+            S3Exception retryError = null;
+
+            do {
+                /* Log the last error. */
+                if (retryError != null) {
+                    System.err.println("S3 error occured creating stream info record, retrying: " + retryError);                    
                 }
-                
-                /* Create the stream info record. */
-                stream.putStreamInfo();
-                
-                /* Success, exit the retry loop. */
-                break;
-            } catch (S3Exception s3e) {
-                /* Transient error occured. If the next loop will hit the maximum
-                 * retry count, throw an exception. Otherwise, log an
-                 * error */
-                if (i < retry - 1) {
-                    System.err.println("S3 Failure creating stream info record for '" +
-                        streamName + "': " + s3e.getMessage());
-                } else {
-                    throw s3e;                            
+
+                try {
+                    /* Check if the stream exists */
+                    if (stream.getStreamInfo() != null) {
+                        throw new RemoteStreamException.StreamExistsException("Stream \"" + streamName + "\" exits.");
+                    }
+
+                    /* Create the stream info record. */
+                    stream.putStreamInfo();
+                    break;
+                } catch (S3Exception s3e) {
+                    /* Let the retry handler check the exception */
+                    retryError = s3e;
+                    continue;
                 }
-            }
+            } while (retry.shouldRetry(retryError));
+
+        } catch (S3Exception s3e) {
+            System.err.println("S3 Failure creating stream info record for '" +
+                streamName + "': " + s3e.getMessage());            
         }
 
         /*
@@ -144,22 +150,33 @@ class UploadStreamer {
                 S3ByteArrayObject obj = new S3ByteArrayObject(
                     stream.streamBlockKey(blockId), data, 0, length);
 
-                for (int i = 0; i < retry; i++) {
-                    try {
-                        _connection.putObject(_bucket, obj, AccessControlList.StandardPolicy.PRIVATE);
-                        break; // Succeeded, exit the retry loop.
-                    } catch (S3Exception s3e) {
-                        /* Error occured. If the next loop will hit the maximum
-                         * retry count, throw an exception. Otherwise, log an
-                         * error */
-                        if (i < retry - 1) {
-                            System.err.println("S3 Failure uploading " +
-                                obj.getKey() + ": " + s3e.getMessage());
-                        } else {
-                            readerThread.interrupt();
-                            throw s3e;                            
+
+                /* Check if the stream exists, and if not, create the stream info record. */
+                try {
+                    S3RetryHandler retry = new S3RetryHandler(maxRetry);
+                    S3Exception retryError = null;
+
+                    do {
+                        /* Log the last error. */
+                        if (retryError != null) {
+                            System.err.println("S3 failure uploading '" + obj.getKey() + "', retrying: " + retryError);                   
                         }
-                    }
+
+                        try {
+                            _connection.putObject(_bucket, obj, AccessControlList.StandardPolicy.PRIVATE);                            
+                        } catch (S3Exception e) {
+                            /* Let the retry handler check the exception */
+                            retryError = e;
+                            continue;
+                        }
+                        break;
+                    } while (retry.shouldRetry(retryError));
+
+                } catch (S3Exception s3e) {
+                    System.err.println("S3 failure uploading '" +
+                        obj.getKey() + "': " + s3e.getMessage());
+                    readerThread.interrupt();
+                    throw s3e;
                 }
 
                 /*
