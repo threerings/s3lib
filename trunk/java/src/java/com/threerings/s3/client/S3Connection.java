@@ -74,7 +74,7 @@ import org.xml.sax.SAXException;
  *
  * @todo Implement a re-entrant HttpConnectionManager so that we can support
  *  multiple "in-flight" S3 objects on the same thread. Until this is written,
- *  a new S3Connection requests will invalidate the previous request. This is
+ *  a new S3Connection request will invalidate the previous request. This is
  *  only particularly important when using getObject(), as the request remains
  *  open to provide access to the data stream.
  */
