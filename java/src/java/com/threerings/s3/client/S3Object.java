@@ -114,7 +114,8 @@ public abstract class S3Object {
 
     /**
      * Get the object's input stream, used to read object contents, potentially
-     * from the remote S3 server.
+     * from the remote S3 server. The caller is responsible for closing the
+     * stream.
      */
     public abstract InputStream getInputStream () throws S3ClientException;
 

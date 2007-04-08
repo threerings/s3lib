@@ -288,8 +288,6 @@ public class S3ConnectionTest extends TestCase
     public void testGetObject ()
         throws Exception
     {
-        S3Object remote;
-
         // Send it to the mother ship
         _conn.putObject(_testBucketName, _fileObj, AccessControlList.StandardPolicy.PRIVATE);
 
