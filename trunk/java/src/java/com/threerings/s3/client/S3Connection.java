@@ -71,7 +71,12 @@ import org.xml.sax.SAXException;
  * An interface into the S3 system.  It is initially configured with
  * authentication and connection parameters and exposes methods to access and
  * manipulate S3 data.
- * TODO: URL encoding is totally missing.
+ *
+ * @todo Implement a re-entrant HttpConnectionManager so that we can support
+ *  multiple "in-flight" S3 objects on the same thread. Until this is written,
+ *  a new S3Connection requests will invalidate the previous request. This is
+ *  only particularly important when using getObject(), as the request remains
+ *  open to provide access to the data stream.
  */
 public class S3Connection
 {
@@ -175,7 +180,11 @@ public class S3Connection
                 "Encoding error for bucket " + bucketName + ": " + e);
         }
 
-        executeS3Method(method);
+        try {
+            executeS3Method(method);            
+        } finally {
+            method.releaseConnection();
+        }
     }
 
 
@@ -237,15 +246,16 @@ public class S3Connection
             );
         }
 
-        executeS3Method(method);
-
         try {
+            executeS3Method(method);
             return new S3ObjectListing(method.getResponseBodyAsStream());          
         } catch (SAXException se) {
             throw new S3ClientException("Error parsing bucket GET response: " + se.getMessage(), se);
         } catch (IOException ioe) {
             throw new S3ClientException.NetworkException("Error receiving bucket GET response: " +
                 ioe.getMessage(), ioe);
+        } finally {
+            method.releaseConnection();
         }
     }
 
@@ -266,7 +276,11 @@ public class S3Connection
                 "Encoding error for bucket " + bucketName + ": " + e);
         }
 
-        executeS3Method(method);
+        try {
+            executeS3Method(method);            
+        } finally {
+            method.releaseConnection();
+        }
     }
 
     /**
@@ -327,12 +341,18 @@ public class S3Connection
             method.setRequestHeader(header, entry.getValue());
         }
 
-        executeS3Method(method);
+        try {
+            executeS3Method(method);            
+        } finally {
+            method.releaseConnection();
+        }
     }
 
 
     /**
-     * Retrieve a S3Object.
+     * Retrieve a S3Object. The object's data streams directly from the remote
+     * server, and thus may be invalidated.
+     *
      * @param bucketName Source bucket.
      * @param objectKey Object key.
      */
@@ -357,7 +377,6 @@ public class S3Connection
 
         // Execute the get request and retrieve all metadata from the response
         executeS3Method(method);
-
 
         // Mime type
         mimeType = getResponseHeader(method, CONTENT_TYPE_HEADER, true);
@@ -435,7 +454,11 @@ public class S3Connection
             objectKey + ": " + e);
         }
 
-        executeS3Method(method);
+        try {
+            executeS3Method(method);            
+        } finally {
+            method.releaseConnection();
+        }
     }
     
     /**
@@ -478,7 +501,6 @@ public class S3Connection
                 throw new S3ClientException.NetworkException("Network error receiving S3 error response: " + ioe.getMessage(), ioe);
             }
 
-            method.releaseConnection();
             throw S3ServerException.exceptionForS3Error(new String(errorDoc).trim());
         }
     }
