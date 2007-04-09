@@ -37,13 +37,8 @@ import java.security.NoSuchAlgorithmException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-
 import java.io.InputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * A representation of a (locally file-backed) object stored in S3.

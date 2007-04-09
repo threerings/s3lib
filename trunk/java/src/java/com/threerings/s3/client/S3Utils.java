@@ -35,9 +35,7 @@ package com.threerings.s3.client;
 import org.apache.commons.codec.binary.Base64;
 
 import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HeaderElement;
 import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpMethodBase;
 import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.RequestEntity;
 
@@ -206,7 +204,6 @@ class S3Utils {
         // Convert the expiration date to rfc822 format.
         final String DateFormat = "EEE, dd MMM yyyy HH:mm:ss ";
         SimpleDateFormat format;
-        String rfc822date;
         
         format = new SimpleDateFormat( DateFormat, Locale.US );
         format.setTimeZone(TimeZone.getTimeZone("GMT"));

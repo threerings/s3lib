@@ -31,18 +31,8 @@
 
 package com.threerings.s3.client;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-
 import java.io.InputStream;
-import java.io.IOException;
-import java.io.OutputStream;
 
-import java.util.List;
 import java.util.Map;
 
 /**

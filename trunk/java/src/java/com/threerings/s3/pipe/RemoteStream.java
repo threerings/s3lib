@@ -40,7 +40,6 @@ import com.threerings.s3.client.S3ObjectEntry;
 import com.threerings.s3.client.S3ObjectListing;
 import com.threerings.s3.client.S3ServerException;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
 import java.util.ArrayList;
@@ -82,7 +81,6 @@ public class RemoteStream {
         List<RemoteStreamInfo> streams;
         S3ObjectListing listing;
         String marker = null;
-        Base64 encoder = new Base64();
 
         streams = new ArrayList<RemoteStreamInfo>();
         do {

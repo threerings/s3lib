@@ -31,18 +31,11 @@
 
 package com.threerings.s3.client;
 
-import org.apache.commons.codec.digest.DigestUtils;
-
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * A representation of a array-backed object stored in S3.

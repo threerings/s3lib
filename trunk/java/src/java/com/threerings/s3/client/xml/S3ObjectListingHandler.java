@@ -33,7 +33,6 @@
 package com.threerings.s3.client.xml;
 
 import com.threerings.s3.client.S3ObjectEntry;
-import com.threerings.s3.client.S3ObjectListing;
 import com.threerings.s3.client.S3Owner;
 
 import java.text.ParseException;
@@ -47,7 +46,6 @@ import java.util.SimpleTimeZone;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.helpers.DefaultHandler;
-import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 /**
