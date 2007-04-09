@@ -169,7 +169,7 @@ public class S3ConnectionTest extends TestCase
         );
 
         /* ETag (MD5) */
-        String md5 = new String(Hex.encodeHex(_fileObj.getMD5Checksum()));
+        String md5 = new String(Hex.encodeHex(_fileObj.getMD5()));
         assertEquals(md5, entry.getETag());
 
         /* Size */

@@ -65,7 +65,7 @@ public class S3ByteArrayObjectTest extends TestCase
     public void testGetMD5Checksum ()
         throws Exception
     {
-        byte[] checksum = _byteObj.getMD5Checksum();
+        byte[] checksum = _byteObj.getMD5();
         String hex = new String(Hex.encodeHex(checksum));
         assertEquals(TEST_DATA_MD5, hex);   
     }

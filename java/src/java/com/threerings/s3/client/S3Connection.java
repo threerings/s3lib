@@ -328,7 +328,7 @@ public class S3Connection
         // Compute and set the content-md5 value (base64 of 128bit digest)
         // http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.15
         try {
-            checksum = Base64.encodeBase64(object.getMD5Checksum());
+            checksum = Base64.encodeBase64(object.getMD5());
             method.setRequestHeader(CONTENT_MD5_HEADER, new String(checksum, "ascii"));            
         } catch (UnsupportedEncodingException uee) {
             // ASCII must always be supported.

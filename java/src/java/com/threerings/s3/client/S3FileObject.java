@@ -87,7 +87,7 @@ public class S3FileObject extends S3Object {
     }
 
     @Override // From S3Object
-    public byte[] getMD5Checksum ()
+    public byte[] getMD5 ()
         throws S3ClientException
     {
          InputStream input;

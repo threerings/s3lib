@@ -122,7 +122,7 @@ public abstract class S3Object {
     /**
      * Get the object's MD5 checksum.
      */
-    public abstract byte[] getMD5Checksum () throws S3ClientException;
+    public abstract byte[] getMD5 () throws S3ClientException;
 
     /**
      * Returns the number of bytes required to store the

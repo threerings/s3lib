@@ -54,8 +54,8 @@ public class S3ObjectTest  extends TestCase
         test.assertEquals(obj1.getMimeType(), obj2.getMimeType());
 
         // Checksum
-        String checksum1 = new String(Hex.encodeHex(obj1.getMD5Checksum()));
-        String checksum2 = new String(Hex.encodeHex(obj2.getMD5Checksum()));
+        String checksum1 = new String(Hex.encodeHex(obj1.getMD5()));
+        String checksum2 = new String(Hex.encodeHex(obj2.getMD5()));
         test.assertEquals(checksum1, checksum2);
 
         // Length

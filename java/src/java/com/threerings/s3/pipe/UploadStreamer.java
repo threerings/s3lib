@@ -44,6 +44,12 @@ import java.nio.ByteBuffer;
 /*
  * Uploads streams as a series of S3Objects.
  * UploadStreams are re-usable, but not thread-safe.
+ *
+ * @todo Implement data blocking on a sub-object level. That is, each S3Object
+ *  is composed of n number of blocks. This will allow us to checksum, compress,
+ *  or PKE sign smaller blocks, refetching those blocks (using HTTP range support)
+ *  if necessary. This "sub-blocking" is necessary as the overhead of S3 key
+ *  GET/PUT requests rules out using small S3 object blocks.
  */
 class UploadStreamer {
     /*
