@@ -41,6 +41,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.RandomAccessFile;
 
+import org.apache.commons.io.IOUtils;
+
 public class DownloadStreamerTest extends TestCase
 {
     public DownloadStreamerTest (String name) {
@@ -85,6 +87,14 @@ public class DownloadStreamerTest extends TestCase
         FileOutputStream output = new FileOutputStream(_outputFile);
         DownloadStreamer downloadStreamer = new DownloadStreamer(_conn, _bucket);
         downloadStreamer.download("test stream", output, 5);
+
+        /* Compare the input to the output. */
+        assertTrue("Contents not equal!",
+            IOUtils.contentEquals(
+                new FileInputStream(_testFile),
+                new FileInputStream(_outputFile)
+            )
+        );
     }
 
     /** Temporary test data file. */

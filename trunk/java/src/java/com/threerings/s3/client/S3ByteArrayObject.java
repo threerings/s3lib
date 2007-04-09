@@ -105,7 +105,7 @@ public class S3ByteArrayObject extends S3Object {
     }
 
     @Override // From S3Object
-    public byte[] getMD5Checksum ()
+    public byte[] getMD5 ()
     {
         return _md5;
     }
