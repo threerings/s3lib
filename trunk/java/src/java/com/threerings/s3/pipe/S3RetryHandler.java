@@ -48,6 +48,7 @@ class S3RetryHandler {
     /**
      * Returns true if the exception is transient and the caller
      * should retry. Otherwise, throws the provided exception.
+     * Sleeps for 1 second before returning true.
      */
     protected boolean shouldRetry (S3Exception exception)
         throws S3Exception
@@ -61,6 +62,11 @@ class S3RetryHandler {
          if (_retryCount > _maxRetry) {
              throw exception;
          } else {
+             try {
+                 Thread.sleep(1000);             
+             } catch (InterruptedException e) {
+                 // Ignore
+             }
              return true;
          }
     }

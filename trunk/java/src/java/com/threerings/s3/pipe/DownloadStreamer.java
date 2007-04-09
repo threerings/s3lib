@@ -83,7 +83,8 @@ class DownloadStreamer {
             do {
                 /* Log the last error. */
                 if (retryError != null) {
-                    System.err.println("S3 error occured creating stream info record, retrying: " + retryError);                    
+                    System.err.println("S3 error occured creating stream info record, retrying: " +
+                        retryError.getMessage());                    
                 }
 
                 try {
@@ -91,7 +92,8 @@ class DownloadStreamer {
                     info = stream.getStreamInfo();
                     
                     if (info == null) {
-                        throw new RemoteStreamException.NoSuchStreamException("Stream \"" + streamName + "\" does not exist.");
+                        throw new RemoteStreamException.NoSuchStreamException("Stream \"" + streamName +
+                            "\" does not exist.");
                     }             
                 } catch (S3Exception s3e) {
                     /* Let the retry handler check the exception */
@@ -103,7 +105,7 @@ class DownloadStreamer {
             } while (retry.shouldRetry(retryError));
         } catch (S3Exception s3e) {
             throw new RemoteStreamException("S3 failure fetching stream info record for '" +
-                streamName + "': " + s3e.getMessage());            
+                streamName + "': " + s3e.getMessage(), s3e);            
         }
 
         /*
@@ -166,11 +168,18 @@ class DownloadStreamer {
                 }
             } catch (S3Exception e) {
                 throw new RemoteStreamException("S3 failure fetching stream block " + Long.toString(blockId) +
-                    ": " + e.getMessage());
+                    ": " + e.getMessage(), e);
             } catch (IOException e) {
                 throw new RemoteStreamException("Fatal IO error handling stream block " +
-                    Long.toString(blockId) + ": " + e.getMessage());
+                    Long.toString(blockId) + ": " + e.getMessage(), e);
             }
+        }
+
+        /* We're done, flush the output. */
+        try {
+            output.flush();            
+        } catch (IOException e) {
+            throw new RemoteStreamException("Error flushing output stream: " + e.getMessage(), e);
         }
     }
 
