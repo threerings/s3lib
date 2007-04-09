@@ -31,17 +31,41 @@
 
 package com.threerings.s3.pipe;
 
+import java.util.Date;
+
 /**
  * Remote stream info record.
  */
 class RemoteStreamInfo {
-    public RemoteStreamInfo (int version) {
+    public RemoteStreamInfo (String name, int version, Date created) {
+        _name = name;
         _version = version;
+        _creationDate = created;
     }
 
+    /**
+     * Get the stream's name.
+     */
+    public String getName () {
+        return _name;
+    }
+
+    /**
+     * Get the stream's data structure version.
+     */
     public int getVersion () {
         return _version;
     }
+
+    public Date getCreationDate () {
+        return _creationDate;
+    }
+
+    /** Remote stream name. */
+    private String _name;
+
+    /** Remote stream last modified date. */
+    private Date _creationDate;
 
     /** Remote stream version. */
     private int _version;
