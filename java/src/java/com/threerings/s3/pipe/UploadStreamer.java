@@ -101,7 +101,8 @@ class UploadStreamer {
             do {
                 /* Log the last error. */
                 if (retryError != null) {
-                    System.err.println("S3 error occured creating stream info record, retrying: " + retryError);                    
+                    System.err.println("S3 error occured creating stream info record, retrying: " +
+                        retryError.getMessage());                    
                 }
 
                 try {
@@ -121,8 +122,8 @@ class UploadStreamer {
             } while (retry.shouldRetry(retryError));
 
         } catch (S3Exception s3e) {
-            System.err.println("S3 Failure creating stream info record for '" +
-                streamName + "': " + s3e.getMessage());            
+            throw new RemoteStreamException("S3 failure creating stream info record for '" +
+                streamName + "': " + s3e.getMessage());      
         }
 
         /*
