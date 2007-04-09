@@ -535,7 +535,7 @@ public class S3Connection
     private HttpClient _awsHttpClient;
     
     /** URL encoder. */
-    private URLCodec _urlEncoder = new URLCodec();
+    private final URLCodec _urlEncoder = new URLCodec();
 
     /** Prefix parameter. */
     private static final String LIST_PREFIX_PARAMETER = "prefix";

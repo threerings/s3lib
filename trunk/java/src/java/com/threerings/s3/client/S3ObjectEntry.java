@@ -100,20 +100,20 @@ public class S3ObjectEntry {
     }
 
     /** The name of the object */
-    private String _key;
+    private final String _key;
 
     /** The date at which the object was last modified. */
-    private Date _lastModified;
+    private final Date _lastModified;
 
     /** The object's ETag, which can be used for conditional GETs. */
-    private String _eTag;
+    private final String _eTag;
 
     /** The size of the object in bytes. */
-    private long _size;
+    private final long _size;
 
     /** The object's storage class */
-    private String _storageClass;
+    private final String _storageClass;
 
     /** The object's owner */
-    private S3Owner _owner;
+    private final S3Owner _owner;
 }

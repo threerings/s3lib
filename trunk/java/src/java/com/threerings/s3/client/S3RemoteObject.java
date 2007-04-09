@@ -84,12 +84,12 @@ class S3RemoteObject extends S3Object {
     }
     
     /** Data length in bytes. */
-    private long _length;
+    private final long _length;
     
     /** MD5 digest. */
-    private byte[] _md5digest;
+    private final byte[] _md5digest;
 
     /** HTTP response stream. This is "auto-closing" -- the connection will
      * be closed when the stream is closed. */
-    private InputStream _response;
+    private final InputStream _response;
 }

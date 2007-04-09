@@ -138,46 +138,13 @@ final public class Main {
     };
 
 
-    /** S3 Connection. */
-    protected S3Connection connection;
-
-    /** AWS Id. */
-    protected String awsId;
-
-    /** AWS secret key */
-    protected String awsKey;
-
-    /** Path to AWS properties file. */
-    @Option(name="--keyfile", usage="Specify the properties file containing the AWS ID and secret key.", metaVar="<file>", required=true)
-    protected File keyFile;
-
-    /** Remote bucket name. */
-    @Option(name="--bucket", usage="Specify the S3 bucket name.", metaVar="<bucket>", required=true)
-    protected String bucketName = null;
-
-    /** Remote stream name. */
-    @Option(name="--stream", usage="Specify the remote stream name.", metaVar="<stream name>")
-    protected String streamName = null;
-
-    /** Maximum number of retries. */
-    @Option(name="--retry", usage="Specify the number of S3 retry attempts before exiting, " +
-        "in the event of S3 and/or network failure. Defaults to 5.", metaVar="<count>")
-    protected int maxRetry = 5;
-
-    /** Block size, in bytes. Default to 5 megabytes. */
-    protected int blockSize = 5 * 1024 * 1024;
-
-    /** All non-option arguments. */
-    @Argument
-    protected List<String> arguments = new ArrayList<String>();
-
-
     /**
      * Instantiate and run a Main instance.
      */
     public static void main (String[] args) {
         new Main().doMain(args);
     }
+
 
     /**
      * Parse command line arguments and run the specified command.
@@ -267,10 +234,42 @@ final public class Main {
      */
     @Option(name="--blocksize", usage="Specify the in-memory block size, in kilobytes, " +
         "for S3 file uploads. Defaults to 5 megabytes.", metaVar="<size>")
-    private void setBlocksize (int blockSize) {
-        blockSize = blockSize * 1024;
+    private void setBlocksize (int newBlockSize) {
+        blockSize = newBlockSize * 1024;
     }
 
+    /** S3 Connection. */
+    private S3Connection connection;
+
+    /** AWS Id. */
+    private String awsId;
+
+    /** AWS secret key */
+    private String awsKey;
+
+    /** Path to AWS properties file. */
+    @Option(name="--keyfile", usage="Specify the properties file containing the AWS ID and secret key.", metaVar="<file>", required=true)
+    private File keyFile;
+
+    /** Remote bucket name. */
+    @Option(name="--bucket", usage="Specify the S3 bucket name.", metaVar="<bucket>", required=true)
+    private String bucketName = null;
+
+    /** Remote stream name. */
+    @Option(name="--stream", usage="Specify the remote stream name.", metaVar="<stream name>")
+    private String streamName = null;
+
+    /** Maximum number of retries. */
+    @Option(name="--retry", usage="Specify the number of S3 retry attempts before exiting, " +
+        "in the event of S3 and/or network failure. Defaults to 5.", metaVar="<count>")
+    private int maxRetry = 5;
+
+    /** Block size, in bytes. Default to 5 megabytes. */
+    private int blockSize = 5 * 1024 * 1024;
+
+    /** All non-option arguments. */
+    @Argument
+    private List<String> arguments = new ArrayList<String>();
 
     /** AWS id property. */
     private static final String PROP_AWSID = "aws.id";
