@@ -246,6 +246,7 @@ public class RemoteStream {
         } while (listing.truncated());
     }
 
+
     /**
      * Return the complete S3 prefix for this stream.
      */
@@ -273,6 +274,13 @@ public class RemoteStream {
             Long.toString(blockId);
     }
 
+    /**
+     * Return the stream name.
+     */
+    public String getStreamName ()
+    {
+        return _streamName;
+    }
 
     /** S3 Connection. */
     private S3Connection _connection;
