@@ -50,7 +50,7 @@ import java.util.Properties;
 
 enum PipeCommand {
     /** Read from stdin, write to an S3 stream. */
-    STDIN {
+    UPLOAD {
         public void run (Main app)
             throws S3Exception, RemoteStreamException
         {
@@ -61,7 +61,7 @@ enum PipeCommand {
 
 
     /** Read from an S3 stream, write to stdout. */
-    STDOUT {
+    DOWNLOAD {
         public void run (Main app)
             throws S3Exception, RemoteStreamException
         {
