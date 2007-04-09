@@ -157,8 +157,6 @@ class UploadStreamer {
                 S3ByteArrayObject obj = new S3ByteArrayObject(
                     stream.streamBlockKey(blockId), data, 0, length);
 
-
-                /* Check if the stream exists, and if not, create the stream info record. */
                 try {
                     S3RetryHandler retry = new S3RetryHandler(maxRetry);
                     S3Exception retryError = null;
