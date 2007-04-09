@@ -31,12 +31,6 @@
 
 package com.threerings.s3.pipe;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-
-import java.util.HashMap;
-import java.util.Map;
-
 import com.threerings.s3.client.acl.AccessControlList;
 import com.threerings.s3.client.S3ByteArrayObject;
 import com.threerings.s3.client.S3Connection;
@@ -45,6 +39,15 @@ import com.threerings.s3.client.S3Object;
 import com.threerings.s3.client.S3ObjectEntry;
 import com.threerings.s3.client.S3ObjectListing;
 import com.threerings.s3.client.S3ServerException;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.List;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -68,6 +71,94 @@ import org.apache.commons.codec.binary.Base64;
  * @todo: Investigate the atomicity of ACLs and their potential use for locking.
  */
 public class RemoteStream {
+
+    /**
+     * Returns a list of all remote streams.
+     */
+    static public List<RemoteStreamInfo> getAllStreams (S3Connection connection,
+        String bucketName)
+        throws S3Exception, RemoteStreamException
+    {
+        List<RemoteStreamInfo> streams;
+        S3ObjectListing listing;
+        String marker = null;
+        Base64 encoder = new Base64();
+
+        streams = new ArrayList<RemoteStreamInfo>();
+        do {
+
+            /* Get a listing of all common prefixes: STREAM_PREFIX.<encoded stream name>. */
+            listing = connection.listObjects(bucketName, STREAM_PREFIX + FIELD_DELIMETER,
+                marker, 1000, FIELD_DELIMETER);
+
+            /* For each prefix, extract the stream info. */
+            for (String prefix : listing.getCommonPrefixes()) {
+                RemoteStreamInfo info = getStreamInfo(connection, bucketName, prefix + INFO_FIELD);
+                streams.add(info);
+            }
+
+            marker = listing.getNextMarker();
+        } while (listing.truncated());
+
+        return streams;
+    }
+
+    /**
+     * Given the S3 stream info key, retrieve a remote stream info record.
+     *
+     * @throws RemoteStreamException.UnsupportedVersionException if the info
+     * record version is unsupported.
+     */
+    public static RemoteStreamInfo getStreamInfo (S3Connection connection, String bucketName, String infoKey)
+        throws S3Exception, RemoteStreamException
+    {
+        try {
+            /* Fetch the stream's info record. */
+            S3Object object;
+            Map<String,String> metadata;
+
+            /* Fetch the object. */
+            object = connection.getObject(bucketName, infoKey);
+            metadata = object.getMetadata();
+
+            /* Extract the version and ensure we support it */
+            String versionString;
+            int version;
+            if ((versionString = metadata.get(INFO_KEY_VERSION)) == null) {
+                throw new RemoteStreamException.InvalidInfoRecordException(
+                    "Stream missing version number");
+            }
+            version = Integer.parseInt(versionString);
+            if (version != VERSION) {
+                throw new RemoteStreamException.UnsupportedVersionException(
+                    "Stream record version is not supported: " + versionString);
+            }
+
+            /* Extract the stream name. */
+            String name;
+            if ((name = metadata.get(INFO_KEY_NAME)) == null) {
+                throw new RemoteStreamException.InvalidInfoRecordException(
+                    "Stream missing stream name");
+            }
+
+            /* Extract the creation date. */
+            String createdString;
+            Date created;
+            if ((createdString = metadata.get(INFO_KEY_CTIME)) == null) {
+                throw new RemoteStreamException.InvalidInfoRecordException(
+                    "Stream missing stream creation date");
+            }
+            created = new Date(Long.parseLong(createdString));
+
+            return new RemoteStreamInfo(name, version, created);
+
+        } catch (S3ServerException.NoSuchKeyException nsk) {
+            return null;
+        } catch (NumberFormatException nfe) {
+            /* Shouldn't happen, unless intentionally bad data is supplied. */
+            throw new RemoteStreamException.InvalidInfoRecordException("Unsupported integer: " + nfe);
+        }
+    }
 
     public RemoteStream (S3Connection connection, String bucketName,
         String streamName)
@@ -100,8 +191,14 @@ public class RemoteStream {
         Map<String,String> metadata = new HashMap<String,String>();
         S3ByteArrayObject infoObject = new S3ByteArrayObject(streamInfoKey(), new byte[0], S3Object.DEFAULT_MIME_TYPE);
 
+        /* Set the name. */
+        metadata.put(INFO_KEY_NAME, _streamName);
+
         /* Set the version. */
         metadata.put(INFO_KEY_VERSION, Integer.toString(VERSION));
+
+        /* Set the creation date. */
+        metadata.put(INFO_KEY_CTIME, Long.toString(new Date().getTime()));
 
         /* Upload the info object. */
         infoObject.setMetadata(metadata);
@@ -119,30 +216,7 @@ public class RemoteStream {
     public RemoteStreamInfo getStreamInfo ()
         throws S3Exception, RemoteStreamException
     {
-        S3Object object;
-        Map<String,String> metadata;
-        String versionString = "";
-        int version;
-
-        try {
-            /* Fetch the stream's info record. */
-            object = _connection.getObject(_bucketName, streamInfoKey());
-            metadata = object.getMetadata();
-            versionString = metadata.get(INFO_KEY_VERSION);
-
-            if (versionString == null) {
-                throw new RemoteStreamException.UnsupportedVersionException(
-                    "Stream missing version number");
-            }
-            
-            version = Integer.parseInt(versionString);
-            return new RemoteStreamInfo(version);
-
-        } catch (S3ServerException.NoSuchKeyException nsk) {
-            return null;
-        } catch (NumberFormatException nfe) {
-            throw new RemoteStreamException.UnsupportedVersionException("Unsupported version: " + versionString);
-        }
+        return getStreamInfo(_connection, _bucketName, streamInfoKey());
     }
 
     /**
@@ -210,8 +284,14 @@ public class RemoteStream {
     /** Data structure version. Used to support backwards compatibility*/
     protected static final int VERSION = 1;
 
-    /** Key to info version metadata. */
+    /** Key to stream name. */
+    private static final String INFO_KEY_NAME = "name";
+
+    /** Key to stream version. */
     private static final String INFO_KEY_VERSION = "version";
+
+    /** Key to stream creation date. */
+    private static final String INFO_KEY_CTIME = "ctime";
 
     /** Stream prefix. All stream-related keys will be prepended with this
       * prefix. */

@@ -41,6 +41,9 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 
+import java.util.Date;
+import java.util.List;
+
 import org.apache.commons.codec.binary.Base64;
 
 /**
@@ -70,6 +73,17 @@ public class RemoteStreamTest extends TestCase
         S3ConnectionTest.deleteBucket(_conn, _bucket);
     }
 
+    public void testGetAllStreams ()
+        throws Exception
+    {
+        List<RemoteStreamInfo> streams;
+
+        _stream.putStreamInfo();
+        streams = RemoteStream.getAllStreams(_conn, _bucket);
+        assertEquals(1, streams.size());
+        assertEquals(STREAM_NAME, streams.get(0).getName());
+    }
+
     public void testPutStreamInfo ()
         throws Exception
     {
@@ -87,7 +101,14 @@ public class RemoteStreamTest extends TestCase
         /* With an info record. */
         _stream.putStreamInfo();
         info = _stream.getStreamInfo();
+        assertEquals(STREAM_NAME, info.getName());
         assertEquals(RemoteStream.VERSION, info.getVersion());
+        
+        /* Last modified -- should be within the last 5 minutes. (5 minutes * 60 seconds * 1000 milliseconds)*/
+        assertTrue(
+            "Streams's last modified date is not within the last 5 minutes: " + info.getCreationDate(),
+            (new Date().getTime() - info.getCreationDate().getTime()) < 5 * 60 * 1000
+        );
     }
 
     public void testDeleteStream ()

@@ -57,10 +57,18 @@ public class RemoteStreamException extends Exception {
         }
     }
 
+    /** The stream info record is invalid / unparsable. */
+    public static class InvalidInfoRecordException extends RemoteStreamException {
+        public InvalidInfoRecordException (String message) {
+            super(message);
+        }
+    }
+
     /** The stream version is not supported. */
     public static class UnsupportedVersionException extends RemoteStreamException {
         public UnsupportedVersionException (String message) {
             super(message);
         }
     }
+
 }
