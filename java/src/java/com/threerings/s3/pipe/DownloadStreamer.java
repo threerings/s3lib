@@ -109,7 +109,7 @@ class DownloadStreamer {
         }
 
         /*
-         * Download the blocks from S3. We use a 32k read buffer.
+         * Download the blocks from S3.
          */
         byte[] buffer = new byte[BUFFER_SIZE];
         for (long blockId = 0; ; blockId++) {
