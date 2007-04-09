@@ -124,5 +124,5 @@ public class S3FileObject extends S3Object {
     }
 
     /** File path. */
-    private File _file;
+    private final File _file;
 }

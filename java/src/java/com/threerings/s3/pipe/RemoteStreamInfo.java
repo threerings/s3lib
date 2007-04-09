@@ -62,11 +62,11 @@ class RemoteStreamInfo {
     }
 
     /** Remote stream name. */
-    private String _name;
+    private final String _name;
 
     /** Remote stream last modified date. */
-    private Date _creationDate;
+    private final Date _creationDate;
 
     /** Remote stream version. */
-    private int _version;
+    private final int _version;
 }

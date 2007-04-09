@@ -220,13 +220,13 @@ class UploadStreamer {
 
 
     /** Queue size. */
-    private final int QUEUE_SIZE = 4;
+    private static final int QUEUE_SIZE = 4;
 
     /** S3 Connection. */
-    private S3Connection _connection;
+    private final S3Connection _connection;
 
     /** S3 Bucket. */
-    private String _bucket;
+    private final String _bucket;
 
     /** Read block size. */
     private final int _blocksize;

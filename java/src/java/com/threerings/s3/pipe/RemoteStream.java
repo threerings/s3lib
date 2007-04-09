@@ -283,16 +283,16 @@ public class RemoteStream {
     }
 
     /** S3 Connection. */
-    private S3Connection _connection;
+    private final S3Connection _connection;
     
     /** S3 Bucket. */
-    private String _bucketName;
+    private final String _bucketName;
 
     /** Stream name. */
-    private String _streamName;
+    private final String _streamName;
 
     /** Stream encoded name. */
-    private String _encodedStreamName;
+    private final String _encodedStreamName;
 
     /** Data structure version. Used to support backwards compatibility*/
     protected static final int VERSION = 1;

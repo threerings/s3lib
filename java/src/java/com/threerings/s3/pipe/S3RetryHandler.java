@@ -72,7 +72,7 @@ class S3RetryHandler {
     }
 
     /** Maximum number of retry attempts. */
-    private int _maxRetry;
+    private final int _maxRetry;
 
     /** Current number of attempts. */
     private int _retryCount = 0;
