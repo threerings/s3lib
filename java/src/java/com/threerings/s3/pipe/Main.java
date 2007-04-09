@@ -92,7 +92,7 @@ final public class Main {
                 List<RemoteStreamInfo> list = RemoteStream.getAllStreams(app.connection, app.bucketName);
                 for (RemoteStreamInfo info : list) {
                     System.out.println("Stream: '" + info.getName() + "'" + " " +
-                        "    Created: " + info.getCreationDate() + "\n");
+                        "    Created: " + info.getCreationDate());
                 }
             }
 
