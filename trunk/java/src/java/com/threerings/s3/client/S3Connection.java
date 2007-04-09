@@ -117,7 +117,7 @@ public class S3Connection
     public S3Connection (String awsKeyId, String awsSecretKey, Protocol protocol,
                              String host)
     {
-        this(awsKeyId, awsSecretKey, protocol, S3Utils.DEFAULT_HOST, protocol.getDefaultPort());
+        this(awsKeyId, awsSecretKey, protocol, host, protocol.getDefaultPort());
     }
 
     /**
@@ -214,7 +214,6 @@ public class S3Connection
         throws S3Exception
     {
         GetMethod method;
-        InputStream stream;
         List<NameValuePair> parameters = new ArrayList<NameValuePair>(4);
 
         try {
