@@ -48,81 +48,96 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 
-enum PipeCommand {
-    /** Read from stdin, write to an S3 stream. */
-    UPLOAD {
-        public void run (Main app)
-            throws S3Exception, RemoteStreamException
-        {
-            UploadStreamer streamer = new UploadStreamer(app.connection, app.bucketName, app.blockSize);
-            streamer.upload(app.streamName, System.in, app.maxRetry);
-        }
-    },
-
-
-    /** Read from an S3 stream, write to stdout. */
-    DOWNLOAD {
-        public void run (Main app)
-            throws S3Exception, RemoteStreamException
-        {
-            DownloadStreamer streamer = new DownloadStreamer(app.connection, app.bucketName);
-            streamer.download(app.streamName, System.out, app.maxRetry);
-        }
-    },
-
-    /** Delete a stream. */
-    DELETE {
-        public void run (Main app)
-            throws S3Exception, RemoteStreamException
-        {
-            RemoteStream stream = new RemoteStream(app.connection, app.bucketName, app.streamName);
-            stream.delete();
-        }
-    },
-
-    /** Create a bucket. */
-    CREATEBUCKET {
-        public void run (Main app)
-            throws S3Exception
-        {
-            app.connection.createBucket(app.bucketName);
-        }
-
-        public void validate (Main app) {}
-    },
-
-
-    /** Delete a bucket. */
-    DELETEBUCKET {
-        public void run (Main app)
-            throws S3Exception
-        {
-            app.connection.deleteBucket(app.bucketName);
-        }
-
-        public void validate (Main app) {}
-    };
-
-
-    /** Validate that any (non-args4j required) user-supplied settings are set. Feel
-      * free to override this for a given command. */
-    public void validate (Main app)
-        throws CmdLineException
-    {
-        if (app.streamName == null) {
-            throw new CmdLineException("Option \"--stream\" is required.");
-        }
-    }
-
-    /** Run the specific pipe command. */
-    public abstract void run (Main app) throws RemoteStreamException, S3Exception;
-};
-
-
 /**
  * s3pipe main class.
  */
 final public class Main {
+    enum PipeCommand {
+        /** Read from stdin, write to an S3 stream. */
+        UPLOAD {
+            public void run (Main app)
+                throws S3Exception, RemoteStreamException
+            {
+                UploadStreamer streamer = new UploadStreamer(app.connection, app.bucketName, app.blockSize);
+                streamer.upload(app.streamName, System.in, app.maxRetry);
+            }
+        },
+
+
+        /** Read from an S3 stream, write to stdout. */
+        DOWNLOAD {
+            public void run (Main app)
+                throws S3Exception, RemoteStreamException
+            {
+                DownloadStreamer streamer = new DownloadStreamer(app.connection, app.bucketName);
+                streamer.download(app.streamName, System.out, app.maxRetry);
+            }
+        },
+
+        /** Delete a stream. */
+        DELETE {
+            public void run (Main app)
+                throws S3Exception, RemoteStreamException
+            {
+                RemoteStream stream = new RemoteStream(app.connection, app.bucketName, app.streamName);
+                stream.delete();
+            }
+        },
+
+        /** List all streams in a bucket. */
+        LIST {
+            public void run (Main app)
+                throws S3Exception, RemoteStreamException
+            {
+                List<RemoteStreamInfo> list = RemoteStream.getAllStreams(app.connection, app.bucketName);
+                for (RemoteStreamInfo info : list) {
+                    System.out.println("Stream: '" + info.getName() + "'" + " " +
+                        "    Created: " + info.getCreationDate() + "\n");
+                }
+            }
+
+            public void validate (Main app) {}
+        },
+
+        /** Create a bucket. */
+        CREATEBUCKET {
+            public void run (Main app)
+                throws S3Exception
+            {
+                app.connection.createBucket(app.bucketName);
+            }
+
+            public void validate (Main app) {}
+        },
+
+
+        /** Delete a bucket. */
+        DELETEBUCKET {
+            public void run (Main app)
+                throws S3Exception
+            {
+                app.connection.deleteBucket(app.bucketName);
+            }
+
+            public void validate (Main app) {}
+        };
+
+
+        /** Validate that any (non-args4j required) user-supplied settings are set. Feel
+          * free to override this for a given command. */
+        public void validate (Main app)
+            throws CmdLineException
+        {
+            if (app.streamName == null) {
+                throw new CmdLineException("Option \"--stream\" is required.");
+            }
+        }
+
+        /** Run the specific pipe command. */
+        public abstract void run (Main app) throws RemoteStreamException, S3Exception;
+    };
+
+
     /** S3 Connection. */
     protected S3Connection connection;
 
@@ -208,7 +223,7 @@ final public class Main {
             System.err.println(e.getMessage());
             System.exit(EXIT_FAILURE);
         } catch (RemoteStreamException e) {
-            System.err.println(e.getMessage());
+            System.err.println("Stream record error: " + e.getMessage());
             System.exit(EXIT_FAILURE);            
         }
 

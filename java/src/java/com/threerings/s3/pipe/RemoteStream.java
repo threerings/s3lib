@@ -93,8 +93,13 @@ public class RemoteStream {
 
             /* For each prefix, extract the stream info. */
             for (String prefix : listing.getCommonPrefixes()) {
-                RemoteStreamInfo info = getStreamInfo(connection, bucketName, prefix + INFO_FIELD);
-                streams.add(info);
+                try {
+                    RemoteStreamInfo info = getStreamInfo(connection, bucketName, prefix + INFO_FIELD);
+                    streams.add(info);
+                } catch (RemoteStreamException e) {
+                    System.err.println("Skipping invalid remote stream " + prefix + INFO_FIELD +
+                        ": " + e.getMessage());
+                }
             }
 
             marker = listing.getNextMarker();
@@ -126,19 +131,19 @@ public class RemoteStream {
             int version;
             if ((versionString = metadata.get(INFO_KEY_VERSION)) == null) {
                 throw new RemoteStreamException.InvalidInfoRecordException(
-                    "Stream missing version number");
+                    "Stream missing version number.");
             }
             version = Integer.parseInt(versionString);
             if (version != VERSION) {
                 throw new RemoteStreamException.UnsupportedVersionException(
-                    "Stream record version is not supported: " + versionString);
+                    "Stream record version is not supported: " + versionString + ".");
             }
 
             /* Extract the stream name. */
             String name;
             if ((name = metadata.get(INFO_KEY_NAME)) == null) {
                 throw new RemoteStreamException.InvalidInfoRecordException(
-                    "Stream missing stream name");
+                    "Stream missing stream name.");
             }
 
             /* Extract the creation date. */
