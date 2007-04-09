@@ -35,8 +35,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.FileNotFoundException;
 
 /**
  * A representation of a single object stored in S3.

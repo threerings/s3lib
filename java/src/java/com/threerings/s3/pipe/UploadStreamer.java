@@ -38,7 +38,6 @@ import com.threerings.s3.client.S3Exception;
 import com.threerings.s3.client.S3Object;
 
 import java.io.InputStream;
-import java.io.IOException;
 
 import java.nio.ByteBuffer;
 
@@ -83,7 +82,6 @@ class UploadStreamer {
     {
         QueuedStreamReader reader;
         Thread readerThread;
-        String encodedName;
         RemoteStream stream;
 
         /* Create and start the stream reader. */

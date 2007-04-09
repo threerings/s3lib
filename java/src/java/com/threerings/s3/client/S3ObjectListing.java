@@ -37,12 +37,7 @@ import com.threerings.s3.client.xml.S3ObjectListingHandler;
 import java.io.InputStream;
 import java.io.IOException;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-
-import java.util.ArrayList;
 import java.util.List;
-import java.util.SimpleTimeZone;
 
 import org.xml.sax.InputSource;
 import org.xml.sax.helpers.XMLReaderFactory;

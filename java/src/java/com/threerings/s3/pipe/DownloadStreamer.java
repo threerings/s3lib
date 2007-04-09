@@ -31,8 +31,6 @@
 
 package com.threerings.s3.pipe;
 
-import com.threerings.s3.client.acl.AccessControlList;
-import com.threerings.s3.client.S3ByteArrayObject;
 import com.threerings.s3.client.S3Connection;
 import com.threerings.s3.client.S3Exception;
 import com.threerings.s3.client.S3Object;
@@ -41,8 +39,6 @@ import com.threerings.s3.client.S3ServerException;
 import java.io.OutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
-import java.nio.ByteBuffer;
 
 import java.util.Arrays;
 
