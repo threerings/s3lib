@@ -175,8 +175,15 @@ final public class Main {
             command.validate(this);
         } catch (CmdLineException cle) {
             System.err.println("Error parsing arguments: " + cle.getMessage());
-            System.err.println("Usage:\n  s3pipe <options> <command>\nOptions:");
+            System.err.println("Usage:\n  s3pipe <options> <command>\n\nOptions:");
             parser.printUsage(System.err);
+            System.err.println("\nCommands:");
+            System.err.println("  upload\t\t: Read a stream from stdin, and write to S3.");
+            System.err.println("  download\t\t: Read a stream from S3, and write to stdout.");
+            System.err.println("  list\t\t\t: List all streams within the bucket.");
+            System.err.println("  delete\t\t: Delete the specified stream.");
+            System.err.println("  createbucket\t\t: Create the specified bucket.");
+            System.err.println("  deletebucket\t\t: Delete the specified bucket.");
             System.err.println();
             System.exit(EXIT_FAILURE);
             return;
