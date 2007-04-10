@@ -5,7 +5,6 @@
     <!-- configuration properties -->
     <property name="app.name"       value="s3lib"/>
     <property name="deploy.dir"     value="dist"/>
-    <property name="savedoc.dir"    value="docs"/>
     <property name="libs.dir.ant"   value="lib/ant"/>
     <property name="s3pipe.classdir" value="com/threerings/s3/pipe"/>
     <property name="s3pipe.main"    value="com.threerings.s3.pipe.Main"/>
@@ -141,15 +140,6 @@
     	    <!-- Exclude private packages from the java docs -->
             <excludepackage name="com.threerings.s3.client.xml"/>
         </javadoc>
-    </target>
-
-    <!-- builds the javadocs and stuffs them in a directory where they won't
-    be blown away when we do "clean" next time -->
-    <target name="savedoc" depends="javadoc">
-        <delete dir="${savedoc.dir}/api"/>
-        <copy todir="${savedoc.dir}/api">
-            <fileset dir="${javadoc.home}" includes="**/*"/>
-        </copy>
     </target>
 
     <!-- the default target is to rebuild everything -->
