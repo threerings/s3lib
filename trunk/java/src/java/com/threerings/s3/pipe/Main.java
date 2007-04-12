@@ -43,6 +43,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
+import java.security.Security;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -188,6 +190,10 @@ final public class Main {
             System.exit(EXIT_FAILURE);
             return;
         }
+
+        /* Don't cache DNS results forever. This will break S3's DNS-based
+         * failover support */
+        Security.setProperty("networkaddress.cache.ttl" , "30");
 
         try {
             loadProperties();
