@@ -274,8 +274,8 @@ final public class Main {
 
     /** Maximum number of retries. */
     @Option(name="--retry", usage="Specify the number of S3 retry attempts before exiting, " +
-        "in the event of S3 and/or network failure. Defaults to 5.", metaVar="<count>")
-    private int maxRetry = 5;
+        "in the event of S3 and/or network failure. Defaults to 30.", metaVar="<count>")
+    private int maxRetry = 30;
 
     /** Block size, in bytes. Default to 5 megabytes. */
     private int blockSize = 5 * 1024 * 1024;
