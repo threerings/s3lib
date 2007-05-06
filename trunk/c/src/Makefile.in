@@ -1,0 +1,48 @@
+srcdir=         @srcdir@
+top_srcdir=     @top_srcdir@
+top_builddir=   @top_builddir@
+VPATH=          @srcdir@
+
+include ${top_builddir}/Mk/autoconf.mk
+include ${top_builddir}/Mk/compile.mk
+include ${top_builddir}/Mk/subdir.mk
+
+LIBRARY_NAME=	libs3
+LIBRARY_OBJS=	
+
+GEN_SRCS=
+
+TEST_LIB=	libs3-testing.a
+TEST_OBJS=
+
+CFLAGS+=	-fPIC $(LDAP_CFLAGS) $(OPENVPN_CFLAGS)
+OBJCFLAGS+=	-fPIC $(LDAP_CFLAGS) $(OPENVPN_CFLAGS)
+LIBS+=		$(LDAP_LIBS) $(OBJC_LIBS) $(FLEX_LIBS)
+
+
+INSTALL_LIB=		$(INSTALL) -m 755
+LIBRARY_INSTALL_DIR=	$(DESTDIR)$(libdir)
+
+all:: $(LIBRARY_FILE) $(TEST_LIB) testplugin
+
+# Work-around for gnumake bug.
+# It fails to check if 'TRConfigParser.h' has been created
+# after lemon has been called, and goes looking for a
+# rule to build it.
+TRConfigParser.h: TRConfigParser.m
+
+$(LIBRARY_FILE): $(GEN_SRCS) $(LIBRARY_OBJS)
+	$(MAKE_LIBRARY)
+
+$(TEST_LIB): $(GEN_SRCS) $(LIBRARY_OBJS)
+	$(AR) -r $@ $(LIBRARY_OBJS)
+
+install:: $(LIBRARY_FILE)
+	$(INSTALL_LIBRARY)
+
+clean::
+	rm -f $(TEST_OBJS) $(LIBRARY_OBJS) $(TEST_LIB) $(GEN_SRCS) testplugin
+	$(CLEAN_LIBRARY)
+
+distclean:: clean
+	rm -f Makefile

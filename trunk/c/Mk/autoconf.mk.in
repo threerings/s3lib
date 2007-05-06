@@ -1,0 +1,33 @@
+SHELL			= @SHELL@
+
+CC			= @CC@
+
+CFLAGS			= @CFLAGS@ @DEFS@ -Wall
+
+LIBRARY_LD		= @LIBRARY_LD@
+LIBRARY_LD_FLAGS	= @LIBRARY_LD_FLAGS@
+LIBRARY_CFLAGS		= @LIBRARY_CFLAGS@
+LIBRARY_SUFFIX		= @LIBRARY_SUFFIX@
+LIBRARY_FILE		= @LIBRARY_FILE@
+
+MAKE_LIBRARY		= @MAKE_LIBRARY@
+INSTALL_LIBRARY		= @INSTALL_LIBRARY@
+CLEAN_LIBRARY		= @CLEAN_LIBRARY@
+
+LDFLAGS                 = @LDFLAGS@
+
+INSTALL                 = @INSTALL@
+LN_S                    = @LN_S@
+
+DOXYGEN			= @DOXYGEN@
+
+prefix			= @prefix@
+sysconfdir		= @sysconfdir@
+exec_prefix		= @exec_prefix@
+bindir			= @bindir@
+datadir			= @datadir@
+libdir			= @libdir@
+localstatedir		= @localstatedir@
+infodir			= @infodir@
+
+SILENT			= @
