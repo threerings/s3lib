@@ -41,7 +41,7 @@
 # terms specified in this license.
 
 #--------------------------------------------------------------------
-# OD_CONFIG_LIBRARY
+# TR_CONFIG_LIBRARY
 #
 #	Try to determine the proper flags to pass to the compiler
 #	for building plugins.
@@ -79,7 +79,7 @@
 #                       to build libraries on this platform.
 #--------------------------------------------------------------------
 
-AC_DEFUN(OD_CONFIG_LIBRARY, [
+AC_DEFUN(TR_CONFIG_LIBRARY, [
 
     LD_LIBRARY_PATH_VAR="LD_LIBRARY_PATH"
     PLAT_OBJS=""

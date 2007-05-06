@@ -1,6 +1,7 @@
 builtin(include,pthread.m4)
 builtin(include,platform.m4)
 builtin(include,check.m4)
+builtin(include,libcurl.m4)
 
 #------------------------------------------------------------------------
 # TR_WERROR --
