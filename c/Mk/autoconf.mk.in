@@ -26,6 +26,7 @@ sysconfdir		= @sysconfdir@
 exec_prefix		= @exec_prefix@
 bindir			= @bindir@
 datadir			= @datadir@
+datarootdir		= @datarootdir@
 libdir			= @libdir@
 localstatedir		= @localstatedir@
 infodir			= @infodir@
