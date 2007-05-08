@@ -47,40 +47,40 @@
 #include <tests.h>
 
 void print_usage(const char *name) {
-	printf("Usage: %s [filename]\n", name);
-	printf(" [filename]\tWrite XML log to <filename>\n");
+    printf("Usage: %s [filename]\n", name);
+    printf(" [filename]\tWrite XML log to <filename>\n");
 }
 
 int main(int argc, char *argv[]) {
-	Suite *s;
-	SRunner *sr;
-	int nf;
+    Suite *s;
+    SRunner *sr;
+    int nf;
 
-	if (argc > 2) {
-		print_usage(argv[0]);
-		exit(1);
-	}
+    if (argc > 2) {
+        print_usage(argv[0]);
+        exit(1);
+    }
 
-	/* Load all test suites */
-	s = S3Connection_suite();
-	sr = srunner_create(s);
-	// srunner_add_suite(sr, TODO_suite());
+    /* Load all test suites */
+    s = S3Connection_suite();
+    sr = srunner_create(s);
+    // srunner_add_suite(sr, TODO_suite());
 
-	/* Enable XML output */
-	if (argc == 2)
-		srunner_set_xml(sr, argv[1]);
+    /* Enable XML output */
+    if (argc == 2)
+        srunner_set_xml(sr, argv[1]);
 
     /* CURL Initializers */
     curl_global_init(CURL_GLOBAL_ALL);
 
-	/* Run tests */
-	srunner_run_all(sr, CK_NORMAL);
+    /* Run tests */
+    srunner_run_all(sr, CK_NORMAL);
 
-	nf = srunner_ntests_failed(sr);
-	srunner_free(sr);
+    nf = srunner_ntests_failed(sr);
+    srunner_free(sr);
 
-	if (nf == 0)
-		exit(EXIT_SUCCESS);
-	else
-		exit(EXIT_FAILURE);
+    if (nf == 0)
+        exit(EXIT_SUCCESS);
+    else
+        exit(EXIT_FAILURE);
 }
