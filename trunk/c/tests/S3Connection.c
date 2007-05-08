@@ -47,12 +47,20 @@ START_TEST (test_new) {
 }
 END_TEST
 
+START_TEST (test_set_url) {
+    S3Connection *conn = s3connection_new("id", "key");
+    s3connection_set_url(conn, "http://localhost");
+    s3connection_free(conn);
+}
+END_TEST
+
 Suite *S3Connection_suite(void) {
     Suite *s = suite_create("S3Connection");
 
     TCase *tc_general = tcase_create("General");
     suite_add_tcase(s, tc_general);
     tcase_add_test(tc_general, test_new);
+    tcase_add_test(tc_general, test_set_url);
 
     return s;
 }

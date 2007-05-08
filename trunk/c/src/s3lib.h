@@ -33,17 +33,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Useful includes */
+#ifndef S3LIB_H
+#define S3LIB_H
+
+/* system includes */
 #include <stdlib.h>
-
-#ifdef HAVE_STDBOOL_H
 #include <stdbool.h>
-#else
-#define true 1
-#define false 0
-#endif
 
+/* cURL includes */
 #include <curl/curl.h>
 
-/* S3lib includes */
+/* s3lib includes */
 #include "S3Connection.h"
+
+#endif /* S3LIB_H */
