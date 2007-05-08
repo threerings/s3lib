@@ -43,7 +43,16 @@
 /* cURL includes */
 #include <curl/curl.h>
 
+/*!
+ * @defgroup S3Library Amazon S3 Library
+ * @{
+ */
+
 /* s3lib includes */
 #include "S3Connection.h"
+
+/*!
+ * @} S3Lib
+ */
 
 #endif /* S3LIB_H */
