@@ -39,8 +39,10 @@
 
 #include <stdlib.h>
 #include <unistd.h>
-#include <check.h>
 #include <stdio.h>
+
+#include <curl/curl.h>
+#include <check.h>
 
 #include <tests.h>
 
@@ -67,6 +69,9 @@ int main(int argc, char *argv[]) {
 	/* Enable XML output */
 	if (argc == 2)
 		srunner_set_xml(sr, argv[1]);
+
+    /* CURL Initializers */
+    curl_global_init(CURL_GLOBAL_ALL);
 
 	/* Run tests */
 	srunner_run_all(sr, CK_NORMAL);
