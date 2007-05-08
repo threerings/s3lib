@@ -77,6 +77,8 @@
 #       LIBRARY_SUFFIX -  Suffix to use for the names of dynamic libraries
 #                       extensions.  An empty string means we don't know how
 #                       to build libraries on this platform.
+#       AR -            Path to ar binary
+#       RANLIB -        Path to ranlib binary
 #--------------------------------------------------------------------
 
 AC_DEFUN(TR_CONFIG_LIBRARY, [
@@ -110,6 +112,18 @@ AC_DEFUN(TR_CONFIG_LIBRARY, [
     INSTALL_LIBRARY='$(INSTALL_LIB) $(LIBRARY_FILE) $(LIBRARY_INSTALL_DIR)/$(LIBRARY_FILE)'
     CLEAN_LIBRARY='rm -f ${LIBRARY_FILE}'
 
+    # Check for static library tools, too
+    AC_CHECK_TOOL([RANLIB], [ranlib], [no])
+    if test x"$RANLIB" = x"no"; then
+        AC_MSG_ERROR([Missing ranlib -- required to build static library])
+    fi
+
+    AC_CHECK_TOOL([AR], [ar], [no])
+    if test x"$AR" = x"no"; then
+        AC_MSG_ERROR([Missing ar -- required to build static library])
+    fi
+
+
     AC_SUBST(LIBRARY_LD)
     AC_SUBST(LIBRARY_LD_FLAGS)
     AC_SUBST(LIBRARY_CFLAGS)
@@ -119,4 +133,7 @@ AC_DEFUN(TR_CONFIG_LIBRARY, [
     AC_SUBST(MAKE_LIBRARY)
     AC_SUBST(INSTALL_LIBRARY)
     AC_SUBST(CLEAN_LIBRARY)
+
+    AC_SUBST([AR])
+    AC_SUBST([RANLIB])
 ])

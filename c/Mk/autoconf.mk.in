@@ -19,6 +19,9 @@ LDFLAGS                 = @LDFLAGS@
 INSTALL                 = @INSTALL@
 LN_S                    = @LN_S@
 
+AR			= @AR@
+RANLIB			= @RANLIB@
+
 DOXYGEN			= @DOXYGEN@
 
 prefix			= @prefix@

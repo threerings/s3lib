@@ -8,7 +8,7 @@ include ${top_builddir}/Mk/compile.mk
 include ${top_builddir}/Mk/subdir.mk
 
 LIBRARY_NAME=	libs3
-LIBRARY_OBJS=	
+LIBRARY_OBJS=	S3Connection.o
 
 GEN_SRCS=
 
@@ -23,25 +23,20 @@ LIBS+=		$(LDAP_LIBS) $(OBJC_LIBS) $(FLEX_LIBS)
 INSTALL_LIB=		$(INSTALL) -m 755
 LIBRARY_INSTALL_DIR=	$(DESTDIR)$(libdir)
 
-all:: $(LIBRARY_FILE) $(TEST_LIB) testplugin
-
-# Work-around for gnumake bug.
-# It fails to check if 'TRConfigParser.h' has been created
-# after lemon has been called, and goes looking for a
-# rule to build it.
-TRConfigParser.h: TRConfigParser.m
+all:: $(LIBRARY_FILE) $(TEST_LIB)
 
 $(LIBRARY_FILE): $(GEN_SRCS) $(LIBRARY_OBJS)
 	$(MAKE_LIBRARY)
 
 $(TEST_LIB): $(GEN_SRCS) $(LIBRARY_OBJS)
 	$(AR) -r $@ $(LIBRARY_OBJS)
+	$(RANLIB) $@
 
 install:: $(LIBRARY_FILE)
 	$(INSTALL_LIBRARY)
 
 clean::
-	rm -f $(TEST_OBJS) $(LIBRARY_OBJS) $(TEST_LIB) $(GEN_SRCS) testplugin
+	rm -f $(TEST_OBJS) $(LIBRARY_OBJS) $(TEST_LIB) $(GEN_SRCS)
 	$(CLEAN_LIBRARY)
 
 distclean:: clean
