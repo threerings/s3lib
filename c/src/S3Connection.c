@@ -40,6 +40,13 @@
 /**
  * @file
  * @brief S3 connection management.
+ * @author Landon Fuller <landonf@threerings.net>
+ */
+
+/**
+ * @defgroup S3Connection S3 Connection Management
+ * @ingroup S3Library
+ * @{
  */
 
 /** Default Amazon S3 URL. */
@@ -50,16 +57,20 @@ const char S3_DEFAULT_URL[] = "https://s3.amazonaws.com";
  * @attention S3Connection instances are not thread-safe.
  */
 struct S3Connection {
-    /* AWS access key id. */
+    /** @internal
+     * AWS access key id. */
     char *aws_id;
 
-    /* AWS private key. */
+    /** @internal
+     * AWS private key. */
     char *aws_key;
 
-    /* S3 server url. */
+    /** @internal
+     * S3 server url. */
     char *s3_url;
 
-    /* Cached cURL handle (not thread-safe). */
+    /** @internal
+     * Cached cURL handle (not thread-safe). */
     CURL *curl;
 };
 
@@ -109,6 +120,7 @@ error:
 
 /**
  * Set the connection's S3 service URL.
+ *
  * The service URL defaults to #S3_DEFAULT_URL, and will not generally need to be changed.
  *
  * @param conn A valid S3Connection instance.
@@ -152,3 +164,7 @@ void s3connection_free (S3Connection *conn) {
     if (conn->curl != NULL) 
         curl_easy_cleanup(conn->curl);
 }
+
+/**
+ * @} S3Connection
+ */
