@@ -46,7 +46,9 @@ AC_CACHE_SAVE
 # AC_CACHE_SAVE
 
 # Libraries
-LIBCURL_CHECK_CONFIG
+LIBCURL_CHECK_CONFIG([yes], [], [], [
+	AC_MSG_ERROR([s3lib requires libcurl (http://curl.haxx.se/).])
+])
 OD_LIBCHECK
 
 # Output
