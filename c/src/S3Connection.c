@@ -38,13 +38,21 @@
 #include <string.h>
 
 /**
- * Maintains S3 connection state.
+ * Maintains S3 connection state. Not thread-safe.
  * @internal
  */
 struct S3Connection {
+    /** AWS access key id. */
     char *aws_id;
+
+    /** AWS private key. */
     char *aws_key;
-    char *aws_url;
+
+    /** S3 server url. */
+    char *s3_url;
+
+    /** Cached cURL handle (not thread-safe). */
+    CURL *curl;
 };
 
 /** Default Amazon S3 URL. @internal */
@@ -74,9 +82,14 @@ S3Connection *s3connection_new (const char *aws_id, const char *aws_key) {
     if (conn->aws_key == NULL)
         goto error;
 
-    /* Default AWS URL */
-    conn->aws_url = strdup(DEFAULT_S3_URL);
-    if (conn->aws_url == NULL)
+    /* Default S3 URL */
+    conn->s3_url = strdup(DEFAULT_S3_URL);
+    if (conn->s3_url == NULL)
+        goto error;
+
+    /* cURL handle */
+    conn->curl = curl_easy_init();
+    if (conn->curl == NULL)
         goto error;
 
     return (conn);    
@@ -91,15 +104,15 @@ error:
  * @param connection: An a valid S3Connection instance.
  */
 void s3connection_free (S3Connection *conn) {
-    if (conn->aws_id != NULL) {
+    if (conn->aws_id != NULL)
         free(conn->aws_id);
-    }
 
-    if (conn->aws_key != NULL) {
+    if (conn->aws_key != NULL)
         free(conn->aws_key);
-    }
 
-    if (conn->aws_url != NULL) {
-        free(conn->aws_url);
-    }
+    if (conn->s3_url != NULL)
+        free(conn->s3_url);
+
+    if (conn->curl != NULL) 
+        curl_easy_cleanup(conn->curl);
 }

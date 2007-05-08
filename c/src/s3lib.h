@@ -43,5 +43,7 @@
 #define false 0
 #endif
 
+#include <curl/curl.h>
+
 /* S3lib includes */
 #include "S3Connection.h"
