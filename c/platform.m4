@@ -102,7 +102,7 @@ AC_DEFUN(TR_CONFIG_LIBRARY, [
     esac
 
     if test "x$LIBRARY_SUFFIX" = "x" ; then
-	AC_MSG_ERROR([Can't figure out how to do link libraries on this system.])
+	AC_MSG_ERROR([Can't figure out how to link libraries on this system.])
     fi
 
     LIBRARY_FILE='${LIBRARY_NAME}${LIBRARY_SUFFIX}'
