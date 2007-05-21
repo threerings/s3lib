@@ -37,10 +37,10 @@
 #define S3ERROR_H
 
 /** S3 error result. */
-typedef struct S3Error S3Error;
+typedef struct S3ServerError S3ServerError;
 
-TR_EXTERN S3Error *s3error_new (const char *xmlData, int length);
-TR_EXTERN const char *s3error_requestid (S3Error *error);
-TR_EXTERN void s3error_free (S3Error *error);
+TR_EXTERN S3ServerError *s3server_error_new (const char *xmlData, int length);
+TR_EXTERN const char *s3server_error_requestid (S3ServerError *error);
+TR_EXTERN void s3server_error_free (S3ServerError *error);
 
 #endif /* S3ERROR_H */

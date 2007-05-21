@@ -52,10 +52,16 @@
  * @{
  */
 
-/**
- * Stores an S3 error result.
+/*!
+ * @defgroup S3ServerError S3 Server Error Handling
+ * @ingroup S3Error
+ * @{
  */
-struct S3Error {
+
+/**
+ * Represents a S3 server error result.
+ */
+struct S3ServerError {
     char *code;
     char *message;
     char *resource;
@@ -69,14 +75,14 @@ struct S3Error {
  * @param length buffer length.
  * @return A new S3Error instance.
  */
-TR_DECLARE S3Error *s3error_new (const char *xmlBuffer, int length) {
-    S3Error *error = NULL;
+TR_DECLARE S3ServerError *s3server_error_new (const char *xmlBuffer, int length) {
+    S3ServerError *error = NULL;
     xmlDoc *doc = NULL;
     xmlNode *root;
     xmlNode *node;
 
     /* Allocate a new S3 error. */
-    error = calloc(1, sizeof(S3Error));
+    error = calloc(1, sizeof(S3ServerError));
     if (error == NULL)
         return NULL;
 
@@ -134,7 +140,7 @@ error:
     if (doc)
         xmlFreeDoc(doc);
 
-    s3error_free(error);
+    s3server_error_free(error);
     return NULL;
 }
 
@@ -145,7 +151,7 @@ error:
  * @param error A S3Error instance
  * @return The request ID, or NULL if the server did not provide one.
  */
-TR_DECLARE const char *s3error_requestid (S3Error *error) {
+TR_DECLARE const char *s3server_error_requestid (S3ServerError *error) {
     return error->requestid;
 }
 
@@ -154,7 +160,7 @@ TR_DECLARE const char *s3error_requestid (S3Error *error) {
  * Deallocate a S3Error instance.
  * @param error An S3Error instance.
  */
-TR_DECLARE void s3error_free (S3Error *error) {
+TR_DECLARE void s3server_error_free (S3ServerError *error) {
     if (error->code != NULL)
         free(error->code);
     
@@ -169,6 +175,10 @@ TR_DECLARE void s3error_free (S3Error *error) {
 
     free(error);
 }
+
+/*!
+ * @} S3ServerError
+ */
 
 /*!
  * @} S3Error

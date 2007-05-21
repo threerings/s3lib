@@ -51,16 +51,16 @@ static const char error_document[] =
 " </Error>";
 
 START_TEST (test_new) {
-    S3Error *error;
+    S3ServerError *error;
 
     /* Parse the error. */
-    error = s3error_new(error_document, sizeof(error_document));
+    error = s3server_error_new(error_document, sizeof(error_document));
 
     /* Check the request id. */
-    fail_if(s3error_requestid(error) == NULL);
-    fail_unless(strcmp(s3error_requestid(error), "4442587FB7D0A2F9") == 0);
+    fail_if(s3server_error_requestid(error) == NULL);
+    fail_unless(strcmp(s3server_error_requestid(error), "4442587FB7D0A2F9") == 0);
 
-    s3error_free(error);
+    s3server_error_free(error);
 }
 END_TEST
 
