@@ -36,8 +36,8 @@
 /** Maintains S3 connection state. */
 typedef struct S3Connection S3Connection;
 
-extern const char S3_DEFAULT_URL[];
+TR_EXTERN const char S3_DEFAULT_URL[];
 
-S3Connection *s3connection_new (const char *aws_id, const char *aws_key);
-bool s3connection_set_url (S3Connection *conn, const char *s3_url);
-void s3connection_free (S3Connection *conn);
+TR_EXTERN S3Connection *s3connection_new (const char *aws_id, const char *aws_key);
+TR_EXTERN bool s3connection_set_url (S3Connection *conn, const char *s3_url);
+TR_EXTERN void s3connection_free (S3Connection *conn);
