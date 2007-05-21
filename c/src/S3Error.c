@@ -62,9 +62,20 @@
  * Represents a S3 server error result.
  */
 struct S3ServerError {
+    /** @internal
+     * S3 error code. */
     char *code;
+
+    /** @internal
+     * S3-generated error message. */
     char *message;
+
+    /** @internal
+     * Resource requested. */
     char *resource;
+
+    /** @internal
+     * Associated request id. */
     char *requestid;
 };
 
@@ -73,7 +84,7 @@ struct S3ServerError {
  *
  * @param xmlBuffer S3 XML error document.
  * @param length buffer length.
- * @return A new S3Error instance.
+ * @return A new #S3ServerError instance.
  */
 TR_DECLARE S3ServerError *s3server_error_new (const char *xmlBuffer, int length) {
     S3ServerError *error = NULL;
@@ -146,9 +157,9 @@ error:
 
 
 /**
- * Return the S3Error Request Id.
+ * Return the request id associated with the #S3ServerError.
  *
- * @param error A S3Error instance
+ * @param error A #S3ServerError instance
  * @return The request ID, or NULL if the server did not provide one.
  */
 TR_DECLARE const char *s3server_error_requestid (S3ServerError *error) {
@@ -157,8 +168,8 @@ TR_DECLARE const char *s3server_error_requestid (S3ServerError *error) {
 
 
 /**
- * Deallocate a S3Error instance.
- * @param error An S3Error instance.
+ * Deallocate a #S3ServerError instance.
+ * @param error An #S3ServerError instance.
  */
 TR_DECLARE void s3server_error_free (S3ServerError *error) {
     if (error->code != NULL)

@@ -55,7 +55,7 @@ TR_DECLARE const char S3_DEFAULT_URL[] = "https://s3.amazonaws.com";
 
 /**
  * Maintains S3 connection state.
- * @attention S3Connection instances are not re-entrant.
+ * @attention #S3Connection instances are not re-entrant.
  */
 struct S3Connection {
     /** @internal
@@ -76,13 +76,13 @@ struct S3Connection {
 };
 
 /**
- * Instantiate a new S3 connection instance.
- * @attention S3Connection instances are not re-entrant, and should not be
+ * Instantiate a new #S3Connection instance.
+ * @attention Instances of #S3Connection are not re-entrant, and should not be
  * shared between multiple threads.
  *
  * @param aws_id Your Amazon AWS Id.
  * @param aws_key Your Amazon AWS Secret Key.
- * @return A new S3Connection instance, or NULL on failure.
+ * @return A new #S3Connection instance, or NULL on failure.
  */
 TR_DECLARE S3Connection *s3connection_new (const char *aws_id, const char *aws_key) {
     S3Connection *conn;
@@ -120,11 +120,11 @@ error:
 }
 
 /**
- * Set the connection's S3 service URL.
+ * Set the #S3Connection's S3 service URL.
  *
  * The service URL defaults to #S3_DEFAULT_URL, and will not generally need to be changed.
  *
- * @param conn A valid S3Connection instance.
+ * @param conn A valid #S3Connection instance.
  * @param s3_url The new S3 service URL.
  * @return true on success, false on failure.
  */
@@ -152,8 +152,8 @@ TR_DECLARE void *s3connection_create_bucket (S3Connection *conn, const char *buc
 #endif
 
 /**
- * Close and free a S3 connection instance.
- * @param conn A valid S3Connection instance.
+ * Close and free a #S3Connection instance.
+ * @param conn A #S3Connection instance.
  */
 TR_DECLARE void s3connection_free (S3Connection *conn) {
     if (conn->aws_id != NULL)
