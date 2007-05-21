@@ -1,5 +1,5 @@
 /*
- * S3Lib.h vi:ts=4:sw=4:expandtab:
+ * S3Error.h vi:ts=4:sw=4:expandtab:
  * Amazon S3 Library
  *
  * Author: Landon Fuller <landonf@threerings.net>
@@ -33,44 +33,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef S3LIB_H
-#define S3LIB_H
+#ifndef S3ERROR_H
+#define S3ERROR_H
 
-#include <stdbool.h>
+/** S3 error result. */
+typedef struct S3Error S3Error;
 
+TR_EXTERN S3Error *s3error_new (const char *xmlData, int length);
+TR_EXTERN void s3error_free (S3Error *error);
 
-/* Win32-compatible 'extern' */
-#if defined(__WIN32__)
-    #if defined(TR_BUILDING_s3lib_LIB) // Building s3lib
-    #define TR_EXTERN  __declspec(dllexport)
-    #define TR_DECLARE __declspec(dllexport)
-    #else // Not building s3lib
-    #define TR_EXTERN __declspec(dllimport) extern
-    #define TR_DECLARE __declspec(dllimport) extern
-    #endif /* TR_BUILDING_s3lib_LIB */
-#else /* __WIN32__ */
-    #define TR_EXTERN extern
-    #define TR_DECLARE
-#endif /* !__WIN32__ */
-
-
-/* cURL includes */
-#include <curl/curl.h>
-
-/*!
- * @defgroup S3Library Amazon S3 Library
- * @{
- */
-
-/* s3lib includes */
-#include "S3Error.h"
-#include "S3Connection.h"
-
-/* s3lib functions */
-TR_EXTERN void s3lib_global_init (void);
-
-/*!
- * @} S3Lib
- */
-
-#endif /* S3LIB_H */
+#endif /* S3ERROR_H */

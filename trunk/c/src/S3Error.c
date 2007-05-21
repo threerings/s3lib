@@ -1,5 +1,5 @@
 /*
- * S3Lib.h vi:ts=4:sw=4:expandtab:
+ * S3Error.c vi:ts=4:sw=4:expandtab:
  * Amazon S3 Library
  *
  * Author: Landon Fuller <landonf@threerings.net>
@@ -33,44 +33,85 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef S3LIB_H
-#define S3LIB_H
+#include <stdlib.h>
+#include <libxml/parser.h>
 
-#include <stdbool.h>
+#include <S3Lib.h>
 
-
-/* Win32-compatible 'extern' */
-#if defined(__WIN32__)
-    #if defined(TR_BUILDING_s3lib_LIB) // Building s3lib
-    #define TR_EXTERN  __declspec(dllexport)
-    #define TR_DECLARE __declspec(dllexport)
-    #else // Not building s3lib
-    #define TR_EXTERN __declspec(dllimport) extern
-    #define TR_DECLARE __declspec(dllimport) extern
-    #endif /* TR_BUILDING_s3lib_LIB */
-#else /* __WIN32__ */
-    #define TR_EXTERN extern
-    #define TR_DECLARE
-#endif /* !__WIN32__ */
-
-
-/* cURL includes */
-#include <curl/curl.h>
+/**
+ * @file
+ * @brief S3 error handling.
+ * @author Landon Fuller <landonf@threerings.net>
+ */
 
 /*!
- * @defgroup S3Library Amazon S3 Library
+ * @defgroup S3Error S3 Error Handling
+ * @ingroup S3Library
  * @{
  */
 
-/* s3lib includes */
-#include "S3Error.h"
-#include "S3Connection.h"
+/**
+ * Stores an S3 error result.
+ */
+struct S3Error {
+    char *code;
+    char *message;
+    char *resource;
+    char *request_id;
+};
 
-/* s3lib functions */
-TR_EXTERN void s3lib_global_init (void);
+/**
+ * Instantiate a new S3Error instance.
+ *
+ * @param xmlBuffer S3 XML error document.
+ * @param length buffer length.
+ */
+TR_DECLARE S3Error *s3error_new (const char *xmlBuffer, int length) {
+    S3Error *error = NULL;
+    xmlDoc *doc = NULL;
+
+    /* Allocate a new S3 error. */
+    error = calloc(1, sizeof(S3Error));
+    if (error == NULL)
+        return NULL;
+
+    /* Parse the error document. */
+    doc = xmlReadMemory(xmlBuffer, length, "", NULL, XML_PARSE_NONET | XML_PARSE_NOERROR);
+    if (!doc)
+        goto error;
+
+    /* Free the document and return the error instance. */
+    xmlFreeDoc(doc);
+    return error;
+
+error:
+    if (doc)
+        xmlFreeDoc(doc);
+
+    s3error_free(error);
+    return NULL;
+}
+
+/**
+ * Deallocate a S3 error instance.
+ * @param error An S3Error instance.
+ */
+TR_DECLARE void s3error_free (S3Error *error) {
+    if (error->code != NULL)
+        free(error->code);
+    
+    if (error->message != NULL)
+        free(error->message);
+
+    if (error->resource != NULL)
+        free(error->resource);
+    
+    if (error->request_id != NULL)
+        free(error->request_id);
+
+    free(error);
+}
 
 /*!
- * @} S3Lib
+ * @} S3Error
  */
-
-#endif /* S3LIB_H */

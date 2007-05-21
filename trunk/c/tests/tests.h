@@ -38,8 +38,9 @@
 
 #include <config.h>
 #include <check.h>
-#include <src/s3lib.h>
+#include <src/S3Lib.h>
 
 Suite *S3Connection_suite(void);
+Suite *S3Error_suite(void);
 
 #endif /* TESTS_H */
