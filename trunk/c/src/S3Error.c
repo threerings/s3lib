@@ -34,6 +34,8 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
+
 #include <libxml/parser.h>
 
 #include <S3Lib.h>
@@ -57,7 +59,7 @@ struct S3Error {
     char *code;
     char *message;
     char *resource;
-    char *request_id;
+    char *requestid;
 };
 
 /**
@@ -65,10 +67,13 @@ struct S3Error {
  *
  * @param xmlBuffer S3 XML error document.
  * @param length buffer length.
+ * @return A new S3Error instance.
  */
 TR_DECLARE S3Error *s3error_new (const char *xmlBuffer, int length) {
     S3Error *error = NULL;
     xmlDoc *doc = NULL;
+    xmlNode *root;
+    xmlNode *node;
 
     /* Allocate a new S3 error. */
     error = calloc(1, sizeof(S3Error));
@@ -76,9 +81,50 @@ TR_DECLARE S3Error *s3error_new (const char *xmlBuffer, int length) {
         return NULL;
 
     /* Parse the error document. */
-    doc = xmlReadMemory(xmlBuffer, length, "", NULL, XML_PARSE_NONET | XML_PARSE_NOERROR);
-    if (!doc)
+    doc = xmlReadMemory(xmlBuffer, length, "noname.xml", NULL, XML_PARSE_NONET | XML_PARSE_NOERROR);
+    if (doc == NULL)
         goto error;
+
+    root = xmlDocGetRootElement(doc);
+    if (root == NULL || root->children == NULL)
+        goto error;
+
+    /* Iterate over the <Error> children elements. We cast back and forth
+     * between UTF-8 unsigned char and signed char pointers, for lack of
+     * a standard UTF-8 string type. */
+    for (node = root->children; node != NULL; node = node->next) {
+        /* Must be an element node. */
+        if (node->type != XML_ELEMENT_NODE)
+            continue;
+
+        /* Must have a child text element */
+        if (node->children == NULL || node->children->type != XML_TEXT_NODE)
+            continue;
+
+        /* The child element must have text content */
+        if (node->children->content == NULL)
+            continue;
+
+        /* Code */
+        if (xmlStrEqual(node->name, (xmlChar *) "Code")) {
+            error->code = strdup((char *) node->children->content);
+        }
+
+        /* Message */
+        else if (xmlStrEqual(node->name, (xmlChar *) "Message")) {
+            error->message = strdup((char *) node->children->content);
+        }
+
+        /* Resource */
+        else if (xmlStrEqual(node->name, (xmlChar *) "Resource")) {
+            error->resource = strdup((char *) node->children->content);
+        }
+        
+        /* RequestId */
+        else if (xmlStrEqual(node->name, (xmlChar *) "RequestId")) {
+            error->requestid = strdup((char *) node->children->content);
+        }
+    }
 
     /* Free the document and return the error instance. */
     xmlFreeDoc(doc);
@@ -92,8 +138,20 @@ error:
     return NULL;
 }
 
+
 /**
- * Deallocate a S3 error instance.
+ * Return the S3Error Request Id.
+ *
+ * @param error A S3Error instance
+ * @return The request ID, or NULL if the server did not provide one.
+ */
+TR_DECLARE const char *s3error_requestid (S3Error *error) {
+    return error->requestid;
+}
+
+
+/**
+ * Deallocate a S3Error instance.
  * @param error An S3Error instance.
  */
 TR_DECLARE void s3error_free (S3Error *error) {
@@ -106,8 +164,8 @@ TR_DECLARE void s3error_free (S3Error *error) {
     if (error->resource != NULL)
         free(error->resource);
     
-    if (error->request_id != NULL)
-        free(error->request_id);
+    if (error->requestid != NULL)
+        free(error->requestid);
 
     free(error);
 }
