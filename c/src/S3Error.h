@@ -40,6 +40,7 @@
 typedef struct S3Error S3Error;
 
 TR_EXTERN S3Error *s3error_new (const char *xmlData, int length);
+TR_EXTERN const char *s3error_requestid (S3Error *error);
 TR_EXTERN void s3error_free (S3Error *error);
 
 #endif /* S3ERROR_H */

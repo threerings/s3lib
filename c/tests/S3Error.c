@@ -37,6 +37,8 @@
 #include <config.h>
 #endif
 
+#include <string.h>
+
 #include "tests.h"
 
 static const char error_document[] =
@@ -50,7 +52,14 @@ static const char error_document[] =
 
 START_TEST (test_new) {
     S3Error *error;
+
+    /* Parse the error. */
     error = s3error_new(error_document, sizeof(error_document));
+
+    /* Check the request id. */
+    fail_if(s3error_requestid(error) == NULL);
+    fail_unless(strcmp(s3error_requestid(error), "4442587FB7D0A2F9") == 0);
+
     s3error_free(error);
 }
 END_TEST
