@@ -54,7 +54,7 @@ AC_CACHE_SAVE
 LIBCURL_CHECK_CONFIG([yes], [], [], [
 	AC_MSG_ERROR([s3lib requires libcurl (http://curl.haxx.se/).])
 ])
-AM_PATH_XML2([2.6.23], [], [
+AM_PATH_XML2([2.6.16], [], [
 	AC_MSG_ERROR([s3lib requires libxml2 (http://www.xmlsoft.org).])
 ])
 OD_LIBCHECK
