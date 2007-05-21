@@ -1,5 +1,5 @@
 /*
- * S3Lib.h vi:ts=4:sw=4:expandtab:
+ * S3Lib.c vi:ts=4:sw=4:expandtab:
  * Amazon S3 Library
  *
  * Author: Landon Fuller <landonf@threerings.net>
@@ -33,44 +33,29 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef S3LIB_H
-#define S3LIB_H
+#include <S3Lib.h>
+#include <libxml/parser.h>
 
-#include <stdbool.h>
-
-
-/* Win32-compatible 'extern' */
-#if defined(__WIN32__)
-    #if defined(TR_BUILDING_s3lib_LIB) // Building s3lib
-    #define TR_EXTERN  __declspec(dllexport)
-    #define TR_DECLARE __declspec(dllexport)
-    #else // Not building s3lib
-    #define TR_EXTERN __declspec(dllimport) extern
-    #define TR_DECLARE __declspec(dllimport) extern
-    #endif /* TR_BUILDING_s3lib_LIB */
-#else /* __WIN32__ */
-    #define TR_EXTERN extern
-    #define TR_DECLARE
-#endif /* !__WIN32__ */
-
-
-/* cURL includes */
-#include <curl/curl.h>
+/**
+ * @file
+ * @brief S3 library support.
+ * @author Landon Fuller <landonf@threerings.net>
+ */
 
 /*!
- * @defgroup S3Library Amazon S3 Library
+ * @ingroup S3Library
  * @{
  */
 
-/* s3lib includes */
-#include "S3Error.h"
-#include "S3Connection.h"
-
-/* s3lib functions */
-TR_EXTERN void s3lib_global_init (void);
+/**
+ * Perform global library initialization. This
+ * does not initialize libcurl.
+ */
+TR_DECLARE void s3lib_global_init (void) {
+    /* Verify libxml version compatibility. */
+    LIBXML_TEST_VERSION;
+}
 
 /*!
- * @} S3Lib
+ * @} S3Library
  */
-
-#endif /* S3LIB_H */

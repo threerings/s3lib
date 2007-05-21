@@ -64,13 +64,14 @@ int main(int argc, char *argv[]) {
     /* Load all test suites */
     s = S3Connection_suite();
     sr = srunner_create(s);
-    // srunner_add_suite(sr, TODO_suite());
+    srunner_add_suite(sr, S3Error_suite());
 
     /* Enable XML output */
     if (argc == 2)
         srunner_set_xml(sr, argv[1]);
 
-    /* CURL Initializers */
+    /* Library Initializers */
+    s3lib_global_init();
     curl_global_init(CURL_GLOBAL_ALL);
 
     /* Run tests */

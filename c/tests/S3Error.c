@@ -1,11 +1,11 @@
 /*
- * S3Lib.h vi:ts=4:sw=4:expandtab:
- * Amazon S3 Library
+ * S3Error.c vi:ts=4:sw=4:expandtab:
+ * Amazon S3 Library Unit Tests
  *
  * Author: Landon Fuller <landonf@threerings.net>
  *
- * Copyright (c) 2007 Landon Fuller <landonf@bikemonkey.org>
- * Copyright (c) 2007 Three Rings Design, Inc.
+ * Copyright (c) 2006 - 2007 Landon Fuller <landonf@bikemonkey.org>
+ * Copyright (c) 2006 - 2007 Three Rings Design, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,44 +33,34 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef S3LIB_H
-#define S3LIB_H
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
-#include <stdbool.h>
+#include "tests.h"
 
+static const char error_document[] =
+"<?xml version=\"1.0\" encoding=\"UTF-8\"?>" \
+" <Error>" \
+"   <Code>NoSuchKey</Code>" \
+"   <Message>The resource you requested does not exist</Message>" \
+"   <Resource>/mybucket/myfoto.jpg</Resource>" \
+"   <RequestId>4442587FB7D0A2F9</RequestId>" \
+" </Error>";
 
-/* Win32-compatible 'extern' */
-#if defined(__WIN32__)
-    #if defined(TR_BUILDING_s3lib_LIB) // Building s3lib
-    #define TR_EXTERN  __declspec(dllexport)
-    #define TR_DECLARE __declspec(dllexport)
-    #else // Not building s3lib
-    #define TR_EXTERN __declspec(dllimport) extern
-    #define TR_DECLARE __declspec(dllimport) extern
-    #endif /* TR_BUILDING_s3lib_LIB */
-#else /* __WIN32__ */
-    #define TR_EXTERN extern
-    #define TR_DECLARE
-#endif /* !__WIN32__ */
+START_TEST (test_new) {
+    S3Error *error;
+    error = s3error_new(error_document, sizeof(error_document));
+    s3error_free(error);
+}
+END_TEST
 
+Suite *S3Error_suite(void) {
+    Suite *s = suite_create("S3Error");
 
-/* cURL includes */
-#include <curl/curl.h>
+    TCase *tc_general = tcase_create("General");
+    suite_add_tcase(s, tc_general);
+    tcase_add_test(tc_general, test_new);
 
-/*!
- * @defgroup S3Library Amazon S3 Library
- * @{
- */
-
-/* s3lib includes */
-#include "S3Error.h"
-#include "S3Connection.h"
-
-/* s3lib functions */
-TR_EXTERN void s3lib_global_init (void);
-
-/*!
- * @} S3Lib
- */
-
-#endif /* S3LIB_H */
+    return s;
+}

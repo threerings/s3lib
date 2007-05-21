@@ -34,10 +34,9 @@
  */
 
 #include <stdlib.h>
-#include <stdbool.h>
 #include <string.h>
 
-#include <s3lib.h>
+#include <S3Lib.h>
 
 /**
  * @file
@@ -142,6 +141,17 @@ TR_DECLARE bool s3connection_set_url (S3Connection *conn, const char *s3_url) {
 }
 
 /**
+ * Create a new S3 bucket
+ * @param conn A valid S3Connection instance.
+ * @param bucketName The name of the bucket to create.
+ * @return A #s3error_t result.
+ */
+#if 0
+TR_DECLARE void *s3connection_create_bucket (S3Connection *conn, const char *bucketName) {
+}
+#endif
+
+/**
  * Close and free a S3 connection instance.
  * @param conn A valid S3Connection instance.
  */
@@ -157,6 +167,8 @@ TR_DECLARE void s3connection_free (S3Connection *conn) {
 
     if (conn->curl != NULL) 
         curl_easy_cleanup(conn->curl);
+
+    free(conn);
 }
 
 /**
