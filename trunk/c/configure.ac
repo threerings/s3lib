@@ -11,6 +11,9 @@ TR_WERROR
 TR_COMPILER_ATTRIBUTE_PRIVATE
 AC_CACHE_SAVE
 
+# Build Defines
+AC_DEFINE([TR_BUILDING_s3lib_LIB], [], [Define when building the s3lib library.])
+
 # Programs
 AC_PROG_INSTALL
 AC_PROG_LN_S

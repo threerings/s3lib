@@ -36,9 +36,23 @@
 #ifndef S3LIB_H
 #define S3LIB_H
 
-/* system includes */
-#include <stdlib.h>
 #include <stdbool.h>
+
+
+/* Win32-compatible 'extern' */
+#if defined(__WIN32__)
+    #if defined(TR_BUILDING_s3lib_LIB) // Building s3lib
+    #define TR_EXTERN  __declspec(dllexport)
+    #define TR_DECLARE __declspec(dllexport)
+    #else // Not building s3lib
+    #define TR_EXTERN __declspec(dllimport) extern
+    #define TR_DECLARE __declspec(dllimport) extern
+    #endif /* TR_BUILDING_s3lib_LIB */
+#else /* __WIN32__ */
+    #define TR_EXTERN extern
+    #define TR_DECLARE
+#endif /* !__WIN32__ */
+
 
 /* cURL includes */
 #include <curl/curl.h>

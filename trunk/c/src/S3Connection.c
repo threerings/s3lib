@@ -33,9 +33,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <s3lib.h>
-
+#include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
+
+#include <s3lib.h>
 
 /**
  * @file
@@ -50,11 +52,11 @@
  */
 
 /** Default Amazon S3 URL. */
-const char S3_DEFAULT_URL[] = "https://s3.amazonaws.com";
+TR_DECLARE const char S3_DEFAULT_URL[] = "https://s3.amazonaws.com";
 
 /**
  * Maintains S3 connection state.
- * @attention S3Connection instances are not thread-safe.
+ * @attention S3Connection instances are not re-entrant.
  */
 struct S3Connection {
     /** @internal
@@ -76,14 +78,14 @@ struct S3Connection {
 
 /**
  * Instantiate a new S3 connection instance.
- * @attention S3Connection instances are not thread-safe, and must not be
+ * @attention S3Connection instances are not re-entrant, and should not be
  * shared between multiple threads.
  *
  * @param aws_id Your Amazon AWS Id.
  * @param aws_key Your Amazon AWS Secret Key.
  * @return A new S3Connection instance, or NULL on failure.
  */
-S3Connection *s3connection_new (const char *aws_id, const char *aws_key) {
+TR_DECLARE S3Connection *s3connection_new (const char *aws_id, const char *aws_key) {
     S3Connection *conn;
 
     /* Allocate a new S3 Connection. */
@@ -127,9 +129,7 @@ error:
  * @param s3_url The new S3 service URL.
  * @return true on success, false on failure.
  */
-bool s3connection_set_url (S3Connection *conn, const char *s3_url) {
-    char *saved = conn->s3_url;
-
+TR_DECLARE bool s3connection_set_url (S3Connection *conn, const char *s3_url) {
     /* Free the old URL. */
     if (conn->s3_url != NULL)
         free(conn->s3_url);
@@ -137,21 +137,15 @@ bool s3connection_set_url (S3Connection *conn, const char *s3_url) {
     /* Copy the new URL */
     conn->s3_url = strdup(s3_url);
 
-    /* This is unlikely; restore the URL to keep the data structure consistent. */
-    if (conn->s3_url == NULL) {
-        conn->s3_url = saved;
-        return false;
-    }
-
     /* Success */
     return true;
 }
 
 /**
  * Close and free a S3 connection instance.
- * @param conn An a valid S3Connection instance.
+ * @param conn A valid S3Connection instance.
  */
-void s3connection_free (S3Connection *conn) {
+TR_DECLARE void s3connection_free (S3Connection *conn) {
     if (conn->aws_id != NULL)
         free(conn->aws_id);
 
