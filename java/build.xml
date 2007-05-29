@@ -89,7 +89,7 @@
     <target name="test" depends="compile">
         <!-- haul in our AWS id and key -->
         <if><isset property="s3lib.test.propertyfile"/><then>
-            <property file="s3lib.test.propertyfile"/>
+            <property file="${s3lib.test.propertyfile}"/>
         </then><else>
             <property file="test.properties"/>
         </else></if>
