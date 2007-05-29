@@ -88,13 +88,17 @@
     <!-- run the unit tests -->
     <target name="test" depends="compile">
         <!-- haul in our AWS id and key -->
-        <property file="test.properties"/>
+        <if><isset property="s3lib.test.propertyfile"/><then>
+            <property file="s3lib.test.propertyfile"/>
+        </then><else>
+            <property file="test.properties"/>
+        </else></if>
 
         <if>
             <isset property="test"/>
             <then>
                 <!-- run one test -->
-                <junit printsummary="yes">
+                <junit printsummary="yes" haltonfailure="yes">
                     <!-- Vend the aws. properties -->
                     <syspropertyset>
                         <propertyref prefix="aws."/>
@@ -115,7 +119,7 @@
             </then>
             <else>
                 <!-- run all tests -->
-                <junit printsummary="yes">
+                <junit printsummary="yes" haltonfailure="yes">
                     <!-- Vend the aws. properties -->
                     <syspropertyset>
                         <propertyref prefix="aws."/>
