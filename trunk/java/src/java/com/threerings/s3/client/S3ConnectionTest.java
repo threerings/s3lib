@@ -41,6 +41,8 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
 
+import java.security.SecureRandom;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -86,11 +88,12 @@ public class S3ConnectionTest extends TestCase
     }
 
     /**
-     * Generate a unique-ish test bucket name.
+     * Generate a unique test bucket name.
      */
     public static String generateTestBucketName ()
     {
-        return  "test-" + getId();
+        int random = new SecureRandom().nextInt(Integer.MAX_VALUE);
+        return  "test-" + getId() + "-" + random;
     }
 
     public S3ConnectionTest (String name)
