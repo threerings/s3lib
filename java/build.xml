@@ -64,6 +64,15 @@
         <delete dir="${deploy.dir}"/>
     </target>
 
+    <!-- runs svnclean checks on the svnclean.fileset -->
+    <target name="checkclean">
+      <!-- haul in the svn clean checker -->
+      <taskdef name="svnclean" classname="com.threerings.ant.SVNClean" classpathref="classpath.ant"/>
+      <svnclean>
+        <fileset dir="${basedir}"/>
+      </svnclean>
+    </target>
+
     <!-- build the java class files -->
     <target name="compile" depends="prepare">
         <depend srcdir="src/java" destdir="${deploy.dir}/classes"
