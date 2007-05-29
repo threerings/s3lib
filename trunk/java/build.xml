@@ -118,6 +118,8 @@
                 </junit>
             </then>
             <else>
+                <!-- used for junit xml output -->
+                <mkdir dir="${deploy.dir}/tmp"/>
                 <!-- run all tests -->
                 <junit printsummary="yes" haltonfailure="yes">
                     <!-- Vend the aws. properties -->
@@ -132,10 +134,11 @@
                     </classpath>
 
                     <!-- human output -->
-                    <formatter type="brief" usefile="false"/>
+                    <formatter type="brief" usefile="false" unless="use.xml.output"/>
+                    <formatter type="xml" usefile="true" if="use.xml.output"/>
 
                     <!-- batch run our tests -->
-                    <batchtest>
+                    <batchtest todir="${deploy.dir}/tmp">
                         <fileset dir="src/java">
                             <include name="**/*Test.java"/>
                         </fileset>
