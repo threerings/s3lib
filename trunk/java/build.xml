@@ -94,58 +94,32 @@
             <property file="test.properties"/>
         </else></if>
 
-        <if>
-            <isset property="test"/>
-            <then>
-                <!-- run one test -->
-                <junit printsummary="yes" haltonfailure="yes">
-                    <!-- Vend the aws. properties -->
-                    <syspropertyset>
-                        <propertyref prefix="aws."/>
-                    </syspropertyset>
+        <junit printsummary="yes" haltonfailure="yes">
+            <!-- Vend the aws. properties -->
+            <syspropertyset>
+                <propertyref prefix="aws."/>
+            </syspropertyset>
 
-                    <!-- include the tests in our class path -->
-                    <classpath>
-                        <pathelement location="${deploy.dir}/classes"/>
-                        <fileset dir="${deploy.dir}/lib" includes="**/*.jar"/>
-                    </classpath>
+            <!-- include the tests in our class path -->
+            <classpath>
+                <pathelement location="${deploy.dir}/classes"/>
+                <fileset dir="${deploy.dir}/lib" includes="**/*.jar"/>
+            </classpath>
 
-                    <!-- human output -->
-                    <formatter type="brief" usefile="false"/>
+            <!-- human output -->
+            <formatter type="brief" usefile="false" unless="use.xml.output"/>
+            <formatter type="xml" usefile="true" if="use.xml.output"/>
 
-                    <!-- run the requested test -->
-                    <test name="${test}"/>
-                </junit>
-            </then>
-            <else>
-                <!-- used for junit xml output -->
-                <mkdir dir="${deploy.dir}/tmp"/>
-                <!-- run all tests -->
-                <junit printsummary="yes" haltonfailure="yes">
-                    <!-- Vend the aws. properties -->
-                    <syspropertyset>
-                        <propertyref prefix="aws."/>
-                    </syspropertyset>
+            <!-- batch run our tests -->
+            <batchtest todir="${deploy.dir}/tmp" unless="test">
+                <fileset dir="src/java">
+                    <include name="**/*Test.java"/>
+                </fileset>
+            </batchtest>
 
-                    <!-- include the tests in our class path -->
-                    <classpath>
-                        <pathelement location="${deploy.dir}/classes"/>
-                        <fileset dir="${deploy.dir}/lib" includes="**/*.jar"/>
-                    </classpath>
-
-                    <!-- human output -->
-                    <formatter type="brief" usefile="false" unless="use.xml.output"/>
-                    <formatter type="xml" usefile="true" if="use.xml.output"/>
-
-                    <!-- batch run our tests -->
-                    <batchtest todir="${deploy.dir}/tmp">
-                        <fileset dir="src/java">
-                            <include name="**/*Test.java"/>
-                        </fileset>
-                    </batchtest>
-                </junit>
-            </else>
-        </if>
+            <!-- run the requested test -->
+            <test name="${test}" if="test"/>
+        </junit>
     </target>
 
     <!-- build the javadoc documentation -->
