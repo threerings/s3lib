@@ -44,6 +44,7 @@
         <mkdir dir="${deploy.dir}"/>
         <mkdir dir="${deploy.dir}/classes"/>
         <mkdir dir="${deploy.dir}/lib"/>
+        <mkdir dir="${deploy.dir}/tmp"/>
         <mkdir dir="${javadoc.home}"/>
         <copy todir="${deploy.dir}/classes">
             <fileset dir="src/java" includes="**/*.properties"/>
