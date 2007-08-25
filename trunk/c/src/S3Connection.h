@@ -42,5 +42,5 @@ TR_EXTERN S3Connection *s3connection_new (const char *aws_id, const char *aws_ke
 TR_EXTERN bool s3connection_set_url (S3Connection *conn, const char *s3_url);
 TR_EXTERN void s3connection_free (S3Connection *conn);
 
-TR_DECLARE void *s3connection_create_bucket (S3Connection *conn, const char *bucketName);
-TR_DECLARE CURL *s3curl_create_bucket (S3Connection *conn, const char *bucketName, CURLcode *error);
+TR_EXTERN void *s3connection_create_bucket (S3Connection *conn, const char *bucketName);
+TR_EXTERN CURL *s3curl_create_bucket (S3Connection *conn, const char *bucketName, CURLcode *error);
