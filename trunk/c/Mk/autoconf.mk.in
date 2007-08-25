@@ -39,5 +39,14 @@ datarootdir		= @datarootdir@
 libdir			= @libdir@
 localstatedir		= @localstatedir@
 infodir			= @infodir@
+includedir		= @includedir@
+
+INSTALL_LIB=		$(INSTALL) -c -m 755
+LIBRARY_INSTALL_DIR=	$(DESTDIR)$(libdir)
+
+INSTALL_HEADER=		$(INSTALL) -c -m 644
+HEADER_INSTALL_DIR=	$(DESTDIR)$(includedir)
+
+INSTALL_DIR=		$(INSTALL) -d -m 755
 
 SILENT			= @
