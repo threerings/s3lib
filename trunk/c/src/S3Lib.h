@@ -36,8 +36,9 @@
 #ifndef S3LIB_H
 #define S3LIB_H
 
-#include <stdbool.h>
+#include <config.h>
 
+#include <stdbool.h>
 
 /* Win32-compatible 'extern' */
 #if defined(__WIN32__)
@@ -68,6 +69,16 @@
 
 /* s3lib functions */
 TR_EXTERN void s3lib_global_init (void);
+
+/* private s3lib functions */
+TR_DECLARE void s3lib_enable_debugging (bool flag);
+TR_PRIVATE bool s3lib_debugging ();
+
+#ifdef TR_BUILDING_s3lib_LIB
+#define DEBUG(msg, args...) \
+    if (s3lib_debugging()) \
+        fprintf(stderr, "[%s in %s:%d] " msg "\n", __func__, __FILE__, __LINE__, ## args)
+#endif
 
 /*!
  * @} S3Lib

@@ -36,6 +36,8 @@
 #include <S3Lib.h>
 #include <libxml/parser.h>
 
+#include <config.h>
+
 /**
  * @file
  * @brief S3 library support.
@@ -47,6 +49,9 @@
  * @{
  */
 
+/** @internal Set to true if debugging is enabled */
+static bool debug = false;
+
 /**
  * Perform global library initialization. This
  * does not initialize libcurl.
@@ -54,6 +59,22 @@
 TR_DECLARE void s3lib_global_init (void) {
     /* Verify libxml version compatibility. */
     LIBXML_TEST_VERSION;
+}
+
+/**
+ * Enable/disable verbose debugging output to stderr.
+ * @param flag Set to true to enable writing of library debugging output to stderr.
+ */
+TR_DECLARE void s3lib_enable_debugging (bool flag) {
+    debug = flag;
+}
+
+/**
+ * @internal
+ * Returns true if stderr debugging mode output is enabled.
+ */
+TR_PRIVATE bool s3lib_debugging () {
+    return debug;
 }
 
 /*!

@@ -54,13 +54,22 @@ START_TEST (test_set_url) {
 }
 END_TEST
 
+START_TEST (test_create_bucket) {
+    S3Connection *conn = s3connection_new("id", "key");
+    s3connection_create_bucket(conn, "test");
+    s3connection_free(conn);
+}
+END_TEST
+
 Suite *S3Connection_suite(void) {
     Suite *s = suite_create("S3Connection");
 
     TCase *tc_general = tcase_create("General");
+    tcase_set_timeout(tc_general, 5);
     suite_add_tcase(s, tc_general);
     tcase_add_test(tc_general, test_new);
     tcase_add_test(tc_general, test_set_url);
+    tcase_add_test(tc_general, test_create_bucket);
 
     return s;
 }
