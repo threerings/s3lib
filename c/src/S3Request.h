@@ -1,11 +1,11 @@
 /*
- * tests.h vi:ts=4:sw=4:expandtab:
- * Amazon S3 Library Unit Tests
+ * S3Request.h vi:ts=4:sw=4:expandtab:
+ * Amazon S3 Library
  *
  * Author: Landon Fuller <landonf@threerings.net>
  *
- * Copyright (c) 2006 - 2007 Landon Fuller <landonf@bikemonkey.org>
- * Copyright (c) 2006 - 2007 Three Rings Design, Inc.
+ * Copyright (c) 2007 Landon Fuller <landonf@bikemonkey.org>
+ * Copyright (c) 2007 Three Rings Design, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,15 +33,37 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TESTS_H
-#define TESTS_H
+#ifndef S3REQUEST_H
+#define S3REQUEST_H
 
-#include <config.h>
-#include <check.h>
-#include <src/S3Lib.h>
+/**
+ * @file
+ * @brief S3 HTTP request context.
+ * @author Landon Fuller <landonf@threerings.net>
+ */
 
-Suite *S3Connection_suite(void);
-Suite *S3Error_suite(void);
-Suite *S3Request_suite(void);
+/*!
+ * @addtogroup S3Request
+ * @{
+ */
 
-#endif /* TESTS_H */
+/* S3 HTTP Request Context. */
+typedef struct S3Request S3Request;
+
+/**
+ * HTTP Request Methods.
+ * All HTTP methods used to implement the S3 REST API.
+ */
+typedef enum {
+    /** HTTP PUT Request. */
+    S3_HTTP_PUT
+} S3HTTPMethod;
+
+TR_EXTERN S3Request *s3request_new (const char *url, S3HTTPMethod method);
+TR_EXTERN void s3request_free (S3Request *req);
+
+/*!
+ * @} S3Library
+ */
+
+#endif /* S3REQUEST_H */

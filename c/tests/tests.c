@@ -65,6 +65,7 @@ int main(int argc, char *argv[]) {
     s = S3Connection_suite();
     sr = srunner_create(s);
     srunner_add_suite(sr, S3Error_suite());
+    srunner_add_suite(sr, S3Request_suite());    
 
     /* Enable XML output */
     if (argc == 2)

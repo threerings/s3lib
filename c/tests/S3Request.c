@@ -1,5 +1,5 @@
 /*
- * tests.h vi:ts=4:sw=4:expandtab:
+ * S3Request.c vi:ts=4:sw=4:expandtab:
  * Amazon S3 Library Unit Tests
  *
  * Author: Landon Fuller <landonf@threerings.net>
@@ -33,15 +33,24 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TESTS_H
-#define TESTS_H
-
+#ifdef HAVE_CONFIG_H
 #include <config.h>
-#include <check.h>
-#include <src/S3Lib.h>
+#endif
 
-Suite *S3Connection_suite(void);
-Suite *S3Error_suite(void);
-Suite *S3Request_suite(void);
+#include "tests.h"
 
-#endif /* TESTS_H */
+START_TEST (test_new) {
+    S3Request *req = s3request_new("http://example.com/resource", S3_HTTP_PUT);
+    s3request_free(req);
+}
+END_TEST
+
+Suite *S3Request_suite(void) {
+    Suite *s = suite_create("S3Request");
+
+    TCase *tc_general = tcase_create("General");
+    suite_add_tcase(s, tc_general);
+    tcase_add_test(tc_general, test_new);
+
+    return s;
+}

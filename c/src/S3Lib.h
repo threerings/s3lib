@@ -36,7 +36,9 @@
 #ifndef S3LIB_H
 #define S3LIB_H
 
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif
 
 #include <stdbool.h>
 
@@ -66,12 +68,13 @@
 /* s3lib includes */
 #include "S3Error.h"
 #include "S3Connection.h"
+#include "S3Request.h"
 
 /* s3lib functions */
 TR_EXTERN void s3lib_global_init (void);
 
 /* private s3lib functions */
-TR_DECLARE void s3lib_enable_debugging (bool flag);
+TR_EXTERN void s3lib_enable_debugging (bool flag);
 TR_PRIVATE bool s3lib_debugging ();
 
 #ifdef TR_BUILDING_s3lib_LIB
