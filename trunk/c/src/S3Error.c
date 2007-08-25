@@ -38,6 +38,10 @@
 
 #include <libxml/parser.h>
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <S3Lib.h>
 
 /**
