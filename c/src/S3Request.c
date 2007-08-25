@@ -33,10 +33,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <S3Lib.h>
 #include <S3Request.h>
-
-#include <config.h>
 
 #include <stdlib.h>
 #include <string.h>

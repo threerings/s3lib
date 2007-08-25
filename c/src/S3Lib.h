@@ -36,10 +36,6 @@
 #ifndef S3LIB_H
 #define S3LIB_H
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include <stdbool.h>
 
 /* Win32-compatible 'extern' */
@@ -60,11 +56,6 @@
 /* cURL includes */
 #include <curl/curl.h>
 
-/*!
- * @defgroup S3Library Amazon S3 Library
- * @{
- */
-
 /* s3lib includes */
 #include "S3Error.h"
 #include "S3Connection.h"
@@ -82,9 +73,5 @@ TR_PRIVATE bool s3lib_debugging ();
     if (s3lib_debugging()) \
         fprintf(stderr, "[%s in %s:%d] " msg "\n", __func__, __FILE__, __LINE__, ## args)
 #endif
-
-/*!
- * @} S3Lib
- */
 
 #endif /* S3LIB_H */

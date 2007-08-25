@@ -33,10 +33,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <S3Lib.h>
 #include <libxml/parser.h>
 
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif
+
+#include <S3Lib.h>
 
 /**
  * @file
