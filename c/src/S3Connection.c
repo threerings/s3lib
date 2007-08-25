@@ -35,6 +35,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #include <S3Lib.h>
 
@@ -55,7 +56,7 @@ TR_DECLARE const char S3_DEFAULT_URL[] = "https://s3.amazonaws.com";
 
 /**
  * Maintains S3 connection state.
- * @attention #S3Connection instances are not re-entrant.
+ * @warning S3Connection instances are not re-entrant, and must not be shared between threads.
  */
 struct S3Connection {
     /** @internal
@@ -72,7 +73,7 @@ struct S3Connection {
 
     /** @internal
      * Cached cURL handle (not thread-safe). */
-    CURL *curl;
+    CURL *handle;
 };
 
 /**
@@ -108,8 +109,8 @@ TR_DECLARE S3Connection *s3connection_new (const char *aws_id, const char *aws_k
         goto error;
 
     /* cURL handle */
-    conn->curl = curl_easy_init();
-    if (conn->curl == NULL)
+    conn->handle = curl_easy_init();
+    if (conn->handle == NULL)
         goto error;
 
     return (conn);    
@@ -141,15 +142,41 @@ TR_DECLARE bool s3connection_set_url (S3Connection *conn, const char *s3_url) {
 }
 
 /**
+ * @internal
+ * Reset the S3Connection's CURL handle for a new request.
+ *
+ * @param conn A valid S3Connection instance.
+ */
+static void s3connection_reset_curl (S3Connection *conn) {
+    curl_easy_reset(conn->handle);
+
+    /* Restore any settings */
+    if (s3lib_debugging())
+        curl_easy_setopt(conn->handle, CURLOPT_VERBOSE, 1);
+}
+
+/**
  * Create a new S3 bucket
+ *
  * @param conn A valid S3Connection instance.
  * @param bucketName The name of the bucket to create.
  * @return A #s3error_t result.
  */
-#if 0
 TR_DECLARE void *s3connection_create_bucket (S3Connection *conn, const char *bucketName) {
+    CURLcode error;
+    
+    if (s3curl_create_bucket(conn, bucketName, &error) == NULL)
+        return NULL;
+
+    error = curl_easy_perform(conn->handle);
+    if (error != CURLE_OK) {
+        fprintf(stderr, "Failure: %s\n", curl_easy_strerror(error));
+    } else {
+        fprintf(stderr, "Success");        
+    }
+
+    return NULL;
 }
-#endif
 
 /**
  * Close and free a #S3Connection instance.
@@ -165,11 +192,73 @@ TR_DECLARE void s3connection_free (S3Connection *conn) {
     if (conn->s3_url != NULL)
         free(conn->s3_url);
 
-    if (conn->curl != NULL) 
-        curl_easy_cleanup(conn->curl);
+    if (conn->handle != NULL) 
+        curl_easy_cleanup(conn->handle);
 
     free(conn);
 }
+
+/**
+ * @defgroup S3Curl S3 libcurl API
+ *
+ * Expert API providing access to the underlying cURL library.
+ *
+ * @warning Returned CURL handles are owned by the provided S3Connection,
+ * and are only valid until the next function is called for the S3Connection instance.
+ *
+ * @{
+ */
+
+/**
+ * Prepare and return the S3Connection's CURL handle for an S3 create bucket request.
+ *
+ * @param conn A valid S3Connection instance.
+ * @param bucketName The name of the bucket to create.
+ * @param error On failure, will contain the corresponding curl error code.
+ * @return A borrowed reference to a configured CURL handle, or NULL on failure.
+ * If failure occurs, the CURL error code will be stored in \a error.
+ */
+TR_DECLARE CURL *s3curl_create_bucket (S3Connection *conn, const char *bucketName, CURLcode *error) {
+    char *url = NULL;
+    char *resource;
+
+    /* Reset the handle */
+    curl_easy_reset(conn->handle);
+    
+    s3connection_reset_curl(conn);
+
+    /* Set the request type */
+    if ((*error = curl_easy_setopt(conn->handle, CURLOPT_UPLOAD, 1)) != CURLE_OK)
+        return NULL;
+
+    /* Create and set the resource URL. */
+    resource = curl_easy_escape(conn->handle, bucketName, 0);
+    
+    // s3_url + "/" + resource + \0 terminator
+    url = malloc(strlen(conn->s3_url) + 1 + strlen(resource) + 1);
+    strcpy(url, conn->s3_url);
+    strcat(url, "/");
+    strcat(url, resource);
+
+    DEBUG("Configuring handle with URL: %s", url);
+
+    *error = curl_easy_setopt(conn->handle, CURLOPT_URL, url);
+    curl_free(resource);
+    // XXX leak. Curl requires that we own, and keep valid, any data we pass to it
+    // for the length of the option's lifetime. Need to replace this with a non-curl
+    // specific S3Request context.
+    // free(url);
+
+    if (*error != CURLE_OK)
+        return NULL;
+
+    *error = CURLE_OK;
+    return conn->handle;
+}
+
+/**
+ * @} S3Curl
+ */
 
 /**
  * @} S3Connection

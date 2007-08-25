@@ -72,6 +72,7 @@ int main(int argc, char *argv[]) {
 
     /* Library Initializers */
     s3lib_global_init();
+    s3lib_enable_debugging(true); // XXX for now
     curl_global_init(CURL_GLOBAL_ALL);
 
     /* Run tests */
