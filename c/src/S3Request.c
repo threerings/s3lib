@@ -40,6 +40,7 @@
 #include <S3Lib.h>
 #include <S3Request.h>
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -75,28 +76,6 @@ struct S3Request {
     S3HTTPMethod method;
 };
 
-/**
- * S3 HTTP Request/Response Headers
- *
- * Maintains a hash table of HTTP headers and their associated values. 
- */
-struct S3Headers {
-    /** @internal S3Request structures, mapped by case-sensitive header name */
-     hash_t *hash;
-};
-
-/**
- * S3Header
- *
- * HTTP header and its associated value(s).
- */
-struct S3Header {
-    /** @internal The header name */
-    const char *name;
-
-    /** @internal The header value(s) */
-    list_t *list;
-};
 
 /**
  * Instantiate a new S3Request instance.
@@ -127,6 +106,7 @@ error:
     s3request_free(req);
     return NULL;
 }
+
 
 /**
  * Free a S3Request instance.

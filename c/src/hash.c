@@ -745,12 +745,12 @@ S3_PRIVATE int hash_isempty(hash_t *hash)
     return hash->nodecount == 0;
 }
 
-static hnode_t *hnode_alloc(TR_UNUSED void *context)
+static hnode_t *hnode_alloc(S3_UNUSED void *context)
 {
     return malloc(sizeof *hnode_alloc(NULL));
 }
 
-static void hnode_free(hnode_t *node, TR_UNUSED void *context)
+static void hnode_free(hnode_t *node, S3_UNUSED void *context)
 {
     free(node);
 }

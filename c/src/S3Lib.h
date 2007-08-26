@@ -75,6 +75,7 @@
 /* s3lib includes */
 #include "S3Error.h"
 #include "S3Connection.h"
+#include "S3Header.h"
 #include "S3Request.h"
 
 /* s3lib functions */
