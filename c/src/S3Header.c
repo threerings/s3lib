@@ -64,7 +64,7 @@
  * Maintains a hash table of HTTP headers and their associated values. 
  */
 struct S3HeaderDictionary {
-    /** @internal S3Request structures, mapped by case-sensitive header name */
+    /** @internal A hash table of S3Header instances, keyed by case-sensitive header name */
      hash_t *hash;
 };
 
