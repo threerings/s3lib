@@ -43,6 +43,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "hash.h"
+
 /**
  * @file
  * @brief S3 HTTP request context.
@@ -57,7 +59,9 @@
 
 /**
  * S3 HTTP Request Context.
- * Contains the headers, HTTP request method, and URL required to complete an S3 operation.
+ * The request context exposes the URL, method, and headers of a composed S3 REST request.
+ * The data can be passed to an HTTP client library to complete an S3 operation.
+ *
  * @sa s3request_new()
  */
 struct S3Request {
@@ -68,6 +72,29 @@ struct S3Request {
     /** @internal
      * Request method */
     S3HTTPMethod method;
+};
+
+/**
+ * S3 HTTP Request/Response Headers
+ *
+ * Maintains a hash table of HTTP headers and their associated values. 
+ */
+struct S3Headers {
+    /** @internal S3Request structures, mapped by case-sensitive header name */
+     hash_t *hash;
+};
+
+/**
+ * S3Header
+ *
+ * HTTP header and its associated value(s).
+ */
+struct S3Header {
+    /** @internal The header name */
+    const char *name;
+
+    /** @internal The header value(s) */
+    const char *value;
 };
 
 /**
