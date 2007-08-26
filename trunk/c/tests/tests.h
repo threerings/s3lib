@@ -42,6 +42,7 @@
 
 Suite *S3Connection_suite(void);
 Suite *S3Error_suite(void);
+Suite *S3Header_suite(void);
 Suite *S3Request_suite(void);
 
 #endif /* TESTS_H */

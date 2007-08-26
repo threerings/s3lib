@@ -199,7 +199,7 @@ AC_DEFUN([TR_COMPILER_ATTRIBUTE_VISIBILITY], [
 # Results:
 #
 #       Defines the following macros:
-#               TR_UNUSED
+#               S3_UNUSED
 #
 #------------------------------------------------------------------------
 
@@ -220,10 +220,10 @@ AC_DEFUN([TR_COMPILER_ATTRIBUTE_UNUSED], [
         AC_MSG_RESULT([$od_cv_attribute_lf_unused])
         
         if test x"$od_cv_attribute_lf_unused" = "xno"; then
-                TR_UNUSED=""
+                S3_UNUSED=""
         else
-                TR_UNUSED="$od_cv_attribute_lf_unused"
+                S3_UNUSED="$od_cv_attribute_lf_unused"
         fi
 
-        AC_DEFINE_UNQUOTED(TR_UNUSED, $TR_UNUSED, [Mark unused variables])
+        AC_DEFINE_UNQUOTED(S3_UNUSED, $S3_UNUSED, [Mark unused variables])
 ])
