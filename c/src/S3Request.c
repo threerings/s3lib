@@ -44,6 +44,7 @@
 #include <string.h>
 
 #include "hash.h"
+#include "list.h"
 
 /**
  * @file
@@ -94,7 +95,7 @@ struct S3Header {
     const char *name;
 
     /** @internal The header value(s) */
-    const char *value;
+    list_t *list;
 };
 
 /**
@@ -104,7 +105,7 @@ struct S3Header {
  * @param method The request HTTP method.
  * @return A new S3Request instance, or NULL on failure.
  */
-TR_DECLARE S3Request *s3request_new (const char *url, S3HTTPMethod method) {
+S3_DECLARE S3Request *s3request_new (const char *url, S3HTTPMethod method) {
     S3Request *req;
 
     /* Allocate a new S3 Request. */
@@ -131,7 +132,7 @@ error:
  * Free a S3Request instance.
  * @param req A S3Request instance.
  */
-TR_DECLARE void s3request_free (S3Request *req) {
+S3_DECLARE void s3request_free (S3Request *req) {
     if (req->url != NULL)
         free(req->url);
 

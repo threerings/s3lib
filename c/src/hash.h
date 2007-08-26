@@ -34,6 +34,8 @@
 extern "C" {
 #endif
 
+#include "S3Lib.h"
+
 typedef unsigned long hashcount_t;
 #define HASHCOUNT_T_MAX ULONG_MAX
 
@@ -180,38 +182,38 @@ typedef struct hscan_t {
     #endif
 } hscan_t;
 
-TR_PRIVATE hash_t *hash_create(hashcount_t, hash_comp_t, hash_fun_t);
-TR_PRIVATE void hash_set_allocator(hash_t *, hnode_alloc_t, hnode_free_t, void *);
-TR_PRIVATE void hash_destroy(hash_t *);
-TR_PRIVATE void hash_free_nodes(hash_t *);
-TR_PRIVATE void hash_free(hash_t *);
-TR_PRIVATE hash_t *hash_init(hash_t *, hashcount_t, hash_comp_t,
+S3_PRIVATE hash_t *hash_create(hashcount_t, hash_comp_t, hash_fun_t);
+S3_PRIVATE void hash_set_allocator(hash_t *, hnode_alloc_t, hnode_free_t, void *);
+S3_PRIVATE void hash_destroy(hash_t *);
+S3_PRIVATE void hash_free_nodes(hash_t *);
+S3_PRIVATE void hash_free(hash_t *);
+S3_PRIVATE hash_t *hash_init(hash_t *, hashcount_t, hash_comp_t,
 	hash_fun_t, hnode_t **, hashcount_t);
-TR_PRIVATE void hash_insert(hash_t *, hnode_t *, const void *);
-TR_PRIVATE hnode_t *hash_lookup(hash_t *, const void *);
-TR_PRIVATE hnode_t *hash_delete(hash_t *, hnode_t *);
-TR_PRIVATE int hash_alloc_insert(hash_t *, const void *, void *);
-TR_PRIVATE void hash_delete_free(hash_t *, hnode_t *);
+S3_PRIVATE void hash_insert(hash_t *, hnode_t *, const void *);
+S3_PRIVATE hnode_t *hash_lookup(hash_t *, const void *);
+S3_PRIVATE hnode_t *hash_delete(hash_t *, hnode_t *);
+S3_PRIVATE int hash_alloc_insert(hash_t *, const void *, void *);
+S3_PRIVATE void hash_delete_free(hash_t *, hnode_t *);
 
-TR_PRIVATE void hnode_put(hnode_t *, void *);
-TR_PRIVATE void *hnode_get(hnode_t *);
-TR_PRIVATE const void *hnode_getkey(hnode_t *);
-TR_PRIVATE hashcount_t hash_count(hash_t *);
-TR_PRIVATE hashcount_t hash_size(hash_t *);
+S3_PRIVATE void hnode_put(hnode_t *, void *);
+S3_PRIVATE void *hnode_get(hnode_t *);
+S3_PRIVATE const void *hnode_getkey(hnode_t *);
+S3_PRIVATE hashcount_t hash_count(hash_t *);
+S3_PRIVATE hashcount_t hash_size(hash_t *);
 
-TR_PRIVATE int hash_isfull(hash_t *);
-TR_PRIVATE int hash_isempty(hash_t *);
+S3_PRIVATE int hash_isfull(hash_t *);
+S3_PRIVATE int hash_isempty(hash_t *);
 
-TR_PRIVATE void hash_scan_begin(hscan_t *, hash_t *);
-TR_PRIVATE hnode_t *hash_scan_next(hscan_t *);
-TR_PRIVATE hnode_t *hash_scan_delete(hash_t *, hnode_t *);
-TR_PRIVATE void hash_scan_delfree(hash_t *, hnode_t *);
+S3_PRIVATE void hash_scan_begin(hscan_t *, hash_t *);
+S3_PRIVATE hnode_t *hash_scan_next(hscan_t *);
+S3_PRIVATE hnode_t *hash_scan_delete(hash_t *, hnode_t *);
+S3_PRIVATE void hash_scan_delfree(hash_t *, hnode_t *);
 
-TR_PRIVATE int hash_verify(hash_t *);
+S3_PRIVATE int hash_verify(hash_t *);
 
-TR_PRIVATE hnode_t *hnode_create(void *);
-TR_PRIVATE hnode_t *hnode_init(hnode_t *, void *);
-TR_PRIVATE void hnode_destroy(hnode_t *);
+S3_PRIVATE hnode_t *hnode_create(void *);
+S3_PRIVATE hnode_t *hnode_init(hnode_t *, void *);
+S3_PRIVATE void hnode_destroy(hnode_t *);
 
 #if defined(HASH_IMPLEMENTATION) || !defined(KAZLIB_OPAQUE_DEBUG)
 #ifdef KAZLIB_SIDEEFFECT_DEBUG

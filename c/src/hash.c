@@ -294,7 +294,7 @@ static void shrink_table(hash_t *hash)
  * 8. The table of chains must be properly reset to all null pointers.
  */
 
-TR_PRIVATE hash_t *hash_create(hashcount_t maxcount, hash_comp_t compfun,
+S3_PRIVATE hash_t *hash_create(hashcount_t maxcount, hash_comp_t compfun,
 	hash_fun_t hashfun)
 {
     hash_t *hash;
@@ -333,7 +333,7 @@ TR_PRIVATE hash_t *hash_create(hashcount_t maxcount, hash_comp_t compfun,
  * Select a different set of node allocator routines.
  */
 
-TR_PRIVATE void hash_set_allocator(hash_t *hash, hnode_alloc_t al,
+S3_PRIVATE void hash_set_allocator(hash_t *hash, hnode_alloc_t al,
 	hnode_free_t fr, void *context)
 {
     assert (hash_count(hash) == 0);
@@ -349,7 +349,7 @@ TR_PRIVATE void hash_set_allocator(hash_t *hash, hnode_alloc_t al,
  * cause the hash to become empty.
  */
 
-TR_PRIVATE void hash_free_nodes(hash_t *hash)
+S3_PRIVATE void hash_free_nodes(hash_t *hash)
 {
     hscan_t hs;
     hnode_t *node;
@@ -367,7 +367,7 @@ TR_PRIVATE void hash_free_nodes(hash_t *hash)
  * freeing them and then freeing the table all in one step.
  */
 
-TR_PRIVATE void hash_free(hash_t *hash)
+S3_PRIVATE void hash_free(hash_t *hash)
 {
 #ifdef KAZLIB_OBSOLESCENT_DEBUG
     assert ("call to obsolescent function hash_free()" && 0);
@@ -380,7 +380,7 @@ TR_PRIVATE void hash_free(hash_t *hash)
  * Free a dynamic hash table structure.
  */
 
-TR_PRIVATE void hash_destroy(hash_t *hash)
+S3_PRIVATE void hash_destroy(hash_t *hash)
 {
     assert (hash_val_t_bit != 0);
     assert (hash_isempty(hash));
@@ -401,7 +401,7 @@ TR_PRIVATE void hash_destroy(hash_t *hash)
  *    so we reset it here.
  */
 
-TR_PRIVATE hash_t *hash_init(hash_t *hash, hashcount_t maxcount,
+S3_PRIVATE hash_t *hash_init(hash_t *hash, hashcount_t maxcount,
 	hash_comp_t compfun, hash_fun_t hashfun, hnode_t **table,
 	hashcount_t nchains)
 {
@@ -436,7 +436,7 @@ TR_PRIVATE hash_t *hash_init(hash_t *hash, hashcount_t maxcount,
  *    so that hash_scan_next() shall indicate failure.
  */
 
-TR_PRIVATE void hash_scan_begin(hscan_t *scan, hash_t *hash)
+S3_PRIVATE void hash_scan_begin(hscan_t *scan, hash_t *hash)
 {
     hash_val_t nchains = hash->nchains;
     hash_val_t chain;
@@ -482,7 +482,7 @@ TR_PRIVATE void hash_scan_begin(hscan_t *scan, hash_t *hash)
  */
 
 
-TR_PRIVATE hnode_t *hash_scan_next(hscan_t *scan)
+S3_PRIVATE hnode_t *hash_scan_next(hscan_t *scan)
 {
     hnode_t *next = scan->next;		/* 1 */
     hash_t *hash = scan->table;
@@ -521,7 +521,7 @@ TR_PRIVATE hnode_t *hash_scan_next(hscan_t *scan)
  *    where N is the base 2 logarithm of the size of the hash table. 
  */
 
-TR_PRIVATE void hash_insert(hash_t *hash, hnode_t *node, const void *key)
+S3_PRIVATE void hash_insert(hash_t *hash, hnode_t *node, const void *key)
 {
     hash_val_t hkey, chain;
 
@@ -559,7 +559,7 @@ TR_PRIVATE void hash_insert(hash_t *hash, hnode_t *node, const void *key)
  *    entry.
  */
 
-TR_PRIVATE hnode_t *hash_lookup(hash_t *hash, const void *key)
+S3_PRIVATE hnode_t *hash_lookup(hash_t *hash, const void *key)
 {
     hash_val_t hkey, chain;
     hnode_t *nptr;
@@ -593,7 +593,7 @@ TR_PRIVATE hnode_t *hash_lookup(hash_t *hash, const void *key)
  * 6. Indicate that the node is no longer in a hash table.
  */
 
-TR_PRIVATE hnode_t *hash_delete(hash_t *hash, hnode_t *node)
+S3_PRIVATE hnode_t *hash_delete(hash_t *hash, hnode_t *node)
 {
     hash_val_t chain;
     hnode_t *hptr;
@@ -626,7 +626,7 @@ TR_PRIVATE hnode_t *hash_delete(hash_t *hash, hnode_t *node)
     return node;
 }
 
-TR_PRIVATE int hash_alloc_insert(hash_t *hash, const void *key, void *data)
+S3_PRIVATE int hash_alloc_insert(hash_t *hash, const void *key, void *data)
 {
     hnode_t *node = hash->allocnode(hash->context);
 
@@ -638,7 +638,7 @@ TR_PRIVATE int hash_alloc_insert(hash_t *hash, const void *key, void *data)
     return 0;
 }
 
-TR_PRIVATE void hash_delete_free(hash_t *hash, hnode_t *node)
+S3_PRIVATE void hash_delete_free(hash_t *hash, hnode_t *node)
 {
     hash_delete(hash, node);
     hash->freenode(node, hash->context);
@@ -649,7 +649,7 @@ TR_PRIVATE void hash_delete_free(hash_t *hash, hnode_t *node)
  *  used from within a hash table scan operation. See notes for hash_delete.
  */
 
-TR_PRIVATE hnode_t *hash_scan_delete(hash_t *hash, hnode_t *node)
+S3_PRIVATE hnode_t *hash_scan_delete(hash_t *hash, hnode_t *node)
 {
     hash_val_t chain;
     hnode_t *hptr;
@@ -679,7 +679,7 @@ TR_PRIVATE hnode_t *hash_scan_delete(hash_t *hash, hnode_t *node)
  * Like hash_delete_free but based on hash_scan_delete.
  */
 
-TR_PRIVATE void hash_scan_delfree(hash_t *hash, hnode_t *node)
+S3_PRIVATE void hash_scan_delfree(hash_t *hash, hnode_t *node)
 {
     hash_scan_delete(hash, node);
     hash->freenode(node, hash->context);
@@ -694,7 +694,7 @@ TR_PRIVATE void hash_scan_delfree(hash_t *hash, hnode_t *node)
  *    to see whether it is correct for the node's chain.
  */
 
-TR_PRIVATE int hash_verify(hash_t *hash)
+S3_PRIVATE int hash_verify(hash_t *hash)
 {
     hashcount_t count = 0;
     hash_val_t chain;
@@ -729,7 +729,7 @@ TR_PRIVATE int hash_verify(hash_t *hash)
  */
 
 #undef hash_isfull
-TR_PRIVATE int hash_isfull(hash_t *hash)
+S3_PRIVATE int hash_isfull(hash_t *hash)
 {
     return hash->nodecount == hash->maxcount;
 }
@@ -740,7 +740,7 @@ TR_PRIVATE int hash_isfull(hash_t *hash)
  */
 
 #undef hash_isempty
-TR_PRIVATE int hash_isempty(hash_t *hash)
+S3_PRIVATE int hash_isempty(hash_t *hash)
 {
     return hash->nodecount == 0;
 }
@@ -760,7 +760,7 @@ static void hnode_free(hnode_t *node, TR_UNUSED void *context)
  * Create a hash table node dynamically and assign it the given data.
  */
 
-TR_PRIVATE hnode_t *hnode_create(void *data)
+S3_PRIVATE hnode_t *hnode_create(void *data)
 {
     hnode_t *node = malloc(sizeof *node);
     if (node) {
@@ -774,7 +774,7 @@ TR_PRIVATE hnode_t *hnode_create(void *data)
  * Initialize a client-supplied node 
  */
 
-TR_PRIVATE hnode_t *hnode_init(hnode_t *hnode, void *data)
+S3_PRIVATE hnode_t *hnode_init(hnode_t *hnode, void *data)
 {
     hnode->data = data;
     hnode->next = NULL;
@@ -785,37 +785,37 @@ TR_PRIVATE hnode_t *hnode_init(hnode_t *hnode, void *data)
  * Destroy a dynamically allocated node.
  */
 
-TR_PRIVATE void hnode_destroy(hnode_t *hnode)
+S3_PRIVATE void hnode_destroy(hnode_t *hnode)
 {
     free(hnode);
 }
 
 #undef hnode_put
-TR_PRIVATE void hnode_put(hnode_t *node, void *data)
+S3_PRIVATE void hnode_put(hnode_t *node, void *data)
 {
     node->data = data;
 }
 
 #undef hnode_get
-TR_PRIVATE void *hnode_get(hnode_t *node)
+S3_PRIVATE void *hnode_get(hnode_t *node)
 {
     return node->data;
 }
 
 #undef hnode_getkey
-TR_PRIVATE const void *hnode_getkey(hnode_t *node)
+S3_PRIVATE const void *hnode_getkey(hnode_t *node)
 {
     return node->key;
 }
 
 #undef hash_count
-TR_PRIVATE hashcount_t hash_count(hash_t *hash)
+S3_PRIVATE hashcount_t hash_count(hash_t *hash)
 {
     return hash->nodecount;
 }
 
 #undef hash_size
-TR_PRIVATE hashcount_t hash_size(hash_t *hash)
+S3_PRIVATE hashcount_t hash_size(hash_t *hash)
 {
     return hash->nchains;
 }

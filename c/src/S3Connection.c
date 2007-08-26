@@ -57,7 +57,7 @@
  */
 
 /** Default Amazon S3 URL. */
-TR_DECLARE const char S3_DEFAULT_URL[] = "https://s3.amazonaws.com";
+S3_DECLARE const char S3_DEFAULT_URL[] = "https://s3.amazonaws.com";
 
 /**
  * Maintains S3 connection state.
@@ -90,7 +90,7 @@ struct S3Connection {
  * @param aws_key Your Amazon AWS Secret Key.
  * @return A new #S3Connection instance, or NULL on failure.
  */
-TR_DECLARE S3Connection *s3connection_new (const char *aws_id, const char *aws_key) {
+S3_DECLARE S3Connection *s3connection_new (const char *aws_id, const char *aws_key) {
     S3Connection *conn;
 
     /* Allocate a new S3 Connection. */
@@ -134,7 +134,7 @@ error:
  * @param s3_url The new S3 service URL.
  * @return true on success, false on failure.
  */
-TR_DECLARE bool s3connection_set_url (S3Connection *conn, const char *s3_url) {
+S3_DECLARE bool s3connection_set_url (S3Connection *conn, const char *s3_url) {
     /* Free the old URL. */
     if (conn->s3_url != NULL)
         free(conn->s3_url);
@@ -167,7 +167,7 @@ static void s3connection_reset_curl (S3Connection *conn) {
  * @param bucketName The name of the bucket to create.
  * @return A #s3error_t result.
  */
-TR_DECLARE void *s3connection_create_bucket (S3Connection *conn, const char *bucketName) {
+S3_DECLARE void *s3connection_create_bucket (S3Connection *conn, const char *bucketName) {
     CURLcode error;
     
     if (s3curl_create_bucket(conn, bucketName, &error) == NULL)
@@ -187,7 +187,7 @@ TR_DECLARE void *s3connection_create_bucket (S3Connection *conn, const char *buc
  * Close and free a #S3Connection instance.
  * @param conn A #S3Connection instance.
  */
-TR_DECLARE void s3connection_free (S3Connection *conn) {
+S3_DECLARE void s3connection_free (S3Connection *conn) {
     if (conn->aws_id != NULL)
         free(conn->aws_id);
 
@@ -223,7 +223,7 @@ TR_DECLARE void s3connection_free (S3Connection *conn) {
  * @return A borrowed reference to a configured CURL handle, or NULL on failure.
  * If failure occurs, the CURL error code will be stored in \a error.
  */
-TR_DECLARE CURL *s3curl_create_bucket (S3Connection *conn, const char *bucketName, CURLcode *error) {
+S3_DECLARE CURL *s3curl_create_bucket (S3Connection *conn, const char *bucketName, CURLcode *error) {
     char *url = NULL;
     char *resource;
 

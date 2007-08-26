@@ -59,7 +59,7 @@ static bool debug = false;
  * Perform global library initialization. This
  * does not initialize libcurl.
  */
-TR_DECLARE void s3lib_global_init (void) {
+S3_DECLARE void s3lib_global_init (void) {
     /* Verify libxml version compatibility. */
     LIBXML_TEST_VERSION;
 }
@@ -68,7 +68,7 @@ TR_DECLARE void s3lib_global_init (void) {
  * Enable/disable verbose debugging output to stderr.
  * @param flag Set to true to enable writing of library debugging output to stderr.
  */
-TR_DECLARE void s3lib_enable_debugging (bool flag) {
+S3_DECLARE void s3lib_enable_debugging (bool flag) {
     debug = flag;
 }
 
@@ -76,7 +76,7 @@ TR_DECLARE void s3lib_enable_debugging (bool flag) {
  * @internal
  * Returns true if stderr debugging mode output is enabled.
  */
-TR_PRIVATE bool s3lib_debugging () {
+S3_PRIVATE bool s3lib_debugging () {
     return debug;
 }
 

@@ -65,8 +65,8 @@ typedef enum {
     S3_HTTP_PUT
 } S3HTTPMethod;
 
-TR_EXTERN S3Request *s3request_new (const char *url, S3HTTPMethod method);
-TR_EXTERN void s3request_free (S3Request *req);
+S3_EXTERN S3Request *s3request_new (const char *url, S3HTTPMethod method);
+S3_EXTERN void s3request_free (S3Request *req);
 
 /*!
  * @} S3Library
