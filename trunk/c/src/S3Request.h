@@ -50,6 +50,12 @@
 /* S3 HTTP Request Context. */
 typedef struct S3Request S3Request;
 
+/* S3 Header Dictionary */
+typedef struct S3RequestHeaders S3RequestHeaders;
+
+/* S3 Header */
+typedef struct S3Header S3Header;
+
 /**
  * HTTP Request Methods.
  * All HTTP methods used to implement the S3 REST API.

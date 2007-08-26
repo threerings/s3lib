@@ -38,20 +38,28 @@
 
 #include <stdbool.h>
 
-/* Win32-compatible 'extern' */
+/*
+ * Win32-compatible 'extern'
+ */
 #if defined(__WIN32__)
     #if defined(TR_BUILDING_s3lib_LIB) // Building s3lib
-    #define TR_EXTERN  __declspec(dllexport)
-    #define TR_DECLARE __declspec(dllexport)
+        #define TR_EXTERN  __declspec(dllexport)
+        #define TR_DECLARE __declspec(dllexport)
     #else // Not building s3lib
-    #define TR_EXTERN __declspec(dllimport) extern
-    #define TR_DECLARE __declspec(dllimport) extern
+        #define TR_EXTERN __declspec(dllimport) extern
+        #define TR_DECLARE __declspec(dllimport) extern
     #endif /* TR_BUILDING_s3lib_LIB */
 #else /* __WIN32__ */
     #define TR_EXTERN extern
     #define TR_DECLARE
 #endif /* !__WIN32__ */
 
+/*
+ * Private API?
+ */
+#ifdef TR_BUILDING_s3lib_LIB
+#define S3LIB_PRIVATE_API
+#endif
 
 /* cURL includes */
 #include <curl/curl.h>
@@ -63,15 +71,16 @@
 
 /* s3lib functions */
 TR_EXTERN void s3lib_global_init (void);
+TR_EXTERN void s3lib_enable_debugging (bool flag);
 
 /* private s3lib functions */
-TR_EXTERN void s3lib_enable_debugging (bool flag);
+#ifdef S3LIB_PRIVATE_API
 TR_PRIVATE bool s3lib_debugging ();
 
-#ifdef TR_BUILDING_s3lib_LIB
 #define DEBUG(msg, args...) \
     if (s3lib_debugging()) \
         fprintf(stderr, "[%s in %s:%d] " msg "\n", __func__, __FILE__, __LINE__, ## args)
-#endif
+
+#endif /* S3LIB_PRIVATE_API */
 
 #endif /* S3LIB_H */

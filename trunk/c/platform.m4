@@ -175,3 +175,49 @@ AC_DEFUN([TR_COMPILER_ATTRIBUTE_PRIVATE], [
 
         AC_DEFINE_UNQUOTED(TR_PRIVATE, $TR_PRIVATE, [Mark private symbols])
 ])
+
+#------------------------------------------------------------------------
+# TR_COMPILER_ATTRIBUTE_UNUSED
+#
+#       Determines whether the compiler supports the 'unused' attribute
+#
+# Arguments:
+#       None.
+#
+# Requires:
+#       none
+#
+# Depends:
+#       none
+#
+# Results:
+#
+#       Defines the following macros:
+#               TR_UNUSED
+#
+#------------------------------------------------------------------------
+
+AC_DEFUN([TR_COMPILER_ATTRIBUTE_UNUSED], [
+        AC_MSG_CHECKING([for gcc unused attribute])
+        AC_CACHE_VAL(od_cv_attribute_lf_unused, [
+                AC_COMPILE_IFELSE([
+                        AC_LANG_SOURCE([
+                                int __attribute__ ((unused)) a;
+                        ])
+                ],[
+                        od_cv_attribute_lf_unused="__attribute__((unused))"
+                ],[
+                        od_cv_attribute_lf_unused="no"
+                ])
+        ])
+
+        AC_MSG_RESULT([$od_cv_attribute_lf_unused])
+        
+        if test x"$od_cv_attribute_lf_unused" = "xno"; then
+                TR_UNUSED=""
+        else
+                TR_UNUSED="$od_cv_attribute_lf_unused"
+        fi
+
+        AC_DEFINE_UNQUOTED(TR_UNUSED, $TR_UNUSED, [Mark unused variables])
+])
