@@ -7,8 +7,8 @@ The vast majority of this implementation is subject to the standard
 Landon Fuller, and the license and official copyright can be found at
 the bottom of this file.
 
-Small portions of the implementation were taken from various sources, including:
-	- kazlib (hash table implementation)
+Some code has been integrated from various sources, including:
+	- kazlib (list and hash table implementations)
 
 Associated copyrights and licenses are documented below. You'll find that they
 are all compatible and as permissive as the standard BSD license -- in fact,
