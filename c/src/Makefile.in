@@ -11,7 +11,8 @@ LIBRARY_NAME=	libs3
 LIBRARY_OBJS=	S3Connection.o \
 		S3Error.o \
 		S3Lib.o \
-		S3Request.o
+		S3Request.o \
+		hash.o
 
 HEADERS=	$(srcdir)/S3Connection.h \
 		$(srcdir)/S3Error.h \
