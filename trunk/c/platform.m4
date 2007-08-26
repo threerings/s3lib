@@ -125,10 +125,10 @@ AC_DEFUN(TR_CONFIG_LIBRARY, [
 ])
 
 #------------------------------------------------------------------------
-# TR_COMPILER_ATTRIBUTE_PRIVATE
+# TR_COMPILER_ATTRIBUTE_VISIBILITY
 #
 #       Determines whether the compiler supports the symbol
-#       'visibility("hidden")' attribute
+#       'visibility("...")' attribute
 #
 # Arguments:
 #       None.
@@ -142,13 +142,17 @@ AC_DEFUN(TR_CONFIG_LIBRARY, [
 # Results:
 #
 #       Defines the following macros:
-#               TR_PRIVATE
+#               GCC_VISIBILITY_ATTR
+#	Substitutes:
+#		CFLAGS_VISIBILITY
 #
 #------------------------------------------------------------------------
 
-AC_DEFUN([TR_COMPILER_ATTRIBUTE_PRIVATE], [
+AC_DEFUN([TR_COMPILER_ATTRIBUTE_VISIBILITY], [
         AC_MSG_CHECKING([for gcc symbol visibility attribute])
-        AC_CACHE_VAL(od_cv_attribute_lf_private, [
+        AC_CACHE_VAL(od_cv_attribute_tr_visibility, [
+		CFLAGS_SAVED="$CFLAGS"
+		CFLAGS="$CFLAGS -fvisibility=hidden"
                 AC_COMPILE_IFELSE([
                         AC_LANG_SOURCE([
                                 #if defined(__GNUC__) && defined(__APPLE__) && __GNUC__ < 4
@@ -159,21 +163,23 @@ AC_DEFUN([TR_COMPILER_ATTRIBUTE_PRIVATE], [
                                 int a __attribute__ ((visibility("hidden")));
                         ])
                 ],[
-                        od_cv_attribute_lf_private="__attribute__((visibility(\"hidden\")))"
+                        od_cv_attribute_tr_visibility="yes"
                 ],[
-                        od_cv_attribute_lf_private="no"
+                        od_cv_attribute_tr_visibility="no"
                 ])
+		CFLAGS="$CFLAGS_SAVED"
         ])
 
-        AC_MSG_RESULT([$od_cv_attribute_lf_private])
+        AC_MSG_RESULT([$od_cv_attribute_tr_visibility])
         
-        if test x"$od_cv_attribute_lf_private" = "xno"; then
-                TR_PRIVATE=""
-        else
-                TR_PRIVATE="$od_cv_attribute_lf_private"
+        if test x"$od_cv_attribute_tr_visibility" = "xyes"; then
+		AC_DEFINE(GCC_VISIBILITY_SUPPORT, 1, [GCC supports the visibility attribute])
+		CFLAGS_VISIBILITY="-fvisibility=hidden"
+	else
+		CFLAGS_VISIBILITY=""
         fi
 
-        AC_DEFINE_UNQUOTED(TR_PRIVATE, $TR_PRIVATE, [Mark private symbols])
+	AC_SUBST(CFLAGS_VISIBILITY)
 ])
 
 #------------------------------------------------------------------------

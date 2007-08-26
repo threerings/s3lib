@@ -90,7 +90,7 @@ struct S3ServerError {
  * @param length buffer length.
  * @return A new #S3ServerError instance.
  */
-TR_DECLARE S3ServerError *s3server_error_new (const char *xmlBuffer, int length) {
+S3_DECLARE S3ServerError *s3server_error_new (const char *xmlBuffer, int length) {
     S3ServerError *error = NULL;
     xmlDoc *doc = NULL;
     xmlNode *root;
@@ -166,7 +166,7 @@ error:
  * @param error A #S3ServerError instance
  * @return The request ID, or NULL if the server did not provide one.
  */
-TR_DECLARE const char *s3server_error_requestid (S3ServerError *error) {
+S3_DECLARE const char *s3server_error_requestid (S3ServerError *error) {
     return error->requestid;
 }
 
@@ -175,7 +175,7 @@ TR_DECLARE const char *s3server_error_requestid (S3ServerError *error) {
  * Deallocate a #S3ServerError instance.
  * @param error An #S3ServerError instance.
  */
-TR_DECLARE void s3server_error_free (S3ServerError *error) {
+S3_DECLARE void s3server_error_free (S3ServerError *error) {
     if (error->code != NULL)
         free(error->code);
     

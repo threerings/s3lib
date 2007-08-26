@@ -43,15 +43,23 @@
  */
 #if defined(__WIN32__)
     #if defined(TR_BUILDING_s3lib_LIB) // Building s3lib
-        #define TR_EXTERN  __declspec(dllexport)
-        #define TR_DECLARE __declspec(dllexport)
+        #define S3_EXTERN  __declspec(dllexport)
+        #define S3_DECLARE __declspec(dllexport)
     #else // Not building s3lib
-        #define TR_EXTERN __declspec(dllimport) extern
-        #define TR_DECLARE __declspec(dllimport) extern
+        #define S3_EXTERN __declspec(dllimport) extern
+        #define S3_DECLARE __declspec(dllimport) extern
     #endif /* TR_BUILDING_s3lib_LIB */
 #else /* __WIN32__ */
-    #define TR_EXTERN extern
-    #define TR_DECLARE
+    #if defined(TR_BUILDING_s3lib_LIB) && defined(GCC_VISIBILITY_SUPPORT)
+        #define S3_EXTERN extern __attribute__ ((visibility("default")))
+        #define S3_DECLARE __attribute__ ((visibility("default")))
+        // We default to hidden, but it doesn't hurt to be explicit
+        #define S3_PRIVATE __attribute__ ((visibility("hidden")))
+    #else
+        #define S3_EXTERN extern
+        #define S3_DECLARE
+        #define S3_PRIVATE
+    #endif
 #endif /* !__WIN32__ */
 
 /*
@@ -70,12 +78,12 @@
 #include "S3Request.h"
 
 /* s3lib functions */
-TR_EXTERN void s3lib_global_init (void);
-TR_EXTERN void s3lib_enable_debugging (bool flag);
+S3_EXTERN void s3lib_global_init (void);
+S3_EXTERN void s3lib_enable_debugging (bool flag);
 
 /* private s3lib functions */
 #ifdef S3LIB_PRIVATE_API
-TR_PRIVATE bool s3lib_debugging ();
+S3_PRIVATE bool s3lib_debugging ();
 
 #define DEBUG(msg, args...) \
     if (s3lib_debugging()) \
