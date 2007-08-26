@@ -1,8 +1,9 @@
-builtin(include,pthread.m4)
-builtin(include,platform.m4)
-builtin(include,check.m4)
-builtin(include,libcurl.m4)
-builtin(include,libxml.m4)
+builtin(include,m4/pthread.m4)
+builtin(include,m4/platform.m4)
+builtin(include,m4/check.m4)
+builtin(include,m4/libcurl.m4)
+builtin(include,m4/libxml.m4)
+builtin(include,m4/safestr.m4)
 
 #------------------------------------------------------------------------
 # TR_WERROR --
