@@ -42,6 +42,9 @@ AC_CACHE_SAVE
 
 # Threads
 ACX_PTHREAD
+# Use pthreads for everything
+LIBS="${LIBS} ${PTHREAD_LIBS}"
+CFLAGS="${CFLAGS} ${PTHREAD_CFLAGS}"
 AC_CACHE_SAVE
 
 # Platform
