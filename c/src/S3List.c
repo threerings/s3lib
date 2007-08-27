@@ -38,6 +38,7 @@
 #endif
 
 #include <stdlib.h>
+#include <assert.h>
 
 #include "S3Lib.h"
 
@@ -59,7 +60,7 @@
  * a S3List should not be shared between threads without external synchronization.
  */
 struct S3List {
-    list_t *ctx;
+    list_t ctx;
 };
 
 /**
@@ -71,33 +72,40 @@ S3_DECLARE S3List *s3list_new () {
     if (list == NULL)
         return NULL;
 
-    /* Create a new, empty list */
-    list->ctx = list_create(LISTCOUNT_T_MAX);
+    /* Initialize a new, empty list */
+    list_init(&list->ctx, LISTCOUNT_T_MAX);
 
     return list;
 }
 
+/**
+ * Deallocate all resources associated with \a list.
+ * @param list A S3List instance.
+ */
 S3_DECLARE void s3list_free (S3List *list) {
     lnode_t *node;
 
-    /* If the list has been allocated, iterate over it and free the node data,
-     * and then destroy the list */
-    if (list->ctx != NULL) {
-        node = list_first(list->ctx);        
-        while (node != NULL) {
-            lnode_t *next;
+    /* Iterate over the list and free the node data */
+    node = list_first(&list->ctx);
+    while (node != NULL) {
+        lnode_t *next;
 
-            safestr_t val = lnode_get(node);
-            safestr_release(val);
+        /* Release the node value */
+        safestr_t val = lnode_get(node);
+        safestr_release(val);
 
-            next = list_next(list->ctx, node);
-            lnode_destroy(node);
+        /* Fetch the next node */
+        next = list_next(&list->ctx, node);
 
-            node = next;
-        }
-        
-        list_destroy(list->ctx);
+        /* Delete the current node from the list */
+        list_delete(&list->ctx, node);
+
+        /* Free the current node */
+        lnode_destroy(node);
+
+        node = next;
     }
+    assert(list_isempty(&list->ctx));
 
     free(list);
 }
