@@ -60,7 +60,8 @@ S3_DECLARE const char S3_DEFAULT_URL[] = "https://s3.amazonaws.com";
 
 /**
  * Maintains S3 connection state.
- * @warning S3Connection instances are not re-entrant, and must not be shared between threads.
+ * @attention Operations on a S3Connection instance are not thread-safe, and
+ * a S3Connection should not be shared between threads without external synchronization.
  */
 struct S3Connection {
     /** @internal

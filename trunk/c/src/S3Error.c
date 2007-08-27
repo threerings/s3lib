@@ -64,6 +64,8 @@
 
 /**
  * Represents a S3 server error result.
+ * @attention Operations on a S3Error instance are not guaranteed thread-safe, and
+ * a S3Error should not be shared between threads without external synchronization.
  */
 struct S3ServerError {
     /** @internal

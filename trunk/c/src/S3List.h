@@ -1,11 +1,11 @@
 /*
- * tests.c vi:ts=4:sw=4:expandtab:
- * Amazon S3 Library Unit Tests
+ * S3List.h vi:ts=4:sw=4:expandtab:
+ * Amazon S3 Library
  *
  * Author: Landon Fuller <landonf@threerings.net>
  *
- * Copyright (c) 2006 - 2007 Landon Fuller <landonf@bikemonkey.org>
- * Copyright (c) 2006 - 2007 Three Rings Design, Inc.
+ * Copyright (c) 2007 Landon Fuller <landonf@bikemonkey.org>
+ * Copyright (c) 2007 Three Rings Design, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,59 +33,27 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif /* HAVE_CONFIG_H */
+#ifndef S3LIST_H
+#define S3LIST_H
 
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdio.h>
+/**
+ * @file
+ * @brief S3Lib list implementation.
+ * @author Landon Fuller <landonf@threerings.net>
+ */
 
-#include <curl/curl.h>
-#include <check.h>
+/*!
+ * @addtogroup S3List
+ * @{
+ */
 
-#include <tests.h>
+typedef struct S3List S3List;
 
-void print_usage(const char *name) {
-    printf("Usage: %s [filename]\n", name);
-    printf(" [filename]\tWrite XML log to <filename>\n");
-}
+S3_EXTERN S3List *s3list_new ();
+S3_EXTERN void s3list_free (S3List *list); 
 
-int main(int argc, char *argv[]) {
-    Suite *s;
-    SRunner *sr;
-    int nf;
+/*!
+ * @} S3List
+ */
 
-    if (argc > 2) {
-        print_usage(argv[0]);
-        exit(1);
-    }
-
-    /* Load all test suites */
-    s = S3Connection_suite();
-    sr = srunner_create(s);
-    srunner_add_suite(sr, S3Error_suite());
-    srunner_add_suite(sr, S3Header_suite());
-    srunner_add_suite(sr, S3List_suite());
-    srunner_add_suite(sr, S3Request_suite());
-
-    /* Enable XML output */
-    if (argc == 2)
-        srunner_set_xml(sr, argv[1]);
-
-    /* Library Initializers */
-    s3lib_global_init();
-    s3lib_enable_debugging(true); // XXX for now
-    curl_global_init(CURL_GLOBAL_ALL);
-
-    /* Run tests */
-    srunner_run_all(sr, CK_NORMAL);
-
-    nf = srunner_ntests_failed(sr);
-    srunner_free(sr);
-
-    if (nf == 0)
-        exit(EXIT_SUCCESS);
-    else
-        exit(EXIT_FAILURE);
-}
+#endif /* S3REQUEST_H */
