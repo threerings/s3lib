@@ -23,7 +23,7 @@ XML_LDFLAGS		= @XML_LIBS@
 SAFESTR_CFLAGS		= @SAFESTR_CPPFLAGS@
 SAFESTR_LDFLAGS		= @SAFESTR_LIBS@
 
-LDFLAGS                 = @LDFLAGS@ @PTHREAD_LIBS@
+LDFLAGS                 = @LDFLAGS@ @LIBS@
 
 INSTALL                 = @INSTALL@
 LN_S                    = @LN_S@
