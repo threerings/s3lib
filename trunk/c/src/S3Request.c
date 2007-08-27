@@ -69,7 +69,7 @@
 struct S3Request {
     /** @internal
      * Request URL. */
-    char *url;
+    safestr_t url;
 
     /** @internal
      * Request method */
@@ -93,18 +93,12 @@ S3_DECLARE S3Request *s3request_new (const char *url, S3HTTPMethod method) {
         return NULL;
 
     /* S3 Resource */
-    req->url = strdup(url);
-    if (req->url == NULL)
-        goto error;
+    req->url = s3_safestr_create(url, SAFESTR_IMMUTABLE);
 
     /* Request method */
     req->method = method;
 
     return (req);
-
-error:
-    s3request_free(req);
-    return NULL;
 }
 
 
@@ -114,7 +108,7 @@ error:
  */
 S3_DECLARE void s3request_free (S3Request *req) {
     if (req->url != NULL)
-        free(req->url);
+        safestr_release(req->url);
 
     free(req);
 }

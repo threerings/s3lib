@@ -76,7 +76,7 @@ struct S3HeaderDictionary {
  */
 struct S3Header {
     /** @internal The header name */
-    const char *name;
+    safestr_t name;
 
     /** @internal The header value(s) */
     list_t *values;
@@ -140,11 +140,11 @@ static hnode_t *s3header_hnode_alloc(S3_UNUSED void *context) {
  */
 static void s3header_hnode_free(hnode_t *node, S3_UNUSED void *context) {
     S3Header *value;
-    char *key;
+    safestr_t key;
 
     /* Fetch the node's key and value */
     value = (S3Header *) hnode_get(node);
-    key = (char *) hnode_getkey(node);
+    key = (safestr_t) hnode_getkey(node);
 
     /* No node should be inserted with a NULL key or value */
     assert(value != NULL);
@@ -152,7 +152,7 @@ static void s3header_hnode_free(hnode_t *node, S3_UNUSED void *context) {
 
     /* Deallocate  */
     s3header_free(value);
-    free(key);
+    safestr_release(key);
     free(node);
 }
 

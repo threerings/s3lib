@@ -33,16 +33,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
-#include <S3Lib.h>
+#include "S3Lib.h"
 
 /**
  * @file
@@ -66,15 +65,15 @@ S3_DECLARE const char S3_DEFAULT_URL[] = "https://s3.amazonaws.com";
 struct S3Connection {
     /** @internal
      * AWS access key id. */
-    char *aws_id;
+    safestr_t aws_id;
 
     /** @internal
      * AWS private key. */
-    char *aws_key;
+    safestr_t aws_key;
 
     /** @internal
      * S3 server url. */
-    char *s3_url;
+    safestr_t s3_url;
 
     /** @internal
      * Cached cURL handle (not thread-safe). */
@@ -99,19 +98,13 @@ S3_DECLARE S3Connection *s3connection_new (const char *aws_id, const char *aws_k
         return NULL;
 
     /* Access id */
-    conn->aws_id = strdup(aws_id);
-    if (conn->aws_id == NULL)
-        goto error;    
+    conn->aws_id = s3_safestr_create(aws_id, SAFESTR_IMMUTABLE);
 
     /* Access key */
-    conn->aws_key = strdup(aws_key);
-    if (conn->aws_key == NULL)
-        goto error;
+    conn->aws_key = s3_safestr_create(aws_key, SAFESTR_IMMUTABLE);
 
     /* Default S3 URL */
-    conn->s3_url = strdup(S3_DEFAULT_URL);
-    if (conn->s3_url == NULL)
-        goto error;
+    conn->s3_url = s3_safestr_create(S3_DEFAULT_URL, SAFESTR_IMMUTABLE);
 
     /* cURL handle */
     conn->handle = curl_easy_init();
@@ -137,10 +130,10 @@ error:
 S3_DECLARE bool s3connection_set_url (S3Connection *conn, const char *s3_url) {
     /* Free the old URL. */
     if (conn->s3_url != NULL)
-        free(conn->s3_url);
+        safestr_release(conn->s3_url);
 
     /* Copy the new URL */
-    conn->s3_url = strdup(s3_url);
+    conn->s3_url = s3_safestr_create(s3_url, SAFESTR_IMMUTABLE);
 
     /* Success */
     return true;
@@ -189,13 +182,13 @@ S3_DECLARE void *s3connection_create_bucket (S3Connection *conn, const char *buc
  */
 S3_DECLARE void s3connection_free (S3Connection *conn) {
     if (conn->aws_id != NULL)
-        free(conn->aws_id);
+        safestr_release(conn->aws_id);
 
     if (conn->aws_key != NULL)
-        free(conn->aws_key);
+        safestr_release(conn->aws_key);
 
     if (conn->s3_url != NULL)
-        free(conn->s3_url);
+        safestr_release(conn->s3_url);
 
     if (conn->handle != NULL) 
         curl_easy_cleanup(conn->handle);
@@ -224,8 +217,10 @@ S3_DECLARE void s3connection_free (S3Connection *conn) {
  * If failure occurs, the CURL error code will be stored in \a error.
  */
 S3_DECLARE CURL *s3curl_create_bucket (S3Connection *conn, const char *bucketName, CURLcode *error) {
-    char *url = NULL;
-    char *resource;
+    safestr_t url;
+    safestr_t resource;
+    char *escaped;
+    uint32_t index;
 
     /* Reset the handle */
     curl_easy_reset(conn->handle);
@@ -237,22 +232,31 @@ S3_DECLARE CURL *s3curl_create_bucket (S3Connection *conn, const char *bucketNam
         return NULL;
 
     /* Create and set the resource URL. */
-    resource = curl_easy_escape(conn->handle, bucketName, 0);
+    escaped = curl_easy_escape(conn->handle, bucketName, 0);
+    resource = s3_safestr_create(escaped, SAFESTR_IMMUTABLE);
+    curl_free(escaped);
     
-    // s3_url + "/" + resource + \0 terminator
-    url = malloc(strlen(conn->s3_url) + 1 + strlen(resource) + 1);
-    strcpy(url, conn->s3_url);
-    strcat(url, "/");
-    strcat(url, resource);
+    /* Allocate a string large enough for s3_url + "/" (possibly) + resource */
+    index = safestr_length(conn->s3_url);
 
-    DEBUG("Configuring handle with URL: %s", url);
+    /* Set the base URL */
+    url = safestr_alloc(index + 1 + safestr_length(resource), 0);
+    safestr_append(&url, conn->s3_url);
+    
+    /* Check for, and append, if necessary, a trailing / */
+    if (safestr_charat(url, index - 1) != '/')
+        safestr_append(&url, SAFESTR_TEMP("/"));
+
+    /* Append the resource */
+    safestr_append(&url, resource);
+
+    DEBUG("Configuring handle with URL: %s", s3_safestr_char(url));
 
     *error = curl_easy_setopt(conn->handle, CURLOPT_URL, url);
-    curl_free(resource);
-    // XXX leak. Curl requires that we own, and keep valid, any data we pass to it
-    // for the length of the option's lifetime. Need to replace this with a non-curl
-    // specific S3Request context.
-    // free(url);
+
+    safestr_release(resource);
+    // XXX XXX LEAK. We need to retain this URL for the lifetime of the request.
+    // safestr_release(url);
 
     if (*error != CURLE_OK)
         return NULL;
