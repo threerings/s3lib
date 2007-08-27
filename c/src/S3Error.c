@@ -68,19 +68,19 @@
 struct S3ServerError {
     /** @internal
      * S3 error code. */
-    char *code;
+    safestr_t code;
 
     /** @internal
      * S3-generated error message. */
-    char *message;
+    safestr_t message;
 
     /** @internal
      * Resource requested. */
-    char *resource;
+    safestr_t resource;
 
     /** @internal
      * Associated request id. */
-    char *requestid;
+    safestr_t requestid;
 };
 
 /**
@@ -128,22 +128,22 @@ S3_DECLARE S3ServerError *s3server_error_new (const char *xmlBuffer, int length)
 
         /* Code */
         if (xmlStrEqual(node->name, (xmlChar *) "Code")) {
-            error->code = strdup((char *) node->children->content);
+            error->code = s3_safestr_create((const char *) node->children->content, SAFESTR_IMMUTABLE);
         }
 
         /* Message */
         else if (xmlStrEqual(node->name, (xmlChar *) "Message")) {
-            error->message = strdup((char *) node->children->content);
+            error->message = s3_safestr_create((const char *) node->children->content, SAFESTR_IMMUTABLE);
         }
 
         /* Resource */
         else if (xmlStrEqual(node->name, (xmlChar *) "Resource")) {
-            error->resource = strdup((char *) node->children->content);
+            error->resource = s3_safestr_create((const char *) node->children->content, SAFESTR_IMMUTABLE);
         }
         
         /* RequestId */
         else if (xmlStrEqual(node->name, (xmlChar *) "RequestId")) {
-            error->requestid = strdup((char *) node->children->content);
+            error->requestid = s3_safestr_create((const char *) node->children->content, SAFESTR_IMMUTABLE);
         }
     }
 
@@ -167,7 +167,7 @@ error:
  * @return The request ID, or NULL if the server did not provide one.
  */
 S3_DECLARE const char *s3server_error_requestid (S3ServerError *error) {
-    return error->requestid;
+    return s3_safestr_char(error->requestid);
 }
 
 
@@ -177,16 +177,16 @@ S3_DECLARE const char *s3server_error_requestid (S3ServerError *error) {
  */
 S3_DECLARE void s3server_error_free (S3ServerError *error) {
     if (error->code != NULL)
-        free(error->code);
+        safestr_release(error->code);
     
     if (error->message != NULL)
-        free(error->message);
+        safestr_release(error->message);
 
     if (error->resource != NULL)
-        free(error->resource);
+        safestr_release(error->resource);
     
     if (error->requestid != NULL)
-        free(error->requestid);
+        safestr_release(error->requestid);
 
     free(error);
 }

@@ -1,5 +1,5 @@
 /*
- * S3Lib.h vi:ts=4:sw=4:expandtab:
+ * S3LibPrivate.h vi:ts=4:sw=4:expandtab:
  * Amazon S3 Library
  *
  * Author: Landon Fuller <landonf@threerings.net>
@@ -33,57 +33,34 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef S3LIB_H
-#define S3LIB_H
+#ifndef S3LIBPRIVATE_H
+#define S3LIBPRIVATE_H
 
-#include <stdbool.h>
+#include <safestr.h>
+#include <curl/curl.h>
 
-/*
- * Declaration visibility scoping
+/**
+ * @internal
+ * Create a new safestr from a const char * string. The safestr_create function
+ * does not modify the string argument, so we do the cast once here.
  */
-#if defined(__WIN32__)
-    #if defined(TR_BUILDING_s3lib_LIB)
-        // Building s3lib
-        #define S3_EXTERN  __declspec(dllexport)
-        #define S3_DECLARE __declspec(dllexport)
-    #else
-        // Not building s3lib
-        #define S3_EXTERN __declspec(dllimport) extern
-        #define S3_DECLARE __declspec(dllimport) extern
-    #endif /* TR_BUILDING_s3lib_LIB */
-#else /* __WIN32__ */
-    #if defined(TR_BUILDING_s3lib_LIB) && defined(GCC_VISIBILITY_SUPPORT)
-        #define S3_EXTERN extern __attribute__ ((visibility("default")))
-        #define S3_DECLARE __attribute__ ((visibility("default")))
-        // We default to hidden, but it doesn't hurt to be explicit
-        #define S3_PRIVATE __attribute__ ((visibility("hidden")))
-    #else
-        #define S3_EXTERN extern
-        #define S3_DECLARE
-        #define S3_PRIVATE
-    #endif
-#endif /* !__WIN32__ */
+static inline safestr_t s3_safestr_create (const char *string, u_int32_t flags) {
+    return safestr_create((char *)string, flags);
+}
 
-/*
- * S3Lib private API
+/**
+ * @internal
+ * Returns a borrowed reference to the safestr's backing character array.
  */
-#ifdef TR_BUILDING_s3lib_LIB
-    #define S3LIB_PRIVATE_API
-    #include "S3LibPrivate.h"
-#endif
+static inline const char *s3_safestr_char (safestr_t string) {
+    /* Safe strings are C strings, with meta-data stored above the char * pointer */
+    return (const char *)string;
+}
 
-/*
- * S3lib includes
- */
-#include "S3Error.h"
-#include "S3Connection.h"
-#include "S3Header.h"
-#include "S3Request.h"
+S3_PRIVATE bool s3lib_debugging ();
 
-/*
- * S3lib functions
- */
-S3_EXTERN void s3lib_global_init (void);
-S3_EXTERN void s3lib_enable_debugging (bool flag);
+#define DEBUG(msg, args...) \
+    if (s3lib_debugging()) \
+        fprintf(stderr, "[%s in %s:%d] " msg "\n", __func__, __FILE__, __LINE__, ## args)
 
-#endif /* S3LIB_H */
+#endif /* S3LIBPRIVATE_H */

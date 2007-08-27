@@ -18,6 +18,7 @@ LIBRARY_OBJS=	S3Connection.o \
 
 HEADERS=	$(srcdir)/S3Connection.h \
 		$(srcdir)/S3Error.h \
+		$(srcidr)/S3Header.h \
 		$(srcdir)/S3Lib.h \
 		$(srcdir)/S3Request.h
 
@@ -26,8 +27,8 @@ GEN_SRCS=
 TEST_LIB=	libs3-testing.a
 TEST_OBJS=
 
-CFLAGS+=	-fPIC $(LIBCURL_CFLAGS) $(XML_CFLAGS)
-LIBS+=		$(LIBCURL_LDFLAGS) $(XML_LDFLAGS)
+CFLAGS+=	-fPIC $(LIBCURL_CFLAGS) $(XML_CFLAGS) $(SAFESTR_CFLAGS)
+LIBS+=		$(LIBCURL_LDFLAGS) $(XML_LDFLAGS) $(SAFESTR_LDFLAGS)
 
 S3LIB_HEADER_DIR=	$(HEADER_INSTALL_DIR)/S3Lib
 
