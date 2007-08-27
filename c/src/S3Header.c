@@ -37,14 +37,11 @@
 #include <config.h>
 #endif
 
-#include <S3Lib.h>
-
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "hash.h"
-#include "list.h"
+#include "S3Lib.h"
 
 /**
  * @file
