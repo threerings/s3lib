@@ -39,7 +39,7 @@
 #include <config.h>
 #endif
 
-#include <S3Lib.h>
+#include "S3Lib.h"
 
 /**
  * @file

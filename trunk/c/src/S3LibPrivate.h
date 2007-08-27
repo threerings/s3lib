@@ -39,6 +39,9 @@
 #include <safestr.h>
 #include <curl/curl.h>
 
+#include "hash.h"
+#include "list.h"
+
 /**
  * @internal
  * Create a new safestr from a const char * string. The safestr_create function
