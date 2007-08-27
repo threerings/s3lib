@@ -11,6 +11,7 @@ TEST_OBJS=	tests.o \
 		S3Connection.o \
 		S3Error.o \
 		S3Header.o \
+		S3List.o \
 		S3Request.o
 
 CFLAGS+=	@CHECK_CFLAGS@ $(LIBCURL_CFLAGS) $(XML_CFLAGS) $(SAFESTR_CFLAGS) -DTEST_DATA=\"${srcdir}/data\"
