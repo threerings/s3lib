@@ -46,7 +46,7 @@ START_TEST (test_header_dict_new) {
 END_TEST
 
 START_TEST (test_header_new) {
-    S3Header *header = s3header_new();
+    S3Header *header = s3header_new("Date");
     s3header_free(header);
 }
 END_TEST

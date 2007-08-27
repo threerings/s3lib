@@ -82,9 +82,11 @@ struct S3Header {
 
 /**
  * Allocate a new S3 Header instance.
+ * @param name HTTP header name
  * @return S3 header, or NULL on failure.
+ * @sa s3header_append_value
  */
-S3_DECLARE S3Header *s3header_new () {
+S3_DECLARE S3Header *s3header_new (const char *name) {
     S3Header *header;
 
     /* Allocate our empty header */
@@ -93,7 +95,7 @@ S3_DECLARE S3Header *s3header_new () {
         return NULL;
 
     /* The header name */
-    // TODO
+    header->name = s3_safestr_create(name, SAFESTR_IMMUTABLE);
 
     /* An empty list for header value(s) */
     header->values = list_create(-1);
@@ -114,6 +116,9 @@ error:
  * @param header A S3Header instance
  */
 S3_DECLARE void s3header_free (S3Header *header) {
+    if (header->name != NULL)
+        safestr_release(header->name);
+
     if (header->values != NULL) {
         list_destroy_nodes(header->values);
         list_destroy(header->values);
