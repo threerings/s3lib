@@ -120,6 +120,7 @@ S3_DECLARE void s3list_free (S3List *list) {
 
         /* Release the node value */
         safestr_t val = lnode_get(node);
+        assert(val != NULL);
         safestr_release(val);
 
         /* Fetch the next node */
