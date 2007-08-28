@@ -76,7 +76,7 @@ struct S3Header {
     safestr_t name;
 
     /** @internal The header value(s) */
-    list_t *values;
+    S3List *values;
 };
 
 
@@ -98,7 +98,7 @@ S3_DECLARE S3Header *s3header_new (const char *name) {
     header->name = s3_safestr_create(name, SAFESTR_IMMUTABLE);
 
     /* An empty list for header value(s) */
-    header->values = list_create(-1);
+    header->values = s3list_new();
     if (header->values == NULL)
         goto error;
 
@@ -120,8 +120,7 @@ S3_DECLARE void s3header_free (S3Header *header) {
         safestr_release(header->name);
 
     if (header->values != NULL) {
-        list_destroy_nodes(header->values);
-        list_destroy(header->values);
+        s3list_free(header->values);
     }
     free(header);
 }
