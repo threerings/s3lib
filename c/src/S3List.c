@@ -44,12 +44,22 @@
 
 /**
  * @file
- * @brief S3Lib list implementation.
+ * @brief S3Lib List Implementation.
  * @author Landon Fuller <landonf@threerings.net>
+ *
+ * @internal
+ * @attention
+ * We want to enforce strict typing externally and handle standard list tasks,
+ * but we don't actually need to wrap the standard list types. Instead, we
+ * just return a pointer to the lnode_t struct.
+ *
+ * C99, 6.2.5.26 - Types:
+ * All pointers to structure types shall have the same representation and
+ * alignment requirements as each other.
  */
 
 /**
- * @defgroup S3List S3Lib list handling
+ * @defgroup S3List S3Lib List Datatype
  * @ingroup S3Library
  * @{
  */
@@ -58,24 +68,38 @@
  * An S3List maintains a linked list of const char * elements.
  * @attention Operations on a S3List instance are not guaranteed thread-safe, and
  * a S3List should not be shared between threads without external synchronization.
+ *
+ * @internal
+ * @warning This structure is a dummy. It is used only to generate
+ * doxygen docs. We simply cast #list_t pointers to S3List pointers.
  */
 struct S3List {
-    list_t ctx;
+};
+
+/**
+ * A S3List element.
+ *
+ * @internal
+ * @warning This structure is a dummy. It is used only to generate
+ * doxygen docs. We simply cast #lnode_t pointers to S3ListNode pointers.
+ */
+struct S3ListNode {
 };
 
 /**
  * Create a new, empty S3List instance.
  * @return A newly allocated S3List, or NULL on failure
+ * @sa s3list_free
  */
 S3_DECLARE S3List *s3list_new () {
-    S3List *list = malloc(sizeof(S3List));
-    if (list == NULL)
+    list_t *list;
+
+    /* Allocate a new, empty list */    
+    list = list_create(LISTCOUNT_T_MAX);
+    if (list == NULL)    
         return NULL;
 
-    /* Initialize a new, empty list */
-    list_init(&list->ctx, LISTCOUNT_T_MAX);
-
-    return list;
+    return (S3List *) list;
 }
 
 /**
@@ -83,10 +107,14 @@ S3_DECLARE S3List *s3list_new () {
  * @param list A S3List instance.
  */
 S3_DECLARE void s3list_free (S3List *list) {
+    list_t *klist;
     lnode_t *node;
 
+    /* Unmask the villian's true type */
+    klist = (list_t *) list;
+
     /* Iterate over the list and free the node data */
-    node = list_first(&list->ctx);
+    node = list_first(klist);
     while (node != NULL) {
         lnode_t *next;
 
@@ -95,19 +123,75 @@ S3_DECLARE void s3list_free (S3List *list) {
         safestr_release(val);
 
         /* Fetch the next node */
-        next = list_next(&list->ctx, node);
+        next = list_next(klist, node);
 
         /* Delete the current node from the list */
-        list_delete(&list->ctx, node);
+        list_delete(klist, node);
 
         /* Free the current node */
         lnode_destroy(node);
 
         node = next;
     }
-    assert(list_isempty(&list->ctx));
+    assert(list_isempty(klist));
+    list_destroy(klist);
+}
 
-    free(list);
+/**
+ * Append a string element to the list.
+ * @param list S3List to modify
+ * @param string The string to append to the list. The string will be copied.
+ * @return true on success, or false on failure. This function should not fail unless available memory has been exhausted.
+ */
+S3_DECLARE bool s3list_append (S3List *list, const char *string) {
+    list_t *klist;
+    lnode_t *node;
+    safestr_t data;
+
+    /* Unmask the villian's true type */
+    klist = (list_t *) list;
+
+    data = s3_safestr_create(string, SAFESTR_IMMUTABLE);
+    if (!data)
+        return false;
+
+    node = lnode_create(data);
+    if (!node) {
+        safestr_release(data);
+        return false;
+    }
+
+    list_append(klist, node);
+    return true;
+}
+
+/**
+ * Returns a borrowed reference to the first list element.
+ * @param list A S3List instance.
+ * @return Borrowed reference to the first list element, or NULL if the list is empty.
+ */
+S3_DECLARE S3ListNode *s3list_first (S3List *list) {
+     return (S3ListNode *) list_first((list_t *) list);
+}
+
+/**
+ * If the provided node has a successor, a pointer to that successor is returned.
+ * Otherwise, returns NULL.
+ * @param list A S3List instance.
+ * @param node A node from S3List.
+ * @return Returns the next node, or NULL.
+ */
+S3_DECLARE S3ListNode *s3list_next (S3List *list, S3ListNode *node) {
+    return (S3ListNode *) list_next((list_t *) list, (lnode_t *) node);
+}
+
+/**
+ * Returns a borrowed reference to a list element's string value.
+ * @param node A S3ListNode.
+ * @return Borrowed reference to the list node's string value.
+ */
+S3_DECLARE const char *s3list_node_value (S3ListNode *node) {
+    return lnode_get((lnode_t *) node);
 }
 
 /*!
