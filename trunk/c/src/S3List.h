@@ -48,9 +48,15 @@
  */
 
 typedef struct S3List S3List;
+typedef struct S3ListNode S3ListNode;
 
 S3_EXTERN S3List *s3list_new ();
-S3_EXTERN void s3list_free (S3List *list); 
+S3_EXTERN void s3list_free (S3List *list);
+S3_EXTERN bool s3list_append (S3List *list, const char *string);
+
+S3_EXTERN S3ListNode *s3list_first (S3List *list);
+S3_EXTERN S3ListNode *s3list_next (S3List *list, S3ListNode *node);
+S3_EXTERN const char *s3list_node_value (S3ListNode *node);
 
 /*!
  * @} S3List
