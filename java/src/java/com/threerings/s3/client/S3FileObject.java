@@ -89,7 +89,6 @@ public class S3FileObject extends S3Object {
          MessageDigest md;
          byte data[];
          int nbytes;
-         byte digest[];
 
          // Initialize
          try {
