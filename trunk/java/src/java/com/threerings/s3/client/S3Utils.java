@@ -147,8 +147,8 @@ class S3Utils {
         }
 
         // Finally, add all the interesting headers (i.e.: all that startwith x-amz- ;-))
-        for (Iterator i = interestingHeaders.keySet().iterator(); i.hasNext(); ) {
-            String key = (String)i.next();
+        for (Iterator<String> i = interestingHeaders.keySet().iterator(); i.hasNext(); ) {
+            String key = i.next();
             if (key.startsWith(AMAZON_HEADER_PREFIX)) {
                 buf.append(key).append(':').append(interestingHeaders.get(key));
             } else {
