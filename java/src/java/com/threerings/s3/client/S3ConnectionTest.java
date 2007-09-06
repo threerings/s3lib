@@ -298,7 +298,7 @@ public class S3ConnectionTest extends TestCase
         S3Object obj = _conn.getObject(_testBucketName, _fileObj.getKey());
 
         // Ensure that it is equal to the object we uploaded
-        S3ObjectTest.testEquals(_fileObj, obj, this);
+        S3ObjectTest.testEquals(_fileObj, obj);
 
         // Validate the object file data, too.
         ByteArrayOutputStream output = new ByteArrayOutputStream();
@@ -336,7 +336,7 @@ public class S3ConnectionTest extends TestCase
         S3Object obj = _conn.getObject(_testBucketName, _fileObj.getKey());
 
         // Ensure that it is equal to the object we uploaded
-        S3ObjectTest.testEquals(_fileObj, obj, this);
+        S3ObjectTest.testEquals(_fileObj, obj);
     }
 
     public void testErrorHandling ()

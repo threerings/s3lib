@@ -44,25 +44,25 @@ public class S3ObjectTest  extends TestCase
      * unique, potentially representing transient state (such as an HTTP connection)
      * that can not be replicated.
      */
-    static public void testEquals (S3Object obj1, S3Object obj2, TestCase test)
+    static public void testEquals (S3Object obj1, S3Object obj2)
         throws Exception
     {
         // Key
-        test.assertEquals(obj1.getKey(), obj2.getKey());
+        assertEquals(obj1.getKey(), obj2.getKey());
 
         // Mime Type
-        test.assertEquals(obj1.getMimeType(), obj2.getMimeType());
+        assertEquals(obj1.getMimeType(), obj2.getMimeType());
 
         // Checksum
         String checksum1 = new String(Hex.encodeHex(obj1.getMD5()));
         String checksum2 = new String(Hex.encodeHex(obj2.getMD5()));
-        test.assertEquals(checksum1, checksum2);
+        assertEquals(checksum1, checksum2);
 
         // Length
-        test.assertEquals(obj1.length(), obj2.length());
+        assertEquals(obj1.length(), obj2.length());
 
         // Metadata
-        test.assertTrue("Metadata does not match", obj1.getMetadata().equals(obj2.getMetadata()));
+        assertTrue("Metadata does not match", obj1.getMetadata().equals(obj2.getMetadata()));
     }
 
 
