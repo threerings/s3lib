@@ -151,17 +151,19 @@ public class S3ServerException extends S3Exception
         // This could use a static mapping, but exceptions are rare
         // conditions and there's enough ugly generated code in here as it is.
         try {
-            Class cls;
-            Constructor construct;
-            
-            // This '$' usage is broken, but necessary. See:
+            Constructor<? extends S3ServerException> construct;
+            Class<? extends S3ServerException> cls;
+        	final Class<?> loadedClass;
+
+            // This Class.forName('$') usage for static subclasses is broken, but necessary. See:
             //     http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4378381
-            cls = Class.forName("com.threerings.s3.client.S3ServerException$" + code + "Exception");
-            
+            loadedClass = Class.forName("com.threerings.s3.client.S3ServerException$" + code + "Exception");
+            cls = loadedClass.asSubclass(S3ServerException.class);
+
             // Grab the constructor
             construct = cls.getConstructor(new Class[] {String.class, String.class, String.class});
-            
-            return (S3ServerException) construct.newInstance(new Object[] {errorMessage, requestId, hostId});
+
+            return construct.newInstance(new Object[] {errorMessage, requestId, hostId});
         } catch (Exception e) {
             return new S3ServerException("An unhandled S3 error code was returned: " + code, requestId, hostId);
         }                
