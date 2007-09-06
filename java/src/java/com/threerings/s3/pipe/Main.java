@@ -245,7 +245,8 @@ final public class Main {
     /**
      * Set the block size, in bytes.
      */
-    @Option(name="--blocksize", usage="Specify the in-memory block size, in kilobytes, " +
+    @SuppressWarnings("unused")
+	@Option(name="--blocksize", usage="Specify the in-memory block size, in kilobytes, " +
         "for S3 file uploads. Defaults to 5 megabytes.", metaVar="<size>")
     private void setBlocksize (int newBlockSize) {
         blockSize = newBlockSize * 1024;
