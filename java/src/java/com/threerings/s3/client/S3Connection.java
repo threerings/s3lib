@@ -51,12 +51,14 @@ import org.apache.commons.codec.net.URLCodec;
 
 import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpMethodBase;
 import org.apache.commons.httpclient.HttpStatus;
 
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.methods.DeleteMethod;
+import org.apache.commons.httpclient.methods.HeadMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
@@ -345,32 +347,21 @@ public class S3Connection
         }
     }
 
-
     /**
-     * Retrieve a S3Object. The object's data streams directly from the remote
-     * server, and thus may be invalidated.
-     *
-     * @param bucketName Source bucket.
-     * @param objectKey Object key.
+     * Retrieve an S3Object, using the provided HttpMethodBase.
+     * 
+     * @param objectKey The object key request, used to instantiate the returned S3Object.
+     * @param method The HTTP method to execute.
+     * @param hasBody Set to true if a response body is expected (eg, for an HTTP GET request)
      */
-    public S3Object getObject (String bucketName, String objectKey)
-        throws S3Exception
+    private S3Object getObject (String objectKey, HttpMethodBase method, boolean hasBody)
+    	throws S3Exception
     {
-        GetMethod method;
         InputStream response;
         HashMap<String,String> metadata;
         String mimeType;
         byte digest[];
         long length;
-
-        try {
-            method = new GetMethod("/" + _urlEncoder.encode(bucketName) +
-                "/" + _urlEncoder.encode(objectKey));
-        } catch (EncoderException e) {
-            throw new S3ClientException.InvalidURIException(
-                "Encoding error for bucket " + bucketName + " and key " +
-                objectKey + ": " + e);
-        }
 
         // Execute the get request and retrieve all metadata from the response
         executeS3Method(method);
@@ -414,24 +405,77 @@ public class S3Connection
             }
         }
 
-        // Get the response body. This is an "auto closing" stream --
-        // it will close the HTTP connection when the stream is closed.
-        try {
-            response = method.getResponseBodyAsStream();            
-        } catch (IOException ioe) {
-            throw new S3ClientException.NetworkException("Error receiving object GET response: " +
-                ioe.getMessage(), ioe);
+        if (hasBody) {
+            // Get the response body. This is an "auto closing" stream --
+            // it will close the HTTP connection when the stream is closed.
+            try {
+                response = method.getResponseBodyAsStream();            
+            } catch (IOException ioe) {
+                throw new S3ClientException.NetworkException("Error receiving object " + method.getName() +
+                	"response: " + ioe.getMessage(), ioe);
+            }
+
+            if (response == null) {
+                // A body was expected
+                throw new S3Exception("S3 failed to return any document body");
+            }
+            
+            return new S3RemoteObject(objectKey, mimeType, length, digest, metadata, response);        
+        } else {
+        	return new S3EmptyObject(objectKey, mimeType, length, digest, metadata);
         }
 
-        if (response == null) {
-            // We should always receive a response!
-            throw new S3Exception("S3 failed to return any document body");
-        }
-
-        return new S3RemoteObject(objectKey, mimeType, length, digest, metadata, response);
     }
 
-    
+    /**
+     * Retrieve a S3Object. The object's data streams directly from the remote
+     * server, and thus may be invalidated.
+     *
+     * @param bucketName Source bucket.
+     * @param objectKey Object key.
+     */
+    public S3Object getObject (String bucketName, String objectKey)
+        throws S3Exception
+    {
+        GetMethod method;
+
+        try {
+            method = new GetMethod("/" + _urlEncoder.encode(bucketName) +
+                "/" + _urlEncoder.encode(objectKey));
+        } catch (EncoderException e) {
+            throw new S3ClientException.InvalidURIException(
+                "Encoding error for bucket " + bucketName + " and key " +
+                objectKey + ": " + e);
+        }
+
+        return getObject(objectKey, method, true);
+    }
+
+    /**
+     * Retrieve an S3Object's metadata. The data stream is not retrieved (a HEAD request is
+     * performed). Any attempt to read() the returned S3Object's input stream will throw
+     * an IOException.
+     *
+     * @param bucketName Source bucket.
+     * @param objectKey Object key.
+     */
+    public S3Object getObjectMetadata (String bucketName, String objectKey)
+        throws S3Exception
+    {
+        HeadMethod method;
+
+        try {
+            method = new HeadMethod("/" + _urlEncoder.encode(bucketName) +
+                "/" + _urlEncoder.encode(objectKey));
+        } catch (EncoderException e) {
+            throw new S3ClientException.InvalidURIException(
+                "Encoding error for bucket " + bucketName + " and key " +
+                objectKey + ": " + e);
+        }
+
+        return getObject(objectKey, method, false);
+    }
+
     /**
      * Delete a remote S3 Object.
      * @param bucketName Remote bucket.

@@ -319,6 +319,30 @@ public class S3ConnectionTest extends TestCase
         assertEquals(TEST_DATA, output.toString("utf8"));
     }
 
+    public void testGetObjectMetadata ()
+    	throws Exception
+    {
+        // Send it to the mother ship
+        _conn.putObject(_testBucketName, _fileObj, AccessControlList.StandardPolicy.PRIVATE);
+
+        // Fetch it back out again
+        S3Object obj = _conn.getObjectMetadata(_testBucketName, _fileObj.getKey());
+
+        // Ensure that it is equal to the object we uploaded
+        S3ObjectTest.testEquals(_fileObj, obj);
+
+        // Validate that the input stream is non-functional (this is a head request)
+        InputStream input = obj.getInputStream();
+        try {
+        	input.read();
+        	throw new Exception("input.read() did not throw an exception");
+        } catch (IOException e) {
+        	// Expected
+        }
+
+        input.close();
+    }
+    
     public void testObjectMetadata ()
         throws Exception
     {
