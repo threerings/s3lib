@@ -35,7 +35,6 @@ import junit.framework.TestCase;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.InputStream;
 import java.io.IOException;
 import java.io.FileOutputStream;
 
@@ -73,11 +72,8 @@ public class QueuedStreamReaderTest extends TestCase
         throws Exception
     {
         QueuedStreamReader reader;
-        InputStream data;
         Thread readerThread;
         ByteBuffer block;
-
-        data = new FileInputStream(_testFile);
 
         /* Create and start the stream reader. */
         reader = new QueuedStreamReader(new FileInputStream(_testFile), BLOCK_SIZE, 4);
@@ -103,13 +99,13 @@ public class QueuedStreamReaderTest extends TestCase
     }
 
     /** Temporary test data file. */
-    protected File _testFile;
+    private File _testFile;
 
     /** Block data. */
-    static protected final byte[] TEST_DATA;
+    static private final byte[] TEST_DATA;
 
     /** Block size. */
-    static protected final int BLOCK_SIZE;
+    static private final int BLOCK_SIZE;
     
     static {
         try {
