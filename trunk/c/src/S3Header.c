@@ -83,10 +83,11 @@ struct S3Header {
 /**
  * Allocate a new S3 Header instance.
  * @param name HTTP header name
+ * @param value A single HTTP header value.
  * @return S3 header, or NULL on failure.
  * @sa s3header_append_value
  */
-S3_DECLARE S3Header *s3header_new (const char *name) {
+S3_DECLARE S3Header *s3header_new (const char *name, const char *value) {
     S3Header *header;
 
     /* Allocate our empty header */
@@ -97,9 +98,13 @@ S3_DECLARE S3Header *s3header_new (const char *name) {
     /* The header name */
     header->name = s3_safestr_create(name, SAFESTR_IMMUTABLE);
 
-    /* An empty list for header value(s) */
+    /* An new list for header value(s) */
     header->values = s3list_new();
     if (header->values == NULL)
+        goto error;
+
+    /* The first header value */
+    if (!s3list_append(header->values, value))
         goto error;
 
     /* All done */
@@ -119,9 +124,9 @@ S3_DECLARE void s3header_free (S3Header *header) {
     if (header->name != NULL)
         safestr_release(header->name);
 
-    if (header->values != NULL) {
+    if (header->values != NULL)
         s3list_free(header->values);
-    }
+
     free(header);
 }
 
@@ -192,10 +197,60 @@ error:
  */
 S3_DECLARE void s3header_dict_free(S3HeaderDictionary *headers) {
     if (headers->hash != NULL) {
+        /* Free all nodes. */
         hash_free_nodes(headers->hash);
-        hash_destroy(headers->hash);        
+
+        /* Free the hash table. */
+        hash_destroy(headers->hash);
     }
+
     free(headers);
+}
+
+/**
+ * Add a new header value to the S3HeaderDictionary. If the value already exists
+ * in @a headers, it will be replaced.
+ *
+ * @param headers Dictionary to modify.
+ * @param name HTTP header name.
+ * @param value HTTP header value.
+ * @return True on success, or false on failure.
+ */
+S3_DECLARE bool s3header_dict_put (S3HeaderDictionary *headers, const char *name, const char *value) {
+    S3Header *header = NULL;
+    hnode_t *node = NULL;
+    hnode_t *prev_node;
+
+    /* Create a new header for the given name/value. */
+    header = s3header_new(name, value);
+    if (header == NULL)
+        return false;
+
+    /* Node to hold the header. */
+    node = hnode_create(header);
+    if (node == NULL)
+        goto error;
+
+    /* Delete existing hash entry, if it exists */
+    prev_node = hash_lookup(headers->hash, name);
+    if (prev_node != NULL)
+        hash_delete(headers->hash, prev_node);
+
+    /* Add the header to the hash, re-using our existing key reference */
+    hash_insert(headers->hash, node, safestr_reference(header->name));
+
+    return true;
+
+error:
+    if (header != NULL)
+        s3header_free(header);
+
+    /* Don't need to free the header, since we've
+     * already done that above. Just destroy the node. */
+    if (node != NULL)
+        hnode_destroy(node);
+
+    return false;
 }
 
 /*!

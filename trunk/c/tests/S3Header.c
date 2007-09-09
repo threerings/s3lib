@@ -45,8 +45,21 @@ START_TEST (test_header_dict_new) {
 }
 END_TEST
 
+START_TEST (test_header_dict_put) {
+    S3HeaderDictionary *headers = s3header_dict_new();
+
+    /* Put a value. */
+    fail_unless(s3header_dict_put(headers, "Date", "value"));
+
+    /* And now overwrite it again, for good measure. */
+    fail_unless(s3header_dict_put(headers, "Date", "value"));
+
+    s3header_dict_free(headers);
+}
+END_TEST
+
 START_TEST (test_header_new) {
-    S3Header *header = s3header_new("Date");
+    S3Header *header = s3header_new("Date", "value");
     s3header_free(header);
 }
 END_TEST
@@ -57,6 +70,7 @@ Suite *S3Header_suite(void) {
     TCase *tc_headers = tcase_create("Headers");
     suite_add_tcase(s, tc_headers);
     tcase_add_test(tc_headers, test_header_dict_new);
+    tcase_add_test(tc_headers, test_header_dict_put);
     tcase_add_test(tc_headers, test_header_new);
 
     return s;
