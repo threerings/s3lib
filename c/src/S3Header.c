@@ -60,9 +60,33 @@
  *
  * Maintains a hash table of HTTP headers and their associated values. 
  */
-struct S3HeaderDictionary {
+struct S3HeaderDict {
     /** @internal A hash table of S3Header instances, keyed by case-sensitive header name */
      hash_t *hash;
+
+     /**
+      * @internal Flag marking this dictionary 'dirty' (modified). ANY operation which modifies the hash map MUST set this flag.
+      * The flag is used to help detect table modification during iteration -- however, it can be fooled by resetting the
+      * dirty flag in s3header_dict_iterator_new() (ie, by creating an iterator, modifying the table, creating a second iterator).
+      *
+      * As such, this should be considered an imperfect advisory/debugging aid.
+      */
+     bool dirty;
+};
+
+
+/**
+ * A S3HeaderDict Iterator context.
+ *
+ * @sa s3header_dict_iterator_new
+ * @sa s3header_dict_next
+ */
+struct S3HeaderDictIterator {
+    /** @internal Reference to the iterated dict. */
+    S3HeaderDict *dict;
+
+    /** @internal The iteration context. */
+    hscan_t scanner;
 };
 
 
@@ -167,11 +191,11 @@ static void s3header_hnode_free(hnode_t *node, S3_UNUSED void *context) {
  * Allocate a new HTTP header dictionary.
  * @return Empty header dictionary, or NULL on failure.
  */
-S3_DECLARE S3HeaderDictionary *s3header_dict_new () {
-    S3HeaderDictionary *headers;
+S3_DECLARE S3HeaderDict *s3header_dict_new () {
+    S3HeaderDict *headers;
 
     /* Allocate an empty struct */
-    headers = calloc(1, sizeof(S3HeaderDictionary));
+    headers = calloc(1, sizeof(S3HeaderDict));
     if (headers == NULL)
         return NULL;
 
@@ -183,6 +207,9 @@ S3_DECLARE S3HeaderDictionary *s3header_dict_new () {
     /* Set our custom node allocation/deallocation callbacks */
     hash_set_allocator(headers->hash, s3header_hnode_alloc, s3header_hnode_free, NULL);
 
+    /* Initialize dirty flag */
+    headers->dirty = false;
+
     return headers;
 
 error:
@@ -193,9 +220,9 @@ error:
 
 /**
  * Deallocate all resources assocated with @a headers.
- * @param headers A S3HeaderDictionary instance.
+ * @param headers A S3HeaderDict instance.
  */
-S3_DECLARE void s3header_dict_free(S3HeaderDictionary *headers) {
+S3_DECLARE void s3header_dict_free(S3HeaderDict *headers) {
     if (headers->hash != NULL) {
         /* Free all nodes. */
         hash_free_nodes(headers->hash);
@@ -208,7 +235,7 @@ S3_DECLARE void s3header_dict_free(S3HeaderDictionary *headers) {
 }
 
 /**
- * Add a new header value to the S3HeaderDictionary. If the value already exists
+ * Add a new header value to the S3HeaderDict. If the value already exists
  * in @a headers, it will be replaced.
  *
  * @param headers Dictionary to modify.
@@ -216,10 +243,13 @@ S3_DECLARE void s3header_dict_free(S3HeaderDictionary *headers) {
  * @param value HTTP header value.
  * @return True on success, or false on failure.
  */
-S3_DECLARE bool s3header_dict_put (S3HeaderDictionary *headers, const char *name, const char *value) {
+S3_DECLARE bool s3header_dict_put (S3HeaderDict *headers, const char *name, const char *value) {
     S3Header *header = NULL;
     hnode_t *node = NULL;
     hnode_t *prev_node;
+
+    /* Mark header dirty */
+    headers->dirty = true;
 
     /* Create a new header for the given name/value. */
     header = s3header_new(name, value);
@@ -252,6 +282,71 @@ error:
 
     return false;
 }
+
+
+/**
+ * Returns a newly allocated S3HeaderDictIterator iteration context for the provided
+ * S3HeaderDict. The provided context can be used to iterate over all entries of the
+ * S3HeaderDict.
+ *
+ * @warning Any modifications of the hash table during iteration are UNSAFE and WILL cause
+ * undefined behavior.
+ *
+ * @param headers Dictionary to iterate.
+ * @return A S3HeaderDictIterator instance on success, or NULL if a failure occurs.
+ *
+ * @sa s3header_dict_iterator_free
+ */
+S3_DECLARE S3HeaderDictIterator *s3header_dict_iterator_new (S3HeaderDict *headers) {
+    S3HeaderDictIterator *iterator;
+
+    /* Alloc and initialize our iterator */
+    iterator = calloc(1, sizeof(S3HeaderDictIterator));
+    if (iterator == NULL)
+        return NULL;
+
+    /* Save a reference to the dictionary */
+    iterator->dict = headers;
+
+    /* Initialize the iterator. */
+    hash_scan_begin(&iterator->scanner, headers->hash);
+
+    /* Mark header clean, for (not perfect!) modification detection */
+    headers->dirty = false;
+
+    return iterator;
+}
+
+
+/**
+ * Returns the next S3Header item, if any unvisited nodes remain, or NULL.
+ *
+ * @param iterator An S3HeaderDictIterator instance allocated via s3header_dict_iterator_new
+ * @return The next S3Header instance, or NULL if none remain. The order in which nodes are returned is undefined.
+ */
+S3_DECLARE S3Header *s3header_dict_next (S3HeaderDictIterator *iterator) {
+    hnode_t *node;
+
+    /* The header must not be modified during iteration */
+    assert(iterator->dict->dirty == false);
+
+    node = hash_scan_next(&iterator->scanner);
+    if (node == NULL)
+        return NULL;
+
+    return (S3Header *) hnode_get(node);
+}
+
+
+/**
+ * Deallocate all resources associated with the provided S3HeaderDictIterator context.
+ * @param iterator Iterator to deallocate.
+ */
+S3_DECLARE void s3header_dict_iterator_free (S3HeaderDictIterator *iterator) {
+    /* Not much to do here */
+    free(iterator);
+}
+
 
 /*!
  * @} S3Header
