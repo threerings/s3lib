@@ -48,7 +48,10 @@
  */
 
 /* S3 Header Dictionary */
-typedef struct S3HeaderDictionary S3HeaderDictionary;
+typedef struct S3HeaderDict S3HeaderDict;
+
+/* S3 Header Dictionary Iterator */
+typedef struct S3HeaderDictIterator S3HeaderDictIterator;
 
 /* S3 Header */
 typedef struct S3Header S3Header;
@@ -56,9 +59,14 @@ typedef struct S3Header S3Header;
 S3_EXTERN S3Header *s3header_new (const char *name, const char *value);
 S3_EXTERN void s3header_free (S3Header *header);
 
-S3_EXTERN S3HeaderDictionary *s3header_dict_new ();
-S3_EXTERN void s3header_dict_free (S3HeaderDictionary *headers);
-S3_EXTERN bool s3header_dict_put (S3HeaderDictionary *headers, const char *name, const char *value);
+S3_EXTERN S3HeaderDict *s3header_dict_new ();
+S3_EXTERN void s3header_dict_free (S3HeaderDict *headers);
+
+S3_EXTERN bool s3header_dict_put (S3HeaderDict *headers, const char *name, const char *value);
+
+S3_EXTERN S3HeaderDictIterator *s3header_dict_iterator_new (S3HeaderDict *headers);
+S3_EXTERN S3Header *s3header_dict_next (S3HeaderDictIterator *iterator);
+S3_EXTERN void s3header_dict_iterator_free (S3HeaderDictIterator *iterator);
 
 /*!
  * @} S3Header
