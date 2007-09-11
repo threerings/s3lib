@@ -148,6 +148,7 @@ S3_DECLARE void s3header_free (S3Header *header) {
 
 /**
  * Returns a borrowed reference to the header value list.
+ *
  * @param header A S3Header instance.
  * @return Borrowed reference to the header value list.
  */
