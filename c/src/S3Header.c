@@ -63,15 +63,6 @@
 struct S3HeaderDict {
     /** @internal A hash table of S3Header instances, keyed by case-sensitive header name */
      hash_t *hash;
-
-     /**
-      * @internal Flag marking this dictionary 'dirty' (modified). ANY operation which modifies the hash map MUST set this flag.
-      * The flag is used to help detect table modification during iteration -- however, it can be fooled by resetting the
-      * dirty flag in s3header_dict_iterator_new() (ie, by creating an iterator, modifying the table, creating a second iterator).
-      *
-      * As such, this should be considered an imperfect advisory/debugging aid.
-      */
-     bool dirty;
 };
 
 
@@ -207,9 +198,6 @@ S3_DECLARE S3HeaderDict *s3header_dict_new () {
     /* Set our custom node allocation/deallocation callbacks */
     hash_set_allocator(headers->hash, s3header_hnode_alloc, s3header_hnode_free, NULL);
 
-    /* Initialize dirty flag */
-    headers->dirty = false;
-
     return headers;
 
 error:
@@ -247,9 +235,6 @@ S3_DECLARE bool s3header_dict_put (S3HeaderDict *headers, const char *name, cons
     S3Header *header = NULL;
     hnode_t *node = NULL;
     hnode_t *prev_node;
-
-    /* Mark header dirty */
-    headers->dirty = true;
 
     /* Create a new header for the given name/value. */
     header = s3header_new(name, value);
@@ -311,9 +296,6 @@ S3_DECLARE S3HeaderDictIterator *s3header_dict_iterator_new (S3HeaderDict *heade
     /* Initialize the iterator. */
     hash_scan_begin(&iterator->scanner, headers->hash);
 
-    /* Mark header clean, for (not perfect!) modification detection */
-    headers->dirty = false;
-
     return iterator;
 }
 
@@ -326,9 +308,6 @@ S3_DECLARE S3HeaderDictIterator *s3header_dict_iterator_new (S3HeaderDict *heade
  */
 S3_DECLARE S3Header *s3header_dict_next (S3HeaderDictIterator *iterator) {
     hnode_t *node;
-
-    /* The header must not be modified during iteration */
-    assert(iterator->dict->dirty == false);
 
     node = hash_scan_next(&iterator->scanner);
     if (node == NULL)
