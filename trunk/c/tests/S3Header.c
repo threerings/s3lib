@@ -37,6 +37,8 @@
 #include <config.h>
 #endif
 
+#include <string.h>
+
 #include "tests.h"
 
 START_TEST (test_header_dict_new) {
@@ -94,6 +96,24 @@ START_TEST (test_header_new) {
 }
 END_TEST
 
+START_TEST (test_header_values) {
+    S3Header *header;
+    S3List *values;
+    S3ListNode *node;
+    const char *value;
+
+    header = s3header_new("Date", "value");
+    values = s3header_values(header);
+    
+    node = s3list_first(values);
+    value = s3list_node_value(node);
+    
+    fail_unless(strcmp(value, "value") == 0);
+
+    s3header_free(header);
+}
+END_TEST
+
 Suite *S3Header_suite(void) {
     Suite *s = suite_create("S3Header");
 
@@ -103,6 +123,7 @@ Suite *S3Header_suite(void) {
     tcase_add_test(tc_headers, test_header_dict_put);
     tcase_add_test(tc_headers, test_header_dict_iterate);    
     tcase_add_test(tc_headers, test_header_new);
+    tcase_add_test(tc_headers, test_header_values);
 
     return s;
 }

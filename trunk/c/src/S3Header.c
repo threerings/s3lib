@@ -147,6 +147,16 @@ S3_DECLARE void s3header_free (S3Header *header) {
 
 
 /**
+ * Returns a borrowed reference to the header value list.
+ * @param header A S3Header instance.
+ * @return Borrowed reference to the header value list.
+ */
+S3_DECLARE S3List *s3header_values (S3Header *header) {
+    return header->values;
+}
+
+
+/**
  * @internal
  * S3Header hnode allocation function. Allocates a new key -> S3Header hash node
  */
