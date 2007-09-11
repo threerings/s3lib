@@ -57,6 +57,7 @@ typedef struct S3HeaderDictIterator S3HeaderDictIterator;
 typedef struct S3Header S3Header;
 
 S3_EXTERN S3Header *s3header_new (const char *name, const char *value);
+S3_EXTERN S3List *s3header_values (S3Header *header);
 S3_EXTERN void s3header_free (S3Header *header);
 
 S3_EXTERN S3HeaderDict *s3header_dict_new ();
