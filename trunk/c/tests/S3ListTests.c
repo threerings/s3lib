@@ -84,17 +84,17 @@ START_TEST (test_append_safestr) {
 END_TEST
 
 /* Clone a list. */
-START_TEST (test_clone) {
+START_TEST (test_copy) {
     S3List *orig;
-    S3List *clone;
+    S3List *copy;
     S3ListIterator *i;
 
     orig = s3list_new();
     s3list_append(orig, "hello");
     s3list_append(orig, "world");
 
-    clone = s3list_clone(orig);    
-    i = s3list_iterator_new(clone);
+    copy = s3list_copy(orig);    
+    i = s3list_iterator_new(copy);
 
     /* Check the first node */
     fail_unless(strcmp(s3list_iterator_next(i), "hello") == 0);
@@ -104,7 +104,7 @@ START_TEST (test_clone) {
 
     s3_release(i);
     s3_release(orig);
-    s3_release(clone);
+    s3_release(copy);
 }
 END_TEST
 
@@ -138,7 +138,7 @@ Suite *S3List_suite(void) {
     tcase_add_test(tc_general, test_new);
     tcase_add_test(tc_general, test_append);
     tcase_add_test(tc_general, test_append_safestr);
-    tcase_add_test(tc_general, test_clone);
+    tcase_add_test(tc_general, test_copy);
     tcase_add_test(tc_general, test_next);
 
     return s;
