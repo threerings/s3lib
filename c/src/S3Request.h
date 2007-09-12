@@ -68,7 +68,7 @@ typedef enum {
     S3_HTTP_DELETE
 } S3HTTPMethod;
 
-S3_EXTERN S3Request *s3request_new (const char *url, S3HTTPMethod method);
+S3_EXTERN S3Request *s3request_new (S3HTTPMethod method, const char *bucket, const char *resource);
 S3_EXTERN void s3request_free (S3Request *req);
 
 /*!
