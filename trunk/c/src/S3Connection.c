@@ -192,7 +192,8 @@ S3_DECLARE void *s3connection_create_bucket (S3Connection *conn, const char *buc
 /**
  * @internal
  *
- * #S3Connection deallocation method.
+ * #S3Connection deallocation callback.
+ * @warning Do not call directly, use #s3_release
  * @param conn A #S3Connection instance.
  */
 static void s3connection_dealloc (S3TypeRef obj) {

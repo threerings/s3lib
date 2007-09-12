@@ -117,7 +117,9 @@ S3_DECLARE S3List *s3list_new () {
 /**
  * @internal
  *
- * Deallocate all resources associated with \a list.
+ * S3List deallocation callback.
+ * @warning Do not call directly, use #s3_release
+ *
  * @param list A S3List instance.
  */
 static void s3list_dealloc (S3TypeRef obj) {
@@ -269,7 +271,9 @@ S3_DECLARE S3ListIterator *s3list_iterator_new (S3List *list) {
 
 /**
  * @internal
- * Deallocate all resources associated with the provided S3ListIterator context.
+ * S3ListIterator deallocation callback.
+ * @warning Do not call directly, use #s3_release
+ *
  * @param iterator Iterator to deallocate.
  */
 static void s3list_iterator_dealloc (S3TypeRef obj) {
