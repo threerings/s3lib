@@ -140,7 +140,7 @@ S3_DECLARE void s3header_free (S3Header *header) {
         safestr_release(header->name);
 
     if (header->values != NULL)
-        s3list_free(header->values);
+        s3_release(header->values);
 
     free(header);
 }

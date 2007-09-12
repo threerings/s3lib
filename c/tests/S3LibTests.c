@@ -46,21 +46,21 @@ typedef struct S3Test {
     uint8_t nothing;
 } S3Test;
 
-static void s3test_class_dealloc (S3Test *obj);
+static void s3test_class_dealloc (S3TypeRef obj);
 
 static S3RuntimeClass S3TestClass = {
-    .dealloc = (s3_dealloc_function) &s3test_class_dealloc
+    .dealloc = &s3test_class_dealloc
 };
 
-static void s3test_class_dealloc (S3Test *obj) {
-    free(obj);
+static void s3test_class_dealloc (S3TypeRef obj) {
+    free((S3Test *) obj);
 }
 
 START_TEST (test_reference_counting) {
     S3Test *obj;
 
     obj = malloc(sizeof(S3Test));
-    s3_init(obj, &S3TestClass);
+    s3_object_init(obj, &S3TestClass);
 
     fail_unless(s3_reference_count(obj) == 1);
 
