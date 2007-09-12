@@ -76,15 +76,21 @@
 struct S3List {
 };
 
+
 /**
- * A S3List element.
+ * A S3List Iterator context.
  *
- * @internal
- * @warning This structure is a dummy. It is used only to generate
- * doxygen docs. We simply cast #lnode_t pointers to S3ListNode pointers.
+ * @sa s3list_iterator_new
+ * @sa s3list_iterator_next
  */
-struct S3ListNode {
+struct S3ListIterator {
+    /** @internal Reference to the iterated list. */
+    list_t *list;
+
+    /** @internal Reference to the current list node. */
+    lnode_t *current;
 };
+
 
 /**
  * Create a new, empty S3List instance.
@@ -231,32 +237,61 @@ S3_PRIVATE bool s3list_append_safestr (S3List *list, safestr_t string) {
 }
 
 /**
- * Returns a borrowed reference to the first list element.
- * @param list A S3List instance.
- * @return Borrowed reference to the first list element, or NULL if the list is empty.
+ * Returns a newly allocated S3ListIterator iteration context for the provided
+ * S3List. The provided context can be used to iterate over all entries of the
+ * S3List.
+ *
+ * @warning Any modifications to the list during iteration are UNSAFE and WILL cause
+ * undefined behavior.
+ *
+ * @param list List to iterate.
+ * @return A S3ListIterator instance on success, or NULL if a failure occurs.
+ *
+ * @sa s3list_iterator_free
  */
-S3_DECLARE S3ListNode *s3list_first (S3List *list) {
-     return (S3ListNode *) list_first((list_t *) list);
+S3_DECLARE S3ListIterator *s3list_iterator_new (S3List *list) {
+    S3ListIterator *iterator;
+
+    /* Allocate */
+    iterator = calloc(1, sizeof(S3ListIterator));
+    if (iterator == NULL)
+        return NULL;
+
+    /* Initialize */
+    iterator->list = (list_t *) list;
+    iterator->current = list_first((list_t *) list);
+
+    /* Return */
+    return iterator;
+}
+
+/*
+ * Returns a borrowed reference to the next list value, if any unvisited nodes remain, or NULL.
+ *
+ * @param iterator An S3ListIterator instance.
+ * @return The next list value, or NULL if none remain.
+ */
+S3_DECLARE const char *s3list_iterator_next (S3ListIterator *iterator) {
+    safestr_t value;
+
+    /* If node is NULL, end of list */
+    if (iterator->current == NULL)
+        return NULL;
+
+    /* Otherwise, save the return value and advance the node */
+    value = lnode_get(iterator->current);
+    iterator->current = list_next(iterator->list, iterator->current);
+
+    return s3_safestr_char(value);
 }
 
 /**
- * If the provided node has a successor, a pointer to that successor is returned.
- * Otherwise, returns NULL.
- * @param list A S3List instance.
- * @param node A node from S3List.
- * @return Returns the next node, or NULL.
+ * Deallocate all resources associated with the provided S3ListIterator context.
+ * @param iterator Iterator to deallocate.
  */
-S3_DECLARE S3ListNode *s3list_next (S3List *list, S3ListNode *node) {
-    return (S3ListNode *) list_next((list_t *) list, (lnode_t *) node);
-}
-
-/**
- * Returns a borrowed reference to a list element's string value.
- * @param node A S3ListNode.
- * @return Borrowed reference to the list node's string value.
- */
-S3_DECLARE const char *s3list_node_value (S3ListNode *node) {
-    return lnode_get((lnode_t *) node);
+S3_DECLARE void s3list_iterator_free (S3ListIterator *iterator) {
+    /* Not much to do here */
+    free(iterator);
 }
 
 /*!
