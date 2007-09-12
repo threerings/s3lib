@@ -103,14 +103,12 @@ static S3RuntimeClass S3ListIteratorClass = {
 S3_DECLARE S3List *s3list_new () {
     S3List *list;
     
-    /* Allocate and initialize a new list object */
-    list = calloc(1, sizeof(S3List));
+    /* Allocate */
+    list = s3_object_alloc(&S3ListClass, sizeof(S3List));
     if (list == NULL)
         return NULL;
 
-    s3_object_init(list, &S3ListClass);
-
-    /* Init the list context */
+    /* Initialize */
     list_init(&list->ctx, LISTCOUNT_T_MAX);
 
     return list;
@@ -254,12 +252,10 @@ S3_PRIVATE bool s3list_append_safestr (S3List *list, safestr_t string) {
 S3_DECLARE S3ListIterator *s3list_iterator_new (S3List *list) {
     S3ListIterator *iterator;
 
-    /* Allocate and initialize object */
-    iterator = calloc(1, sizeof(S3ListIterator));
+    /* Allocate */
+    iterator = s3_object_alloc(&S3ListIteratorClass, sizeof(S3ListIterator));
     if (iterator == NULL)
         return NULL;
-    
-    s3_object_init(iterator, &S3ListIteratorClass);
 
     /* Initialize */
     s3_retain(list);
