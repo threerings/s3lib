@@ -94,17 +94,26 @@ S3_PRIVATE bool s3lib_debugging () {
 /**
  * @internal
  *
- * Initialize a new S3 object instance. Sets the reference count to 1 (implicit reference);
+ * Allocate and initialize the class definition of a new S3 object instance.
+ *
+ * The object is zero-filled. The reference count to 1 (implicit reference);
  *
  * @param object Object to initialize.
  * @param class Object's class definition.
  */
-S3_PRIVATE void s3_object_init (S3TypeRef object, S3RuntimeClass *class) {
+S3_PRIVATE S3TypeRef s3_object_alloc (S3RuntimeClass *class, size_t objectSize) {
+    S3TypeRef object;
     S3RuntimeBase *objdata;
+
+    object = calloc(1, objectSize);
+    if (object == NULL)
+        return NULL;
 
     objdata = (S3RuntimeBase *) object;
     objdata->refCount = 1;
     objdata->class = class;
+
+    return object;
 }
 
 /**

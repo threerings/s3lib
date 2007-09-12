@@ -59,8 +59,7 @@ static void s3test_class_dealloc (S3TypeRef obj) {
 START_TEST (test_reference_counting) {
     S3Test *obj;
 
-    obj = malloc(sizeof(S3Test));
-    s3_object_init(obj, &S3TestClass);
+    obj = s3_object_alloc(&S3TestClass, sizeof(S3Test));
 
     fail_unless(s3_reference_count(obj) == 1);
 
