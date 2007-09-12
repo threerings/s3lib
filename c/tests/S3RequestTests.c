@@ -41,7 +41,7 @@
 
 START_TEST (test_new) {
     S3Request *req = s3request_new(S3_HTTP_PUT, "bucket", "resource");
-    s3request_free(req);
+    s3_release(req);
 }
 END_TEST
 

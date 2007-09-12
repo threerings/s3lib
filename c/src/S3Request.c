@@ -55,6 +55,8 @@
  * @{
  */
 
+static void s3request_dealloc (S3TypeRef object);
+
 /**
  * S3 HTTP Request Context.
  * The request context exposes the URL, method, and headers of a composed S3 REST request.
@@ -63,6 +65,8 @@
  * @sa s3request_new()
  */
 struct S3Request {
+    S3RuntimeBase base;
+
     /** @internal
      * Request method */
     S3HTTPMethod method;
@@ -80,6 +84,13 @@ struct S3Request {
     S3HeaderDict *headers;
 };
 
+/**
+ * @internal
+ * S3Request Class Definition
+ */
+static S3RuntimeClass S3RequestClass = {
+    .dealloc = s3request_dealloc
+};
 
 /**
  * Instantiate a new S3Request instance.
@@ -95,7 +106,7 @@ S3_DECLARE S3Request *s3request_new (S3HTTPMethod method, const char *bucket, co
     S3Request *req;
 
     /* Allocate a new S3 Request. */
-    req = calloc(1, sizeof(S3Request));
+    req = s3_object_alloc(&S3RequestClass, sizeof(S3Request));
     if (req == NULL)
         return NULL;
 
@@ -113,10 +124,12 @@ S3_DECLARE S3Request *s3request_new (S3HTTPMethod method, const char *bucket, co
 
 
 /**
- * Free a S3Request instance.
+ * S3Request deallocation method.
  * @param req A S3Request instance.
  */
-S3_DECLARE void s3request_free (S3Request *req) {
+static void s3request_dealloc (S3TypeRef object) {
+    S3Request *req = (S3Request *) object;
+
     if (req->bucket != NULL)
         safestr_release(req->bucket);
 

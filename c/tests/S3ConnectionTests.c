@@ -43,21 +43,21 @@ START_TEST (test_new) {
     S3Connection *conn = s3connection_new("id", "key");
     fail_if(conn == NULL);
 
-    s3connection_free(conn);
+    s3_release(conn);
 }
 END_TEST
 
 START_TEST (test_set_url) {
     S3Connection *conn = s3connection_new("id", "key");
     s3connection_set_url(conn, "http://localhost");
-    s3connection_free(conn);
+    s3_release(conn);
 }
 END_TEST
 
 START_TEST (test_create_bucket) {
     S3Connection *conn = s3connection_new("id", "key");
     s3connection_create_bucket(conn, "test");
-    s3connection_free(conn);
+    s3_release(conn);
 }
 END_TEST
 
