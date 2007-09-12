@@ -50,7 +50,7 @@
  */
 
 /**
- * @defgroup S3Header S3 HTTP Header Handling Functions
+ * @defgroup S3Header HTTP Headers
  * @ingroup S3Library
  * @{
  */
