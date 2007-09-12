@@ -186,6 +186,8 @@ S3_DECLARE const char *s3server_error_requestid (S3ServerError *error) {
 
 
 /**
+ * @internal
+ *
  * S3ServerError deallocation callback.
  * @warning Do not call directly, use #s3_release
  * @param error An #S3ServerError instance.
