@@ -69,7 +69,6 @@ typedef enum {
 } S3HTTPMethod;
 
 S3_EXTERN S3Request *s3request_new (S3HTTPMethod method, const char *bucket, const char *resource);
-S3_EXTERN void s3request_free (S3Request *req);
 
 /*!
  * @} S3Library
