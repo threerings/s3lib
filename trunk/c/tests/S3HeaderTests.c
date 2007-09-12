@@ -99,17 +99,15 @@ END_TEST
 START_TEST (test_header_values) {
     S3Header *header;
     S3List *values;
-    S3ListNode *node;
-    const char *value;
+    S3ListIterator *i;
 
     header = s3header_new("Date", "value");
     values = s3header_values(header);
-    
-    node = s3list_first(values);
-    value = s3list_node_value(node);
-    
-    fail_unless(strcmp(value, "value") == 0);
 
+    i = s3list_iterator_new(values);    
+    fail_unless(strcmp(s3list_iterator_next(i), "value") == 0);
+
+    s3list_iterator_free(i);
     s3header_free(header);
 }
 END_TEST

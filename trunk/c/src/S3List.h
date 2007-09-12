@@ -48,16 +48,16 @@
  */
 
 typedef struct S3List S3List;
-typedef struct S3ListNode S3ListNode;
+typedef struct S3ListIterator S3ListIterator;
 
 S3_EXTERN S3List *s3list_new ();
 S3_EXTERN void s3list_free (S3List *list);
 S3_EXTERN S3List *s3list_clone (S3List *list);
 S3_EXTERN bool s3list_append (S3List *list, const char *string);
 
-S3_EXTERN S3ListNode *s3list_first (S3List *list);
-S3_EXTERN S3ListNode *s3list_next (S3List *list, S3ListNode *node);
-S3_EXTERN const char *s3list_node_value (S3ListNode *node);
+S3_EXTERN S3ListIterator *s3list_iterator_new (S3List *list);
+S3_EXTERN const char *s3list_iterator_next (S3ListIterator *iterator);
+S3_EXTERN void s3list_iterator_free (S3ListIterator *iterator);
 
 #ifdef S3LIB_PRIVATE_API
 S3_PRIVATE bool s3list_append_safestr (S3List *list, safestr_t string);
