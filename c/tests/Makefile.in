@@ -11,6 +11,7 @@ TEST_OBJS=	tests.o \
 		S3Connection.o \
 		S3Error.o \
 		S3Header.o \
+		S3Lib.o \
 		S3List.o \
 		S3Request.o
 

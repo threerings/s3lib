@@ -1,5 +1,5 @@
 /*
- * tests.c vi:ts=4:sw=4:expandtab:
+ * S3Lib.c vi:ts=4:sw=4:expandtab:
  * Amazon S3 Library Unit Tests
  *
  * Author: Landon Fuller <landonf@threerings.net>
@@ -35,58 +35,51 @@
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-#endif /* HAVE_CONFIG_H */
+#endif
 
 #include <stdlib.h>
-#include <unistd.h>
-#include <stdio.h>
 
-#include <curl/curl.h>
-#include <check.h>
+#include "tests.h"
 
-#include <tests.h>
+typedef struct S3Test {
+    S3RuntimeBase base;
+    uint8_t nothing;
+} S3Test;
 
-void print_usage(const char *name) {
-    printf("Usage: %s [filename]\n", name);
-    printf(" [filename]\tWrite XML log to <filename>\n");
+static void s3test_class_dealloc (S3Test *obj);
+
+static S3RuntimeClass S3TestClass = {
+    .dealloc = (s3_dealloc_function) &s3test_class_dealloc
+};
+
+static void s3test_class_dealloc (S3Test *obj) {
+    free(obj);
 }
 
-int main(int argc, char *argv[]) {
-    Suite *s;
-    SRunner *sr;
-    int nf;
+START_TEST (test_reference_counting) {
+    S3Test *obj;
 
-    if (argc > 2) {
-        print_usage(argv[0]);
-        exit(1);
-    }
+    obj = malloc(sizeof(S3Test));
+    s3_init(obj, &S3TestClass);
 
-    /* Load all test suites */
-    s = S3Connection_suite();
-    sr = srunner_create(s);
-    srunner_add_suite(sr, S3Error_suite());
-    srunner_add_suite(sr, S3Header_suite());
-    srunner_add_suite(sr, S3Lib_suite());
-    srunner_add_suite(sr, S3List_suite());
-    srunner_add_suite(sr, S3Request_suite());
+    fail_unless(s3_reference_count(obj) == 1);
 
-    /* Enable XML output */
-    if (argc == 2)
-        srunner_set_xml(sr, argv[1]);
+    s3_retain(obj);
+    fail_unless(s3_reference_count(obj) == 2);
 
-    /* Library Initializers */
-    s3lib_global_init();
-    s3lib_enable_debugging(true); // XXX for now
-    curl_global_init(CURL_GLOBAL_ALL);
+    s3_release(obj);
+    fail_unless(s3_reference_count(obj) == 1);
 
-    /* Run tests */
-    srunner_run_all(sr, CK_NORMAL);
+    s3_release(obj);
+}
+END_TEST
 
-    nf = srunner_ntests_failed(sr);
-    srunner_free(sr);
+Suite *S3Lib_suite(void) {
+    Suite *s = suite_create("S3Lib");
 
-    if (nf == 0)
-        exit(EXIT_SUCCESS);
-    else
-        exit(EXIT_FAILURE);
+    TCase *tc_general = tcase_create("Memory Management");
+    suite_add_tcase(s, tc_general);
+    tcase_add_test(tc_general, test_reference_counting);
+
+    return s;
 }

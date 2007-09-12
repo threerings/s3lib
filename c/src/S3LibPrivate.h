@@ -43,6 +43,48 @@
 #include "list.h"
 
 /**
+ * @file
+ * @brief S3Lib Core Private Implementation
+ * @author Landon Fuller <landonf@threerings.net>
+ */
+
+/*!
+ * @addtogroup S3Library
+ * @{
+ */
+
+/**
+ * @internal
+ * Object instance deallocator.
+ */
+typedef void (*s3_dealloc_function) (S3TypeRef);
+
+/**
+ * @internal
+ * S3 object class definition. Used to implement standard, polymorphic
+ * operations on S3 objects.
+ */
+typedef struct S3RuntimeClass {
+    /** Deallocation function */
+    s3_dealloc_function dealloc;
+} S3RuntimeClass;
+
+
+/**
+ * @internal
+ * S3 object base class. All S3 objects start with this structure.
+ * @warning Never reference any of these elements directly.
+ */
+typedef struct S3RuntimeBase {
+    /** Object reference count */
+    uint32_t refCount;
+
+    /** Object class */
+    S3RuntimeClass *class;
+} S3RuntimeBase;
+
+
+/**
  * @internal
  * Create a new safestr from a const char * string. The safestr_create function
  * does not modify the string argument, so we do the cast once here.
@@ -50,6 +92,7 @@
 static inline safestr_t s3_safestr_create (const char *string, u_int32_t flags) {
     return safestr_create((char *)string, flags);
 }
+
 
 /**
  * @internal
@@ -60,10 +103,17 @@ static inline const char *s3_safestr_char (safestr_t string) {
     return (const char *)string;
 }
 
+
 S3_PRIVATE bool s3lib_debugging ();
+
 
 #define DEBUG(msg, args...) \
     if (s3lib_debugging()) \
         fprintf(stderr, "[%s in %s:%d] " msg "\n", __func__, __FILE__, __LINE__, ## args)
+
+
+/*!
+ * @} S3Library
+ */
 
 #endif /* S3LIBPRIVATE_H */

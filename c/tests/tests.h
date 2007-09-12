@@ -43,6 +43,7 @@
 Suite *S3Connection_suite(void);
 Suite *S3Error_suite(void);
 Suite *S3Header_suite(void);
+Suite *S3Lib_suite(void);
 Suite *S3List_suite(void);
 Suite *S3Request_suite(void);
 

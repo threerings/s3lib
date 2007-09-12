@@ -33,11 +33,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <libxml/parser.h>
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+
+#include <libxml/parser.h>
+#include <assert.h>
 
 #include "S3Lib.h"
 
@@ -82,4 +83,72 @@ S3_PRIVATE bool s3lib_debugging () {
 
 /*!
  * @} S3Library
+ */
+ 
+/*!
+ * @defgroup S3LibraryMemory Memory Management
+ * @ingroup S3Library
+ * @{
+ */
+
+/**
+ * @internal
+ *
+ * Initialize a new S3 object instance. Sets the reference count to 1 (implicit reference);
+ *
+ * @param object Object to initialize.
+ * @param class Object's class definition.
+ */
+S3_PRIVATE void s3_init (S3TypeRef object, S3RuntimeClass *class) {
+    S3RuntimeBase *objdata;
+
+    objdata = (S3RuntimeBase *) object;
+    objdata->refCount = 1;
+    objdata->class = class;
+}
+
+/**
+ * Increments @a object's reference count by one. Should always be complemented by a call
+ * to s3_release.
+ *
+ * @result Returns a reference to @a object.
+ */
+S3_DECLARE S3TypeRef s3_retain (S3TypeRef object) {
+    ((S3RuntimeBase *) object)->refCount++;
+    return object;
+} 
+
+
+/**
+ * Return @a object's reference count.
+ * This is generally only useful for debugging purposes.
+ *
+ * @result The provided @a instance's reference count.
+ */
+S3_DECLARE uint32_t s3_reference_count (S3TypeRef object) {
+    return ((S3RuntimeBase *) object)->refCount;
+}
+
+
+/**
+ * Decrement the @a instance's reference count by one. When the reference
+ * count reaches zero, the object will be immediately deallocated.
+ *
+ * @param object Object instance to deallocate.
+ */
+S3_DECLARE void s3_release (S3TypeRef object) {
+    S3RuntimeBase *objdata;
+
+    assert(s3_reference_count(object) > 0);
+
+    objdata = (S3RuntimeBase *) object;
+    objdata->refCount--;
+
+    if (objdata->refCount == 0)
+        objdata->class->dealloc(object);
+}
+
+
+/*!
+ * @} S3LibraryMemory
  */
