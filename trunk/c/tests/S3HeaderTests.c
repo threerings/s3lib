@@ -43,7 +43,7 @@
 
 START_TEST (test_header_dict_new) {
     S3HeaderDict *headers = s3header_dict_new();
-    s3header_dict_free(headers);
+    s3_release(headers);
 }
 END_TEST
 
@@ -56,7 +56,7 @@ START_TEST (test_header_dict_put) {
     /* And now overwrite it again, for good measure. */
     fail_unless(s3header_dict_put(headers, "Date", "value"));
 
-    s3header_dict_free(headers);
+    s3_release(headers);
 }
 END_TEST
 
@@ -85,14 +85,14 @@ START_TEST (test_header_dict_iterate) {
     fail_unless(s3header_dict_next(iterator) == NULL);
 
     /* Clean up */
-    s3header_dict_iterator_free(iterator);
-    s3header_dict_free(headers);
+    s3_release(iterator);
+    s3_release(headers);
 }
 END_TEST
 
 START_TEST (test_header_new) {
     S3Header *header = s3header_new("Date", "value");
-    s3header_free(header);
+    s3_release(header);
 }
 END_TEST
 
@@ -108,7 +108,7 @@ START_TEST (test_header_values) {
     fail_unless(strcmp(s3list_iterator_next(i), "value") == 0);
 
     s3_release(i);
-    s3header_free(header);
+    s3_release(header);
 }
 END_TEST
 

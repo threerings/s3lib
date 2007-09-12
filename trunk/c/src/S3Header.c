@@ -55,16 +55,26 @@
  * @{
  */
 
+static void s3header_dealloc (S3TypeRef object);
+static void s3header_dict_dealloc(S3TypeRef object);
+static void s3header_dict_iterator_dealloc (S3TypeRef object);
+
 /**
  * S3 HTTP Request/Response Headers
  *
  * Maintains a hash table of HTTP headers and their associated values. 
  */
 struct S3HeaderDict {
+    S3RuntimeBase base;
+
     /** @internal A hash table of S3Header instances, keyed by case-sensitive header name */
-     hash_t *hash;
+    hash_t *hash;
 };
 
+/** @internal S3HeaderDict Class Definition */
+static S3RuntimeClass S3HeaderDictClass = {
+    .dealloc = s3header_dict_dealloc
+};
 
 /**
  * A S3HeaderDict Iterator context.
@@ -73,6 +83,8 @@ struct S3HeaderDict {
  * @sa s3header_dict_next
  */
 struct S3HeaderDictIterator {
+    S3RuntimeBase base;
+
     /** @internal Reference to the iterated dict. */
     S3HeaderDict *dict;
 
@@ -80,6 +92,10 @@ struct S3HeaderDictIterator {
     hscan_t scanner;
 };
 
+/** @internal S3HeaderDictIterator Class Definition */
+static S3RuntimeClass S3HeaderDictIteratorClass = {
+    .dealloc = s3header_dict_iterator_dealloc
+};
 
 /**
  * S3Header
@@ -87,6 +103,8 @@ struct S3HeaderDictIterator {
  * HTTP header and its associated value(s).
  */
 struct S3Header {
+    S3RuntimeBase base;
+
     /** @internal The header name */
     safestr_t name;
 
@@ -94,6 +112,10 @@ struct S3Header {
     S3List *values;
 };
 
+/** @internal S3Header Class Definition */
+static S3RuntimeClass S3HeaderClass = {
+    .dealloc = s3header_dealloc
+};
 
 /**
  * Allocate a new S3 Header instance.
@@ -106,7 +128,7 @@ S3_DECLARE S3Header *s3header_new (const char *name, const char *value) {
     S3Header *header;
 
     /* Allocate our empty header */
-    header = calloc(1, sizeof(S3Header));
+    header = s3_object_alloc(&S3HeaderClass, sizeof(S3Header));
     if (header == NULL)
         return NULL;
 
@@ -126,16 +148,19 @@ S3_DECLARE S3Header *s3header_new (const char *name, const char *value) {
     return header;
 
 error:
-    s3header_free(header);
+    s3_release(header);
     return NULL;
 }
 
 
 /**
- * Deallocate all resources associated with the S3Header.
+ * #S3Header deallocation callback.
+ * @warning Do not call directly, use #s3_release
  * @param header A S3Header instance
  */
-S3_DECLARE void s3header_free (S3Header *header) {
+static void s3header_dealloc (S3TypeRef object) {
+    S3Header *header = (S3Header *) object;
+
     if (header->name != NULL)
         safestr_release(header->name);
 
@@ -183,7 +208,7 @@ static void s3header_hnode_free(hnode_t *node, S3_UNUSED void *context) {
     assert(key != NULL);
 
     /* Deallocate  */
-    s3header_free(value);
+    s3_release(value);
     safestr_release(key);
     free(node);
 }
@@ -197,7 +222,7 @@ S3_DECLARE S3HeaderDict *s3header_dict_new () {
     S3HeaderDict *headers;
 
     /* Allocate an empty struct */
-    headers = calloc(1, sizeof(S3HeaderDict));
+    headers = s3_object_alloc(&S3HeaderDictClass, sizeof(S3HeaderDict));
     if (headers == NULL)
         return NULL;
 
@@ -212,7 +237,7 @@ S3_DECLARE S3HeaderDict *s3header_dict_new () {
     return headers;
 
 error:
-    s3header_dict_free(headers);
+    s3_release(headers);
     return NULL;
 }
 
@@ -221,7 +246,9 @@ error:
  * Deallocate all resources assocated with @a headers.
  * @param headers A S3HeaderDict instance.
  */
-S3_DECLARE void s3header_dict_free(S3HeaderDict *headers) {
+static void s3header_dict_dealloc(S3TypeRef object) {
+    S3HeaderDict *headers = (S3HeaderDict *) object;
+
     if (headers->hash != NULL) {
         /* Free all nodes. */
         hash_free_nodes(headers->hash);
@@ -269,7 +296,7 @@ S3_DECLARE bool s3header_dict_put (S3HeaderDict *headers, const char *name, cons
 
 error:
     if (header != NULL)
-        s3header_free(header);
+        s3_release(header);
 
     /* Don't need to free the header, since we've
      * already done that above. Just destroy the node. */
@@ -290,18 +317,17 @@ error:
  *
  * @param headers Dictionary to iterate.
  * @return A S3HeaderDictIterator instance on success, or NULL if a failure occurs.
- *
- * @sa s3header_dict_iterator_free
  */
 S3_DECLARE S3HeaderDictIterator *s3header_dict_iterator_new (S3HeaderDict *headers) {
     S3HeaderDictIterator *iterator;
 
     /* Alloc and initialize our iterator */
-    iterator = calloc(1, sizeof(S3HeaderDictIterator));
+    iterator = s3_object_alloc(&S3HeaderDictIteratorClass, sizeof(S3HeaderDictIterator));
     if (iterator == NULL)
         return NULL;
 
     /* Save a reference to the dictionary */
+    s3_retain(headers);
     iterator->dict = headers;
 
     /* Initialize the iterator. */
@@ -329,11 +355,16 @@ S3_DECLARE S3Header *s3header_dict_next (S3HeaderDictIterator *iterator) {
 
 
 /**
- * Deallocate all resources associated with the provided S3HeaderDictIterator context.
+ * S3HeaderDictIterator deallocation callback.
+ * @warning Do not call directly, use #s3_release
  * @param iterator Iterator to deallocate.
  */
-S3_DECLARE void s3header_dict_iterator_free (S3HeaderDictIterator *iterator) {
-    /* Not much to do here */
+static void s3header_dict_iterator_dealloc (S3TypeRef object) {
+    S3HeaderDictIterator *iterator = (S3HeaderDictIterator *) object;
+
+    if (iterator->dict != NULL)
+        s3_release(iterator->dict);
+
     free(iterator);
 }
 
