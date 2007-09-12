@@ -58,12 +58,16 @@
 /** Default Amazon S3 URL. */
 S3_DECLARE const char S3_DEFAULT_URL[] = "https://s3.amazonaws.com";
 
+static void s3connection_dealloc (S3TypeRef obj);
+
 /**
  * Maintains S3 connection state.
  * @attention Operations on a S3Connection instance are not thread-safe, and
  * a S3Connection should not be shared between threads without external synchronization.
  */
 struct S3Connection {
+    S3RuntimeBase base;
+
     /** @internal
      * AWS access key id. */
     safestr_t aws_id;
@@ -82,6 +86,14 @@ struct S3Connection {
 };
 
 /**
+ * @internal
+ * S3Connection Class Definition
+ */
+static S3RuntimeClass S3ConnectionClass = {
+    .dealloc = s3connection_dealloc
+};
+
+/**
  * Instantiate a new #S3Connection instance.
  * @attention Instances of #S3Connection are not re-entrant, and should not be
  * shared between multiple threads.
@@ -94,7 +106,7 @@ S3_DECLARE S3Connection *s3connection_new (const char *aws_id, const char *aws_k
     S3Connection *conn;
 
     /* Allocate a new S3 Connection. */
-    conn = calloc(1, sizeof(S3Connection));
+    conn = s3_object_alloc(&S3ConnectionClass, sizeof(S3Connection));
     if (conn == NULL)
         return NULL;
 
@@ -115,7 +127,7 @@ S3_DECLARE S3Connection *s3connection_new (const char *aws_id, const char *aws_k
     return (conn);    
 
 error:
-    s3connection_free(conn);
+    s3_release(conn);
     return NULL;
 }
 
@@ -178,10 +190,14 @@ S3_DECLARE void *s3connection_create_bucket (S3Connection *conn, const char *buc
 }
 
 /**
- * Close and free a #S3Connection instance.
+ * @internal
+ *
+ * #S3Connection deallocation method.
  * @param conn A #S3Connection instance.
  */
-S3_DECLARE void s3connection_free (S3Connection *conn) {
+static void s3connection_dealloc (S3TypeRef obj) {
+    S3Connection *conn = (S3Connection *) obj;
+
     if (conn->aws_id != NULL)
         safestr_release(conn->aws_id);
 
