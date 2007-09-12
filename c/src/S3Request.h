@@ -56,7 +56,16 @@ typedef struct S3Request S3Request;
  */
 typedef enum {
     /** HTTP PUT Request. */
-    S3_HTTP_PUT
+    S3_HTTP_PUT,
+
+    /** HTTP GET Request. */
+    S3_HTTP_GET,
+
+    /** HTTP HEAD Request. */
+    S3_HTTP_HEAD,
+
+    /** HTTP DELETE Request. */
+    S3_HTTP_DELETE
 } S3HTTPMethod;
 
 S3_EXTERN S3Request *s3request_new (const char *url, S3HTTPMethod method);
