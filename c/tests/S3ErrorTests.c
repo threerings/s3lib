@@ -60,7 +60,7 @@ START_TEST (test_new) {
     fail_if(s3server_error_requestid(error) == NULL);
     fail_unless(strcmp(s3server_error_requestid(error), "4442587FB7D0A2F9") == 0);
 
-    s3server_error_free(error);
+    s3_release(error);
 }
 END_TEST
 

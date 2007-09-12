@@ -62,12 +62,16 @@
  * @{
  */
 
+static void s3server_error_dealloc (S3TypeRef obj);
+
 /**
  * Represents a S3 server error result.
  * @attention Operations on a S3Error instance are not guaranteed thread-safe, and
  * a S3Error should not be shared between threads without external synchronization.
  */
 struct S3ServerError {
+    S3RuntimeBase base;
+
     /** @internal
      * S3 error code. */
     safestr_t code;
@@ -86,6 +90,14 @@ struct S3ServerError {
 };
 
 /**
+ * @internal
+ * S3ServerError Class Definition
+ */
+static S3RuntimeClass S3ServerErrorClass = {
+    .dealloc = s3server_error_dealloc
+};
+
+/**
  * Instantiate a new S3Error instance.
  *
  * @param xmlBuffer S3 XML error document.
@@ -99,7 +111,7 @@ S3_DECLARE S3ServerError *s3server_error_new (const char *xmlBuffer, int length)
     xmlNode *node;
 
     /* Allocate a new S3 error. */
-    error = calloc(1, sizeof(S3ServerError));
+    error = s3_object_alloc(&S3ServerErrorClass, sizeof(S3ServerError));
     if (error == NULL)
         return NULL;
 
@@ -157,7 +169,7 @@ error:
     if (doc)
         xmlFreeDoc(doc);
 
-    s3server_error_free(error);
+    s3_release(error);
     return NULL;
 }
 
@@ -177,7 +189,9 @@ S3_DECLARE const char *s3server_error_requestid (S3ServerError *error) {
  * Deallocate a #S3ServerError instance.
  * @param error An #S3ServerError instance.
  */
-S3_DECLARE void s3server_error_free (S3ServerError *error) {
+static void s3server_error_dealloc (S3TypeRef obj) {
+    S3ServerError *error = (S3ServerError *) obj;
+
     if (error->code != NULL)
         safestr_release(error->code);
     
