@@ -59,7 +59,7 @@
  */
 
 /**
- * @defgroup S3List List Datatype
+ * @defgroup S3List Linked Lists
  * @ingroup S3Library
  * @{
  */

@@ -51,13 +51,13 @@
  */
 
 /*!
- * @defgroup S3Error S3 Error Handling
+ * @defgroup S3Error Error Handling
  * @ingroup S3Library
  * @{
  */
 
 /*!
- * @defgroup S3ServerError S3 Server Error Handling
+ * @defgroup S3ServerError Server Error Handling
  * @ingroup S3Error
  * @{
  */

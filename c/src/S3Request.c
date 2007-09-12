@@ -50,7 +50,7 @@
  */
 
 /**
- * @defgroup S3Request S3 HTTP Request Context
+ * @defgroup S3Request HTTP Request Context
  * @ingroup S3Library
  * @{
  */
@@ -70,6 +70,10 @@ struct S3Request {
     /** @internal
      * Request method */
     S3HTTPMethod method;
+
+    /** @internal
+     * Request headers */
+    S3HeaderDict *headers;
 };
 
 
