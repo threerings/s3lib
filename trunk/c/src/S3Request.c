@@ -64,12 +64,16 @@
  */
 struct S3Request {
     /** @internal
-     * Request URL. */
-    safestr_t url;
-
-    /** @internal
      * Request method */
     S3HTTPMethod method;
+
+    /** @internal
+     * Request bucket. */
+    safestr_t bucket;
+
+    /** @internal
+     * Request Resource. */
+    safestr_t resource;
 
     /** @internal
      * Request headers */
@@ -80,11 +84,14 @@ struct S3Request {
 /**
  * Instantiate a new S3Request instance.
  *
- * @param url An S3 resource URL.
  * @param method The request HTTP method.
+ * @param bucket The S3 bucket
+ * @param resource An S3 resource
  * @return A new S3Request instance, or NULL on failure.
+ *
+ * @attention 
  */
-S3_DECLARE S3Request *s3request_new (const char *url, S3HTTPMethod method) {
+S3_DECLARE S3Request *s3request_new (S3HTTPMethod method, const char *bucket, const char *resource) {
     S3Request *req;
 
     /* Allocate a new S3 Request. */
@@ -92,8 +99,11 @@ S3_DECLARE S3Request *s3request_new (const char *url, S3HTTPMethod method) {
     if (req == NULL)
         return NULL;
 
+    /* S3 Bucket */
+    req->bucket = s3_safestr_create(bucket, SAFESTR_IMMUTABLE);
+
     /* S3 Resource */
-    req->url = s3_safestr_create(url, SAFESTR_IMMUTABLE);
+    req->resource = s3_safestr_create(resource, SAFESTR_IMMUTABLE);
 
     /* Request method */
     req->method = method;
@@ -107,8 +117,11 @@ S3_DECLARE S3Request *s3request_new (const char *url, S3HTTPMethod method) {
  * @param req A S3Request instance.
  */
 S3_DECLARE void s3request_free (S3Request *req) {
-    if (req->url != NULL)
-        safestr_release(req->url);
+    if (req->bucket != NULL)
+        safestr_release(req->bucket);
+
+    if (req->resource != NULL)
+        safestr_release(req->resource);
 
     free(req);
 }

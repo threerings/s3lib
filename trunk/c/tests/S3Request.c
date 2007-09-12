@@ -40,7 +40,7 @@
 #include "tests.h"
 
 START_TEST (test_new) {
-    S3Request *req = s3request_new("http://example.com/resource", S3_HTTP_PUT);
+    S3Request *req = s3request_new(S3_HTTP_PUT, "bucket", "resource");
     s3request_free(req);
 }
 END_TEST
