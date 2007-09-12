@@ -44,7 +44,7 @@
 /* List alloc/dealloc */
 START_TEST (test_new) {
     S3List *list = s3list_new();
-    s3list_free(list);
+    s3_release(list);
 }
 END_TEST
 
@@ -57,8 +57,8 @@ START_TEST (test_append) {
     i = s3list_iterator_new(list);
     fail_unless(strcmp(s3list_iterator_next(i), "hello") == 0);
 
-    s3list_iterator_free(i);
-    s3list_free(list);
+    s3_release(i);
+    s3_release(list);
 }
 END_TEST
 
@@ -79,7 +79,7 @@ START_TEST (test_append_safestr) {
     i = s3list_iterator_new(list);
     fail_unless(strcmp(s3list_iterator_next(i), "hello") == 0);
 
-    s3list_free(list);
+    s3_release(list);
 }
 END_TEST
 
@@ -102,9 +102,9 @@ START_TEST (test_clone) {
     /* Check the second */
     fail_unless(strcmp(s3list_iterator_next(i), "world") == 0);
 
-    s3list_iterator_free(i);
-    s3list_free(orig);
-    s3list_free(clone);
+    s3_release(i);
+    s3_release(orig);
+    s3_release(clone);
 }
 END_TEST
 
@@ -126,7 +126,7 @@ START_TEST (test_next) {
     fail_unless(s3list_iterator_next(i) == NULL);
     fail_unless(s3list_iterator_next(i) == NULL);
 
-    s3list_free(list);
+    s3_release(list);
 }
 END_TEST
 

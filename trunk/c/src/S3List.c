@@ -46,16 +46,6 @@
  * @file
  * @brief S3Lib List Implementation.
  * @author Landon Fuller <landonf@threerings.net>
- *
- * @internal
- * @attention
- * We want to enforce strict typing externally and handle standard list tasks,
- * but we don't actually need to wrap the standard list types. Instead, we
- * just return a pointer to the lnode_t struct.
- *
- * C99, 6.2.5.26 - Types:
- * All pointers to structure types shall have the same representation and
- * alignment requirements as each other.
  */
 
 /**
@@ -64,18 +54,26 @@
  * @{
  */
 
+static void s3list_dealloc (S3TypeRef obj);
+static void s3list_iterator_dealloc (S3TypeRef obj);
+
 /**
  * An S3List maintains a linked list of const char * elements.
  * @attention Operations on a S3List instance are not guaranteed thread-safe, and
  * a S3List should not be shared between threads without external synchronization.
- *
- * @internal
- * @warning This structure is a dummy. It is used only to generate
- * doxygen docs. We simply cast #list_t pointers to S3List pointers.
  */
 struct S3List {
+    S3RuntimeBase base;
+
+    /** @internal List implementation context */
+    list_t ctx;
 };
 
+
+/** @internal S3List Class Definition */
+static S3RuntimeClass S3ListClass = {
+    .dealloc = s3list_dealloc
+};
 
 /**
  * A S3List Iterator context.
@@ -84,43 +82,54 @@ struct S3List {
  * @sa s3list_iterator_next
  */
 struct S3ListIterator {
+    S3RuntimeBase base;
+
     /** @internal Reference to the iterated list. */
-    list_t *list;
+    S3List *list;
 
     /** @internal Reference to the current list node. */
     lnode_t *current;
 };
 
+/** @internal S3ListIterator Class Definition */
+static S3RuntimeClass S3ListIteratorClass = {
+    .dealloc = s3list_iterator_dealloc
+};
 
 /**
  * Create a new, empty S3List instance.
  * @return A newly allocated S3List, or NULL on failure
- * @sa s3list_free
  */
 S3_DECLARE S3List *s3list_new () {
-    list_t *list;
-
-    /* Allocate a new, empty list */    
-    list = list_create(LISTCOUNT_T_MAX);
-    if (list == NULL)    
+    S3List *list;
+    
+    /* Allocate and initialize a new list object */
+    list = calloc(1, sizeof(S3List));
+    if (list == NULL)
         return NULL;
 
-    return (S3List *) list;
+    s3_object_init(list, &S3ListClass);
+
+    /* Init the list context */
+    list_init(&list->ctx, LISTCOUNT_T_MAX);
+
+    return list;
 }
 
 /**
+ * @internal
+ *
  * Deallocate all resources associated with \a list.
  * @param list A S3List instance.
  */
-S3_DECLARE void s3list_free (S3List *list) {
-    list_t *klist;
+static void s3list_dealloc (S3TypeRef obj) {
+    S3List *list;
     lnode_t *node;
 
-    /* Unmask the villian's true type */
-    klist = (list_t *) list;
+    list = (S3List *) obj;
 
     /* Iterate over the list and free the node data */
-    node = list_first(klist);
+    node = list_first(&list->ctx);
     while (node != NULL) {
         lnode_t *next;
 
@@ -130,18 +139,18 @@ S3_DECLARE void s3list_free (S3List *list) {
         safestr_release(val);
 
         /* Fetch the next node */
-        next = list_next(klist, node);
+        next = list_next(&list->ctx, node);
 
         /* Delete the current node from the list */
-        list_delete(klist, node);
+        list_delete(&list->ctx, node);
 
         /* Free the current node */
         lnode_destroy(node);
 
         node = next;
     }
-    assert(list_isempty(klist));
-    list_destroy(klist);
+    assert(list_isempty(&list->ctx));
+    free(list);
 }
 
 /**
@@ -157,8 +166,7 @@ S3_DECLARE S3List *s3list_clone (S3List *list) {
     list_t *source;
     lnode_t *node;
 
-    /* Unmask the list's true type */
-    source = (list_t *) list;
+    source = &list->ctx;
     
     /* Allocate a new list. */
     clone = s3list_new();
@@ -184,7 +192,7 @@ S3_DECLARE S3List *s3list_clone (S3List *list) {
     return clone;
 
 error:
-    s3list_free(clone);
+    s3_release(clone);
     return NULL;
 }
 
@@ -218,11 +226,7 @@ S3_DECLARE bool s3list_append (S3List *list, const char *string) {
  * @return true on success, or false on failure. This function should not fail unless available memory has been exhausted.
  */
 S3_PRIVATE bool s3list_append_safestr (S3List *list, safestr_t string) {
-    list_t *rlist;
     lnode_t *node;
-
-    /* It's actually a list_t */
-    rlist = (list_t *) list;
 
     /* Allocate a new node with a string reference */
     node = lnode_create(safestr_reference(string));
@@ -232,7 +236,7 @@ S3_PRIVATE bool s3list_append_safestr (S3List *list, safestr_t string) {
     }
 
     /* Append the node */
-    list_append(rlist, node);
+    list_append(&list->ctx, node);
     return true;
 }
 
@@ -246,24 +250,41 @@ S3_PRIVATE bool s3list_append_safestr (S3List *list, safestr_t string) {
  *
  * @param list List to iterate.
  * @return A S3ListIterator instance on success, or NULL if a failure occurs.
- *
- * @sa s3list_iterator_free
  */
 S3_DECLARE S3ListIterator *s3list_iterator_new (S3List *list) {
     S3ListIterator *iterator;
 
-    /* Allocate */
+    /* Allocate and initialize object */
     iterator = calloc(1, sizeof(S3ListIterator));
     if (iterator == NULL)
         return NULL;
+    
+    s3_object_init(iterator, &S3ListIteratorClass);
 
     /* Initialize */
-    iterator->list = (list_t *) list;
-    iterator->current = list_first((list_t *) list);
+    s3_retain(list);
+    iterator->list = list;
+    iterator->current = list_first(&list->ctx);
 
     /* Return */
     return iterator;
 }
+
+
+/**
+ * @internal
+ * Deallocate all resources associated with the provided S3ListIterator context.
+ * @param iterator Iterator to deallocate.
+ */
+static void s3list_iterator_dealloc (S3TypeRef obj) {
+    S3ListIterator *iterator = (S3ListIterator *) obj;
+
+    if (iterator->list != NULL)
+        s3_release(iterator->list);
+
+    free(iterator);
+}
+
 
 /*
  * Returns a borrowed reference to the next list value, if any unvisited nodes remain, or NULL.
@@ -280,19 +301,11 @@ S3_DECLARE const char *s3list_iterator_next (S3ListIterator *iterator) {
 
     /* Otherwise, save the return value and advance the node */
     value = lnode_get(iterator->current);
-    iterator->current = list_next(iterator->list, iterator->current);
+    iterator->current = list_next(&(iterator->list->ctx), iterator->current);
 
     return s3_safestr_char(value);
 }
 
-/**
- * Deallocate all resources associated with the provided S3ListIterator context.
- * @param iterator Iterator to deallocate.
- */
-S3_DECLARE void s3list_iterator_free (S3ListIterator *iterator) {
-    /* Not much to do here */
-    free(iterator);
-}
 
 /*!
  * @} S3List

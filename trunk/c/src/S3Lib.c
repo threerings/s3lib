@@ -99,7 +99,7 @@ S3_PRIVATE bool s3lib_debugging () {
  * @param object Object to initialize.
  * @param class Object's class definition.
  */
-S3_PRIVATE void s3_init (S3TypeRef object, S3RuntimeClass *class) {
+S3_PRIVATE void s3_object_init (S3TypeRef object, S3RuntimeClass *class) {
     S3RuntimeBase *objdata;
 
     objdata = (S3RuntimeBase *) object;
@@ -114,6 +114,8 @@ S3_PRIVATE void s3_init (S3TypeRef object, S3RuntimeClass *class) {
  * @result Returns a reference to @a object.
  */
 S3_DECLARE S3TypeRef s3_retain (S3TypeRef object) {
+    assert(s3_reference_count(object) != UINT32_MAX);
+
     ((S3RuntimeBase *) object)->refCount++;
     return object;
 } 
