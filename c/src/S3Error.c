@@ -186,7 +186,8 @@ S3_DECLARE const char *s3server_error_requestid (S3ServerError *error) {
 
 
 /**
- * Deallocate a #S3ServerError instance.
+ * S3ServerError deallocation callback.
+ * @warning Do not call directly, use #s3_release
  * @param error An #S3ServerError instance.
  */
 static void s3server_error_dealloc (S3TypeRef obj) {

@@ -124,7 +124,8 @@ S3_DECLARE S3Request *s3request_new (S3HTTPMethod method, const char *bucket, co
 
 
 /**
- * S3Request deallocation method.
+ * S3Request deallocation callback.
+ * @warning Do not call directly, use #s3_release
  * @param req A S3Request instance.
  */
 static void s3request_dealloc (S3TypeRef object) {
