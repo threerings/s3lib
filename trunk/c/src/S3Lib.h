@@ -38,6 +38,17 @@
 
 #include <stdbool.h>
 
+/**
+ * @file
+ * @brief S3Lib Core Implementation
+ * @author Landon Fuller <landonf@threerings.net>
+ */
+
+/*!
+ * @defgroup S3Library S3 Client Library
+ * @{
+ */
+
 /*
  * Declaration visibility scoping
  */
@@ -65,12 +76,21 @@
 #endif /* !__WIN32__ */
 
 /*
+ * S3Lib Types
+ */
+
+/** 'Base type' for polymorphic operations. */
+typedef const void *S3TypeRef;
+
+
+/*
  * S3Lib private API
  */
 #ifdef TR_BUILDING_s3lib_LIB
     #define S3LIB_PRIVATE_API
     #include "S3LibPrivate.h"
 #endif
+
 
 /*
  * S3lib includes
@@ -81,10 +101,23 @@
 #include "S3Header.h"
 #include "S3Request.h"
 
+
 /*
  * S3lib functions
  */
 S3_EXTERN void s3lib_global_init (void);
 S3_EXTERN void s3lib_enable_debugging (bool flag);
+
+S3_EXTERN S3TypeRef s3_retain (S3TypeRef);
+S3_EXTERN uint32_t s3_reference_count (S3TypeRef object);
+S3_EXTERN void s3_release (S3TypeRef);
+
+#ifdef S3LIB_PRIVATE_API
+S3_PRIVATE void s3_init (S3TypeRef object, S3RuntimeClass *class);
+#endif
+
+/*!
+ * @} S3Library
+ */
 
 #endif /* S3LIB_H */
