@@ -156,24 +156,24 @@ static void s3list_dealloc (S3TypeRef obj) {
 /**
  * Clone a list.
  *
- * @param list A S3List instance to clone.
- * @return Returns a newly allocated clone of @a list, or NULL if a failure occured.
+ * @param list A S3List instance to copy.
+ * @return Returns a newly allocated copy of @a list, or NULL if a failure occured.
  * This function should not fail unless available memory has been exhausted.
  * @attention It is the caller's responsibility to free the returned list.
  */
-S3_DECLARE S3List *s3list_clone (S3List *list) {
-    S3List *clone;
+S3_DECLARE S3List *s3list_copy (S3List *list) {
+    S3List *copy;
     list_t *source;
     lnode_t *node;
 
     source = &list->ctx;
     
     /* Allocate a new list. */
-    clone = s3list_new();
-    if (clone == NULL)
+    copy = s3list_new();
+    if (copy == NULL)
         return NULL;
 
-    /* Iterate over the source list, appending the data to the clone */
+    /* Iterate over the source list, appending the data to the copy */
     node = list_first(source);
     while (node != NULL) {
         lnode_t *next;
@@ -181,7 +181,7 @@ S3_DECLARE S3List *s3list_clone (S3List *list) {
         /* Get the node value, add it to the new list */
         safestr_t val = lnode_get(node);
         
-        if (!s3list_append_safestr(clone, val))
+        if (!s3list_append_safestr(copy, val))
             goto error;
 
         /* Fetch the next node */
@@ -189,10 +189,10 @@ S3_DECLARE S3List *s3list_clone (S3List *list) {
         node = next;
     }
 
-    return clone;
+    return copy;
 
 error:
-    s3_release(clone);
+    s3_release(copy);
     return NULL;
 }
 

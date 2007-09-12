@@ -51,7 +51,7 @@ typedef struct S3List S3List;
 typedef struct S3ListIterator S3ListIterator;
 
 S3_EXTERN S3List *s3list_new ();
-S3_EXTERN S3List *s3list_clone (S3List *list);
+S3_EXTERN S3List *s3list_copy (S3List *list);
 S3_EXTERN bool s3list_append (S3List *list, const char *string);
 
 S3_EXTERN S3ListIterator *s3list_iterator_new (S3List *list);
