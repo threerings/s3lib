@@ -8,12 +8,12 @@ include ${top_builddir}/Mk/compile.mk
 
 
 TEST_OBJS=	tests.o \
-		S3Connection.o \
-		S3Error.o \
-		S3Header.o \
-		S3Lib.o \
-		S3List.o \
-		S3Request.o
+		S3ConnectionTests.o \
+		S3ErrorTests.o \
+		S3HeaderTests.o \
+		S3LibTests.o \
+		S3ListTests.o \
+		S3RequestTests.o
 
 CFLAGS+=	@CHECK_CFLAGS@ $(LIBCURL_CFLAGS) $(XML_CFLAGS) $(SAFESTR_CFLAGS) -DTEST_DATA=\"${srcdir}/data\"
 LIBS+=		-ls3-testing $(LIBCURL_LDFLAGS) $(XML_LDFLAGS) $(SAFESTR_LDFLAGS) @CHECK_LIBS@
