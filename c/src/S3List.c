@@ -59,7 +59,7 @@
  */
 
 /**
- * @defgroup S3List S3Lib List Datatype
+ * @defgroup S3List List Datatype
  * @ingroup S3Library
  * @{
  */
@@ -139,30 +139,94 @@ S3_DECLARE void s3list_free (S3List *list) {
 }
 
 /**
+ * Clone a list.
+ *
+ * @param list A S3List instance to clone.
+ * @return Returns a newly allocated clone of @a list, or NULL if a failure occured.
+ * This function should not fail unless available memory has been exhausted.
+ * @attention It is the caller's responsibility to free the returned list.
+ */
+S3_DECLARE S3List *s3list_clone (S3List *list) {
+    S3List *clone;
+    list_t *source;
+    lnode_t *node;
+
+    /* Unmask the list's true type */
+    source = (list_t *) list;
+    
+    /* Allocate a new list. */
+    clone = s3list_new();
+    if (clone == NULL)
+        return NULL;
+
+    /* Iterate over the source list, appending the data to the clone */
+    node = list_first(source);
+    while (node != NULL) {
+        lnode_t *next;
+
+        /* Get the node value, add it to the new list */
+        safestr_t val = lnode_get(node);
+        
+        if (!s3list_append_safestr(clone, val))
+            goto error;
+
+        /* Fetch the next node */
+        next = list_next(source, node);
+        node = next;
+    }
+
+    return clone;
+
+error:
+    s3list_free(clone);
+    return NULL;
+}
+
+/**
  * Append a string element to the list.
  * @param list S3List to modify
  * @param string The string to append to the list. The string will be copied.
  * @return true on success, or false on failure. This function should not fail unless available memory has been exhausted.
  */
 S3_DECLARE bool s3list_append (S3List *list, const char *string) {
-    list_t *klist;
-    lnode_t *node;
     safestr_t data;
-
-    /* Unmask the villian's true type */
-    klist = (list_t *) list;
+    bool result;
 
     data = s3_safestr_create(string, SAFESTR_IMMUTABLE);
     if (!data)
         return false;
 
-    node = lnode_create(data);
+    /* Append the string, drop our implicit reference, and return the result. */
+    result = s3list_append_safestr(list, data);
+    safestr_release(data);
+    return (result);
+}
+
+/**
+ * @internal
+ *
+ * Append a reference to the safestr element to the list.
+ *
+ * @param list S3List to modify
+ * @param string The string to append to the list. The list will retain a string reference.
+ * @return true on success, or false on failure. This function should not fail unless available memory has been exhausted.
+ */
+S3_PRIVATE bool s3list_append_safestr (S3List *list, safestr_t string) {
+    list_t *rlist;
+    lnode_t *node;
+
+    /* It's actually a list_t */
+    rlist = (list_t *) list;
+
+    /* Allocate a new node with a string reference */
+    node = lnode_create(safestr_reference(string));
     if (!node) {
-        safestr_release(data);
+        safestr_release(string);
         return false;
     }
 
-    list_append(klist, node);
+    /* Append the node */
+    list_append(rlist, node);
     return true;
 }
 
