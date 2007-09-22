@@ -1,5 +1,5 @@
 /* 
- * S3RemoteObject vi:ts=4:sw=4:expandtab:
+ * S3StreamObjectTest.java vi:ts=4:sw=4:expandtab:
  *
  * Copyright (c) 2005 - 2007 Three Rings Design, Inc.
  * All rights reserved.
@@ -31,55 +31,51 @@
 
 package com.threerings.s3.client;
 
-import java.io.InputStream;
+import junit.framework.TestCase;
 
-import java.util.Map;
+import java.io.ByteArrayInputStream;
 
-/**
- * A representation of a remotely backed S3 object.
- * The input stream streams directly from the remote server.
- */
-class S3RemoteObject extends S3Object {
-    /**
-     * Instantiate an S3 remote object with the given key.
-     */
-     
-    public S3RemoteObject(String key, String mimeType, long length,
-        byte[] digest, Map<String,String> metadata, InputStream response)
+import org.apache.commons.codec.binary.Hex;
+
+public class S3StreamObjectTest extends TestCase
+{
+    public S3StreamObjectTest (String name)
     {
-        super(key, mimeType, metadata);
-        _length = length;
-        _md5digest = digest;
-        _response = response;
-    }
-     
-
-    @Override // From S3Object
-    public InputStream getInputStream ()
-        throws S3ClientException
-    {
-        return _response;
-    }
-
-    @Override // From S3Object
-    public byte[] getMD5 ()
-        throws S3ClientException
-    {
-        return _md5digest;
-    }
-
-    @Override // From S3Object
-    public long length () {
-        return _length;
+        super(name);
     }
     
-    /** Data length in bytes. */
-    private final long _length;
+    public void setUp ()
+        throws Exception
+    {
+        final byte[] data = TEST_DATA.getBytes("utf8");        
+        streamObj = new S3StreamObject("aKey", data.length,
+                new Hex().decode(TEST_DATA_MD5.getBytes("utf8")),
+                new ByteArrayInputStream(data));
+    }
     
-    /** MD5 digest. */
-    private final byte[] _md5digest;
+    public void testConstruct ()
+        throws Exception
+    {
+        byte[] bytes = new byte[1024];
 
-    /** HTTP response stream. This is "auto-closing" -- the connection will
-     * be closed when the stream is closed. */
-    private final InputStream _response;
+        int count = streamObj.getInputStream().read(bytes);        
+        assertEquals(TEST_DATA, new String(bytes, 0, count));
+    }
+
+    public void testGetMD5Checksum ()
+        throws Exception
+    {
+        byte[] checksum = streamObj.getMD5();
+        String hex = new String(Hex.encodeHex(checksum));
+        assertEquals(TEST_DATA_MD5, hex);   
+    }
+
+    /** Test object. */
+    private S3StreamObject streamObj;
+
+    /** Test data. */
+    private static final String TEST_DATA = "Hello, World!";
+    
+    /** Pre-computed MD5 Checksum for test data. */
+    private static final String TEST_DATA_MD5 = "65a8e27d8879283831b664bd8b7f0ad4";
 }
