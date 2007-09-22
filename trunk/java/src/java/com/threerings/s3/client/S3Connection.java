@@ -419,8 +419,8 @@ public class S3Connection
                 // A body was expected
                 throw new S3Exception("S3 failed to return any document body");
             }
-            
-            return new S3RemoteObject(objectKey, mimeType, length, digest, metadata, response);        
+
+            return new S3StreamObject(objectKey, mimeType, length, digest, metadata, response);        
         } else {
         	return new S3EmptyObject(objectKey, mimeType, length, digest, metadata);
         }
