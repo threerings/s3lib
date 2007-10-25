@@ -78,8 +78,22 @@ import org.xml.sax.SAXException;
  *  only particularly important when using getObject(), as the request remains
  *  open to provide access to the data stream.
  */
-public class S3Connection
-{
+public class S3Connection {
+    /**
+     * Helper method to create and initialize a HostConfiguration, when provided with
+     * the host, port, and protocol.
+     * 
+     * @param host Host to connect to
+     * @param port HTTP port
+     * @param protocol Protocol used
+     * @return Initialized {@link HostConfiguration}
+     */
+    private static HostConfiguration creteHostConfig (String host, int port, Protocol protocol) {
+        final HostConfiguration hostConfig = new HostConfiguration();
+        hostConfig.setHost(host, port, protocol);
+        return hostConfig;
+    }
+    
     /**
      * Create a new interface to interact with S3 with the given credentials.
      *
@@ -119,7 +133,7 @@ public class S3Connection
     {
         this(awsKeyId, awsSecretKey, protocol, host, protocol.getDefaultPort());
     }
-
+    
     /**
      * Create a new interface to interact with S3 with the given credentials and
      * connection parameters.
@@ -133,11 +147,7 @@ public class S3Connection
      public S3Connection (String awsKeyId, String awsSecretKey, Protocol protocol,
                               String host, int port)
     {
-        HostConfiguration awsHostConfig = new HostConfiguration();
-        awsHostConfig.setHost(host, port, protocol);
-        
-        // Escape the tyranny of this() + implicit constructors.
-        _init(awsKeyId, awsSecretKey, awsHostConfig);
+        this(awsKeyId, awsSecretKey, creteHostConfig(host, port, protocol));
     }
 
     /**
@@ -149,14 +159,6 @@ public class S3Connection
      * @param awsHostConfig HttpClient HostConfig.
      */
     public S3Connection (String awsKeyId, String awsSecretKey,
-        HostConfiguration awsHostConfig)
-    {
-        // Escape the tyranny of this() + implicit constructors.
-        _init(awsKeyId, awsSecretKey, awsHostConfig);
-    }
-
-    // Private initializer
-    private void _init (String awsKeyId, String awsSecretKey,
         HostConfiguration awsHostConfig)
     {
         _awsKeyId = awsKeyId;
@@ -567,13 +569,13 @@ public class S3Connection
     }
 
     /** AWS Access ID. */
-    private String _awsKeyId;
+    private final String _awsKeyId;
     
     /** AWS Access Key. */
-    private String _awsSecretKey;
+    private final String _awsSecretKey;
     
     /** S3 HTTP client. */
-    private HttpClient _awsHttpClient;
+    private final HttpClient _awsHttpClient;
     
     /** URL encoder. */
     private final URLCodec _urlEncoder = new URLCodec();
