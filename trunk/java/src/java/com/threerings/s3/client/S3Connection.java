@@ -88,7 +88,7 @@ public class S3Connection {
      * @param protocol Protocol used
      * @return Initialized {@link HostConfiguration}
      */
-    private static HostConfiguration creteHostConfig (String host, int port, Protocol protocol) {
+    private static HostConfiguration createHostConfig (String host, int port, Protocol protocol) {
         final HostConfiguration hostConfig = new HostConfiguration();
         hostConfig.setHost(host, port, protocol);
         return hostConfig;
@@ -147,7 +147,7 @@ public class S3Connection {
      public S3Connection (String awsKeyId, String awsSecretKey, Protocol protocol,
                               String host, int port)
     {
-        this(awsKeyId, awsSecretKey, creteHostConfig(host, port, protocol));
+        this(awsKeyId, awsSecretKey, createHostConfig(host, port, protocol));
     }
 
     /**
