@@ -190,14 +190,14 @@ public class S3ConnectionTest extends TestCase
         _conn.putObject(_testBucketName, obj2, AccessControlList.StandardPolicy.PRIVATE);
 
         /* List one key. Objects are ordered lexographically, so we know what to expect */
-        listing = _conn.listObjects(_testBucketName, null, null, 1, null);
+        listing = _conn.listObjects(_testBucketName, null, 1);
         assertEquals(1, listing.getEntries().size());
         assertEquals(1, listing.getMaxKeys());
         assertTrue("Listing is not truncated", listing.truncated());
         assertEquals("A", listing.getEntries().get(0).getKey());
 
         /* List the next one. */
-        listing = _conn.listObjects(_testBucketName, null, listing.getNextMarker(), 1, null);
+        listing = _conn.listObjects(_testBucketName, listing.getNextMarker(), 1);
         assertEquals(1, listing.getEntries().size());
         assertEquals(1, listing.getMaxKeys());
         assertEquals("B", listing.getEntries().get(0).getKey());
