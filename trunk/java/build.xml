@@ -144,6 +144,7 @@
             <fileset dir="${deploy.dir}/classes">
                 <include name="**/*.class"/>
                 <exclude name="**/*Test.class"/>
+                <exclude name="**/*TestS3Config.class"/>
                 <exclude name="${s3pipe.classdir}"/>
             </fileset>
         </jar>
@@ -156,6 +157,8 @@
             <main>
                 <fileset dir="${deploy.dir}/classes">
                     <include name="${s3pipe.classdir}/**/*.class"/>
+                    <exclude name="**/*Test.class"/>
+                    <exclude name="**/*TestS3Config.class"/>
                 </fileset>
             </main>
             <lib>

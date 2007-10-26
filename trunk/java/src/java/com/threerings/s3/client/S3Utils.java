@@ -35,9 +35,11 @@ package com.threerings.s3.client;
 import org.apache.commons.codec.binary.Base64;
 
 import org.apache.commons.httpclient.Header;
+import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.RequestEntity;
+import org.apache.commons.httpclient.protocol.Protocol;
 
 import javax.crypto.spec.SecretKeySpec;
 import javax.crypto.Mac;
@@ -61,12 +63,40 @@ class S3Utils {
     /** Header for S3's alternate date. */
     static final String ALTERNATIVE_DATE_HEADER = "x-amz-date";
 
-    /** Default AWS S3 Host. */
-    static final String DEFAULT_HOST = "s3.amazonaws.com";
-
     /** Header for S3 access settings. */
     static final String ACL_HEADER = "x-amz-acl";
-
+    
+    /** Default AWS S3 Host. */
+    static final String DEFAULT_HOST = "s3.amazonaws.com";
+    
+    /** HTTPS protocol instance. */
+    private static final Protocol HTTPS_PROTOCOL = Protocol.getProtocol("https");
+    
+    /**
+     * Helper method to create and initialize a HostConfiguration, when provided with
+     * the host, port, and protocol.
+     * 
+     * @param host Host to connect to
+     * @param port HTTP port
+     * @param protocol Protocol used
+     * @return Initialized {@link HostConfiguration}
+     */
+    static HostConfiguration createHostConfig (String host, int port, Protocol protocol) {
+        final HostConfiguration hostConfig = new HostConfiguration();
+        hostConfig.setHost(host, port, protocol);
+        return hostConfig;
+    }
+    
+    /**
+     * Helper method to create and initialize a {@link HostConfiguration} instance.
+     * Always uses SSL.
+     */
+    static HostConfiguration createDefaultHostConfig () {
+        final HostConfiguration hostConfig = new HostConfiguration();
+        hostConfig.setHost(DEFAULT_HOST, HTTPS_PROTOCOL.getDefaultPort(), HTTPS_PROTOCOL);
+        return hostConfig;
+    }
+    
     /**
      * Sign (SHA-1 HMAC) a given AWS web request using the provided key.
      * The canonical request format used for signing is defined by the
