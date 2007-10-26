@@ -31,28 +31,21 @@
 
 package com.threerings.s3.client;
 
-import junit.framework.TestCase;
-
 import org.apache.commons.codec.binary.Hex;
 
-public class S3ByteArrayObjectTest extends TestCase
+import org.junit.*;
+import static org.junit.Assert.*;
+
+public class S3ByteArrayObjectTest
 {
-    public S3ByteArrayObjectTest (String name)
-    {
-        super(name);
-    }
-    
+    @Before
     public void setUp ()
         throws Exception
     {
         _byteObj = new S3ByteArrayObject("aKey", TEST_DATA.getBytes("utf8"));        
     }
     
-    public void tearDown ()
-        throws Exception
-    {
-    }
-
+    @Test
     public void testGetInputStream ()
         throws Exception
     {
@@ -62,6 +55,7 @@ public class S3ByteArrayObjectTest extends TestCase
         assertEquals(TEST_DATA, new String(bytes, 0, count, "utf8"));
     }
 
+    @Test
     public void testGetMD5Checksum ()
         throws Exception
     {

@@ -22,7 +22,7 @@
         <include name="commons-httpclient.jar"/>
         <include name="commons-io.jar"/>
         <include name="commons-logging.jar"/>
-        <include name="junit-3.7.jar"/>
+        <include name="junit-4.3.1.jar"/>
     </fileset>
 
     <!-- declare our classpath -->
