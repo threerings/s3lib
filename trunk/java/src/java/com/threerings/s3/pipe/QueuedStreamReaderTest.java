@@ -31,8 +31,6 @@
 
 package com.threerings.s3.pipe;
 
-import junit.framework.TestCase;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -42,12 +40,12 @@ import java.nio.ByteBuffer;
 
 import java.util.Arrays;
 
-public class QueuedStreamReaderTest extends TestCase
-{
-    public QueuedStreamReaderTest (String name) {
-        super(name);
-    }
+import org.junit.*;
+import static org.junit.Assert.*;
 
+public class QueuedStreamReaderTest {
+
+    @Before
     public void setUp ()
         throws Exception
     {
@@ -64,11 +62,16 @@ public class QueuedStreamReaderTest extends TestCase
         output.close();
     }
 
+    @After
     public void tearDown () {
         _testFile.delete();
     }
 
-    public void testSomething ()
+    /**
+     * Test that the reader streams the blocks correctly onto a queue.
+     */
+    @Test
+    public void testBlockStream ()
         throws Exception
     {
         QueuedStreamReader reader;

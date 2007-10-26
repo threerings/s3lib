@@ -35,8 +35,6 @@ package com.threerings.s3.client.xml;
 import com.threerings.s3.client.S3ObjectEntry;
 import com.threerings.s3.client.S3Owner;
 
-import junit.framework.TestCase;
-
 import java.io.StringReader;
 import java.util.List;
 
@@ -44,25 +42,11 @@ import org.xml.sax.InputSource;
 import org.xml.sax.helpers.XMLReaderFactory;
 import org.xml.sax.XMLReader;
 
-public class S3ObjectListingHandlerTest extends TestCase
-{
-    public S3ObjectListingHandlerTest (String name)
-    {
-        super(name);
-    }
-    
-    public void setUp ()
-        throws Exception
-    {
+import org.junit.*;
+import static org.junit.Assert.*;
 
-    }
-    
-    public void tearDown ()
-        throws Exception
-    {
-    }
-
-
+public class S3ObjectListingHandlerTest {
+    @Test
     public void testParse ()
         throws Exception
     {

@@ -33,8 +33,6 @@ package com.threerings.s3.client;
 
 import com.threerings.s3.client.acl.AccessControlList;
 
-import junit.framework.TestCase;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -47,13 +45,11 @@ import java.util.List;
 
 import org.apache.commons.codec.binary.Hex;
 
-public class S3ConnectionTest extends TestCase
-{
-    public S3ConnectionTest (String name)
-    {
-        super(name);
-    }
-    
+import org.junit.*;
+import static org.junit.Assert.*;
+
+public class S3ConnectionTest {
+    @Before
     public void setUp ()
         throws Exception
     {
@@ -73,6 +69,7 @@ public class S3ConnectionTest extends TestCase
         _conn.createBucket(_testBucketName);
     }
 
+    @After
     public void tearDown ()
         throws Exception
     {
@@ -80,6 +77,7 @@ public class S3ConnectionTest extends TestCase
         _testFile.delete();
     }
 
+    @Test
     public void testCreateBucket ()
         throws Exception
     {
@@ -94,6 +92,7 @@ public class S3ConnectionTest extends TestCase
      * Detailed testing of the response parsing, using static test data, is
      * also done in the S3ObjectListingHandler unit tests.
      */
+    @Test
     public void testListBucket ()
         throws Exception
     {
@@ -146,6 +145,7 @@ public class S3ConnectionTest extends TestCase
     /**
      * Test bucket listing with a prefix
      */
+    @Test
     public void testListBucketPrefix ()
         throws Exception
     {
@@ -176,6 +176,7 @@ public class S3ConnectionTest extends TestCase
     /**
      * Test bucket listing with max keys and marker.
      */
+    @Test
     public void testListBucketMaxMarker ()
         throws Exception
     {
@@ -210,6 +211,7 @@ public class S3ConnectionTest extends TestCase
     /**
      * Test bucket listing with a prefix and delimiter
      */
+    @Test
     public void testListPrefixDelimiter ()
         throws Exception
     {
@@ -234,6 +236,7 @@ public class S3ConnectionTest extends TestCase
         assertEquals("prefix.item0.1", listing.getEntries().get(1).getKey());
     }
 
+    @Test
     public void testPutObject ()
         throws Exception
     {
@@ -241,6 +244,7 @@ public class S3ConnectionTest extends TestCase
         _conn.putObject(_testBucketName, _fileObj, AccessControlList.StandardPolicy.PRIVATE);
     }
 
+    @Test
     public void testGetObject ()
         throws Exception
     {
@@ -272,6 +276,7 @@ public class S3ConnectionTest extends TestCase
         assertEquals(TEST_DATA, output.toString("utf8"));
     }
 
+    @Test
     public void testGetObjectMetadata ()
     	throws Exception
     {
@@ -296,6 +301,7 @@ public class S3ConnectionTest extends TestCase
         input.close();
     }
     
+    @Test
     public void testObjectMetadata ()
         throws Exception
     {
@@ -316,6 +322,7 @@ public class S3ConnectionTest extends TestCase
         S3ObjectTest.testEquals(_fileObj, obj);
     }
 
+    @Test
     public void testErrorHandling ()
         throws Exception
     {

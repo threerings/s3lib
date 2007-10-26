@@ -32,17 +32,16 @@ package com.threerings.s3.client;
 
 import java.security.SecureRandom;
 
-import junit.framework.TestCase;
+import org.junit.*;
+import static org.junit.Assert.*;
 
 /**
  * @author landonf
  *
  */
-public class S3DefaultConnectionFactoryTest extends TestCase {
-    public S3DefaultConnectionFactoryTest(String name) {
-        super(name);
-    }
+public class S3DefaultConnectionFactoryTest {
 
+    @Test
     public void testCreate () throws S3Exception {
         S3ConnectionFactory factory = new S3DefaultConnectionFactory(TestS3Config.getId(), TestS3Config.getKey());
         S3Connection conn = factory.createConnection();

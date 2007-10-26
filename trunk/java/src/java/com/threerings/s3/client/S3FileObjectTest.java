@@ -31,20 +31,16 @@
 
 package com.threerings.s3.client;
 
-import junit.framework.TestCase;
-
 import java.io.File;
 import java.io.FileOutputStream;
 
 import org.apache.commons.codec.binary.Hex;
 
-public class S3FileObjectTest extends TestCase
-{
-    public S3FileObjectTest (String name)
-    {
-        super(name);
-    }
-    
+import org.junit.*;
+import static org.junit.Assert.*;
+
+public class S3FileObjectTest {
+    @Before
     public void setUp ()
         throws Exception
     {
@@ -53,12 +49,14 @@ public class S3FileObjectTest extends TestCase
         new FileOutputStream(_testFile).write(TEST_DATA.getBytes("utf8"));
     }
     
+    @After
     public void tearDown ()
         throws Exception
     {
         _testFile.delete();
     }
 
+    @Test
     public void testConstruct ()
         throws Exception
     {
@@ -68,6 +66,7 @@ public class S3FileObjectTest extends TestCase
         assertEquals(TEST_DATA, new String(bytes, 0, count));
     }
 
+    @Test
     public void testGetMD5Checksum ()
         throws Exception
     {

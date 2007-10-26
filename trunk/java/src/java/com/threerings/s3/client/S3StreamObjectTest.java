@@ -31,19 +31,15 @@
 
 package com.threerings.s3.client;
 
-import junit.framework.TestCase;
-
 import java.io.ByteArrayInputStream;
 
 import org.apache.commons.codec.binary.Hex;
 
-public class S3StreamObjectTest extends TestCase
-{
-    public S3StreamObjectTest (String name)
-    {
-        super(name);
-    }
-    
+import org.junit.*;
+import static org.junit.Assert.*;
+
+public class S3StreamObjectTest {
+    @Before
     public void setUp ()
         throws Exception
     {
@@ -53,6 +49,7 @@ public class S3StreamObjectTest extends TestCase
                 new ByteArrayInputStream(data));
     }
     
+    @Test
     public void testConstruct ()
         throws Exception
     {
@@ -62,6 +59,7 @@ public class S3StreamObjectTest extends TestCase
         assertEquals(TEST_DATA, new String(bytes, 0, count));
     }
 
+    @Test
     public void testGetMD5Checksum ()
         throws Exception
     {

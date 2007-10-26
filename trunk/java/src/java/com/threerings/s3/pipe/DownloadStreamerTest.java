@@ -31,8 +31,6 @@
 
 package com.threerings.s3.pipe;
 
-import junit.framework.TestCase;
-
 import com.threerings.s3.client.S3Connection;
 import com.threerings.s3.client.TestS3Config;
 
@@ -43,12 +41,12 @@ import java.io.RandomAccessFile;
 
 import org.apache.commons.io.IOUtils;
 
-public class DownloadStreamerTest extends TestCase
-{
-    public DownloadStreamerTest (String name) {
-        super(name);
-    }
+import org.junit.*;
+import static org.junit.Assert.*;
 
+public class DownloadStreamerTest {
+
+    @Before
     public void setUp ()
         throws Exception
     {
@@ -67,6 +65,7 @@ public class DownloadStreamerTest extends TestCase
         file.close();
     }
 
+    @After
     public void tearDown ()
         throws Exception
     {
@@ -75,6 +74,7 @@ public class DownloadStreamerTest extends TestCase
         _outputFile.delete();
     }
 
+    @Test
     public void testDownload ()
         throws Exception
     {

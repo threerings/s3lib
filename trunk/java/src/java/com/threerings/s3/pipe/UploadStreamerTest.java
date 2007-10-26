@@ -31,8 +31,6 @@
 
 package com.threerings.s3.pipe;
 
-import junit.framework.TestCase;
-
 import com.threerings.s3.client.S3Connection;
 import com.threerings.s3.client.TestS3Config;
 
@@ -41,12 +39,11 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 
-public class UploadStreamerTest extends TestCase
-{
-    public UploadStreamerTest (String name) {
-        super(name);
-    }
+import org.junit.*;
 
+public class UploadStreamerTest {
+
+    @Before
     public void setUp ()
         throws Exception
     {
@@ -64,6 +61,7 @@ public class UploadStreamerTest extends TestCase
         file.close();
     }
 
+    @After
     public void tearDown ()
         throws Exception
     {
@@ -71,6 +69,7 @@ public class UploadStreamerTest extends TestCase
         _testFile.delete();
     }
 
+    @Test
     public void testUpload ()
         throws Exception
     {

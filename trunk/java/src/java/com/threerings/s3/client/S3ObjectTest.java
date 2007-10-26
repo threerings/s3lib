@@ -31,14 +31,14 @@
 
 package com.threerings.s3.client;
 
-import junit.framework.TestCase;
-
 import org.apache.commons.codec.binary.Hex;
 
-public class S3ObjectTest  extends TestCase
-{
+import org.junit.*;
+import static org.junit.Assert.*;
+
+public class S3ObjectTest {
     /**
-     * For the purpose of unit testing, validate that the two S3Objects are
+     * A unit test utility function to validate that the two S3Objects are
      * equal. This is not a S3Object.equals() implementation, as it's not
      * possible for two S3Objects to be truly equal. Each instance is inherently
      * unique, potentially representing transient state (such as an HTTP connection)
@@ -64,16 +64,11 @@ public class S3ObjectTest  extends TestCase
         // Metadata
         assertTrue("Metadata does not match", obj1.getMetadata().equals(obj2.getMetadata()));
     }
-
-
-    public S3ObjectTest (String name)
-    {
-        super(name);
-    }
-
-    public void testSomething ()
-    {
-        // We don't actually need to test anything right now, but junit 3.7 is
-        // a big baby about TestCases with no tests.
+    
+    /**
+     * We don't really have anything in S3Object to test, but junit doesn't like not having any tests
+     */
+    @Test
+    public void testSomething () {
     }
 }

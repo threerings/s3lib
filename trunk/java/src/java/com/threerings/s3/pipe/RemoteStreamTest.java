@@ -35,8 +35,6 @@ import com.threerings.s3.client.S3Connection;
 import com.threerings.s3.client.S3ObjectListing;
 import com.threerings.s3.client.TestS3Config;
 
-import junit.framework.TestCase;
-
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -46,16 +44,16 @@ import java.util.List;
 
 import org.apache.commons.codec.binary.Base64;
 
+import org.junit.*;
+import static org.junit.Assert.*;
+
 /**
  * Most of these tests are hardwired to fail if encoding/decoding routines are
  * changed, as any changes will result in lost access to old data.
  */
-public class RemoteStreamTest extends TestCase
-{
-    public RemoteStreamTest (String name) {
-        super(name);
-    }
+public class RemoteStreamTest {
 
+    @Before
     public void setUp ()
         throws Exception
     {
@@ -67,12 +65,14 @@ public class RemoteStreamTest extends TestCase
         _conn.createBucket(_bucket);
     }
 
+    @After
     public void tearDown ()
         throws Exception
     {
         TestS3Config.deleteBucket(_conn, _bucket);
     }
 
+    @Test
     public void testGetAllStreams ()
         throws Exception
     {
@@ -84,12 +84,14 @@ public class RemoteStreamTest extends TestCase
         assertEquals(STREAM_NAME, streams.get(0).getName());
     }
 
+    @Test
     public void testPutStreamInfo ()
         throws Exception
     {
         _stream.putStreamInfo();
     }
 
+    @Test
     public void testGetStreamInfoRecord ()
         throws Exception
     {
@@ -111,6 +113,7 @@ public class RemoteStreamTest extends TestCase
         );
     }
 
+    @Test
     public void testDeleteStream ()
         throws Exception
     {
@@ -126,10 +129,12 @@ public class RemoteStreamTest extends TestCase
         assertEquals(0, listing.getEntries().size());
     }
 
+    @Test
     public void testStreamInfoKey () {
         assertEquals("stream." + ENCODED_STREAM_NAME + ".info", _stream.streamInfoKey());
     }
 
+    @Test
     public void testStreamBlockKey () {
         assertEquals("stream." + ENCODED_STREAM_NAME + ".block.0", _stream.streamBlockKey(0));
     }
