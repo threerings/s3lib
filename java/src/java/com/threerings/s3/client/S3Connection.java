@@ -166,8 +166,25 @@ public class S3Connection {
     }
 
     /**
+     * List a bucket's contents, with a maximum number of
+     * returned entries.
+     * 
+     * @param marker Indicates where in the bucket to begin listing. The
+     *  list will only include keys that occur lexiocgraphically after marker.
+     *  Specify null for no marker.
+     * @param maxKeys Maximum number of keys to return. The server may return
+     *  fewer keys, but never more. Specify 0 for no limit.
+     */
+    public S3ObjectListing listObjects (String bucketName, String marker, int maxKeys)
+        throws S3Exception
+    {
+        return listObjects(bucketName, null, marker, maxKeys, null);
+    }
+
+    /**
      * List a bucket's contents.
      * @param prefix Limits response to keys beginning with the provided prefix.
+     *  Specify null for no prefix.
      * @param marker Indicates where in the bucket to begin listing. The list
      *  will only include keys that occur lexicographically after marker.
      *  Specify null for no marker.
