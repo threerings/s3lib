@@ -62,7 +62,6 @@ import org.apache.commons.httpclient.methods.HeadMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
-
 import org.apache.commons.httpclient.protocol.Protocol;
 
 import org.xml.sax.SAXException;
@@ -80,93 +79,60 @@ import org.xml.sax.SAXException;
  */
 public class S3Connection {
     /**
-     * Helper method to create and initialize a HostConfiguration, when provided with
-     * the host, port, and protocol.
+     * Create a new S3 client connection, with the given credentials and connection
+     * host parameters.
      * 
-     * @param host Host to connect to
-     * @param port HTTP port
-     * @param protocol Protocol used
-     * @return Initialized {@link HostConfiguration}
-     */
-    private static HostConfiguration createHostConfig (String host, int port, Protocol protocol) {
-        final HostConfiguration hostConfig = new HostConfiguration();
-        hostConfig.setHost(host, port, protocol);
-        return hostConfig;
-    }
-    
-    /**
-     * Create a new interface to interact with S3 with the given credentials.
+     * Connections will be SSL encrypted.
      *
-     * @param awsKeyId Your unique AWS user id.
-     * @param awsSecretKey The secret string used to generate signatures
+     * @param keyId Your unique AWS user id.
+     * @param secretKey The secret string used to generate signatures
      *        for authentication.
      */
-    public S3Connection (String awsKeyId, String awsSecretKey) {
-        this(awsKeyId, awsSecretKey, Protocol.getProtocol("https"));
+    public S3Connection (String keyId, String secretKey) {
+        this(keyId, secretKey, S3Utils.createDefaultHostConfig());
     }
 
     /**
-     * Create a new interface to interact with S3 with the given credentials and
-     * connection parameters.
+     * Create a new S3 client connection, with the given credentials and connection
+     * host parameters.
      *
-     * @param awsKeyId Your unique AWS user id.
-     * @param awsSecretKey The secret string used to generate signatures
-     *        for authentication.
-     * @param protocol Protocol to use to connect to S3.
+     * @param keyId The your user key into AWS
+     * @param secretKey The secret string used to generate signatures for authentication.
+     * @param hostConfig HttpClient HostConfig.
      */
+    public S3Connection (String keyId, String secretKey,
+        HostConfiguration hostConfig)
+    {
+        this.keyId = keyId;
+        this.secretKey = secretKey;
+        this.httpClient = new HttpClient();
+        this.httpClient.setHostConfiguration(hostConfig);
+    }
+
+    /**
+     * @deprecated Use {@link S3Connection#S3Connection(String, String, HostConfiguration)}
+     */
+    @Deprecated
     public S3Connection (String awsKeyId, String awsSecretKey, Protocol protocol) {
         this(awsKeyId, awsSecretKey, protocol, S3Utils.DEFAULT_HOST);
     }
 
     /**
-     * Create a new interface to interact with S3 with the given credentials and
-     * connection parameters.
-     *
-     * @param awsKeyId Your unique AWS user id.
-     * @param awsSecretKey The secret string used to generate signatures
-     *        for authentication.
-     * @param protocol Protocol to use to connect to S3.
-     * @param host Which host to connect to. Usually, this will be s3.amazonaws.com
+     * @deprecated Use {@link S3Connection#S3Connection(String, String, HostConfiguration)}
      */
-    public S3Connection (String awsKeyId, String awsSecretKey, Protocol protocol,
-                             String host)
-    {
+    @Deprecated
+    public S3Connection (String awsKeyId, String awsSecretKey, Protocol protocol, String host) {
         this(awsKeyId, awsSecretKey, protocol, host, protocol.getDefaultPort());
     }
     
     /**
-     * Create a new interface to interact with S3 with the given credentials and
-     * connection parameters.
-     *
-     * @param awsKeyId Your unique AWS user id.
-     * @param awsSecretKey The secret string used to generate signatures
-     *        for authentication.
-     * @param host Which host to connect to. Usually, this will be s3.amazonaws.com
-     * @param port Port to connect to.
+     * @deprecated Use {@link S3Connection#S3Connection(String, String, HostConfiguration)}
      */
-     public S3Connection (String awsKeyId, String awsSecretKey, Protocol protocol,
-                              String host, int port)
-    {
-        this(awsKeyId, awsSecretKey, createHostConfig(host, port, protocol));
+    @Deprecated
+    public S3Connection (String awsKeyId, String awsSecretKey, Protocol protocol, String host, int port) {
+        this(awsKeyId, awsSecretKey, S3Utils.createHostConfig(host, port, protocol));
     }
 
-    /**
-     * Create a new interface to interact with S3 with the given credential and connection
-     * parameters
-     *
-     * @param awsKeyId The your user key into AWS
-     * @param awsSecretKey The secret string used to generate signatures for authentication.
-     * @param awsHostConfig HttpClient HostConfig.
-     */
-    public S3Connection (String awsKeyId, String awsSecretKey,
-        HostConfiguration awsHostConfig)
-    {
-        _awsKeyId = awsKeyId;
-        _awsSecretKey = awsSecretKey;
-        _awsHttpClient = new HttpClient();
-        _awsHttpClient.setHostConfiguration(awsHostConfig);
-    }
-    
     /**
      * Creates a new bucket.
      * @param bucketName The name of the bucket to create.
@@ -515,11 +481,11 @@ public class S3Connection {
         int statusCode;
         
         // Sign the request
-        S3Utils.signAWSRequest(_awsKeyId, _awsSecretKey, method, null);
+        S3Utils.signAWSRequest(keyId, secretKey, method, null);
         
         // Execute the request
         try {
-            statusCode = _awsHttpClient.executeMethod(method);            
+            statusCode = httpClient.executeMethod(method);            
         } catch (IOException ioe) {
             throw new S3ClientException.NetworkException("Network error executing S3 method: " +
                 ioe.getMessage(), ioe);
@@ -567,15 +533,15 @@ public class S3Connection {
 
         return header.getValue();
     }
-
+    
     /** AWS Access ID. */
-    private final String _awsKeyId;
+    private final String keyId;
     
     /** AWS Access Key. */
-    private final String _awsSecretKey;
+    private final String secretKey;
     
     /** S3 HTTP client. */
-    private final HttpClient _awsHttpClient;
+    private final HttpClient httpClient;
     
     /** URL encoder. */
     private final URLCodec _urlEncoder = new URLCodec();
