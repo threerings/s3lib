@@ -166,6 +166,9 @@ public class S3ObjectListingHandler extends DefaultHandler {
                     _state.push(ParserState.OWNER);
                 }
                 break;
+            default:
+                /* No state transition, let the endElement handler deal with it. */
+                break;
         }
 
         /* Increment the element depth. */
