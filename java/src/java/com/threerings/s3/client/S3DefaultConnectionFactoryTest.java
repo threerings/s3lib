@@ -1,5 +1,5 @@
 /* 
- * UploadStreamer vi:ts=4:sw=4:expandtab:
+ * S3SimpleConnectionFactoryTest.java vi:ts=4:sw=4:expandtab:
  *
  * Copyright (c) 2005 - 2007 Three Rings Design, Inc.
  * All rights reserved.
@@ -28,64 +28,29 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+package com.threerings.s3.client;
 
-package com.threerings.s3.pipe;
+import java.security.SecureRandom;
 
 import junit.framework.TestCase;
 
-import com.threerings.s3.client.S3Connection;
-import com.threerings.s3.client.TestS3Config;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.RandomAccessFile;
-
-public class UploadStreamerTest extends TestCase
-{
-    public UploadStreamerTest (String name) {
+/**
+ * @author landonf
+ *
+ */
+public class S3DefaultConnectionFactoryTest extends TestCase {
+    public S3DefaultConnectionFactoryTest(String name) {
         super(name);
     }
 
-    public void setUp ()
-        throws Exception
-    {
-        _conn = TestS3Config.createConnection();
-        _bucket = TestS3Config.generateTestBucketName();
-        _testFile = File.createTempFile("s3pipe", "data");
-
-        /* Set up our test bucket. */
-        _conn.createBucket(_bucket);
-
-        /* Populate the file with 10 bytes. We use a very small stream in
-         * order to save bandwidth -- S3 requests cost money! */
-        RandomAccessFile file = new RandomAccessFile(_testFile, "rw");
-        file.setLength(10);
-        file.close();
+    public void testCreate () throws S3Exception {
+        S3ConnectionFactory factory = new S3DefaultConnectionFactory(TestS3Config.getId(), TestS3Config.getKey());
+        S3Connection conn = factory.createConnection();
+        try {
+            conn.listObjects("a bucket that will absolutely not exist such that we can verify that we receive a server-side S3 exception: " + new SecureRandom().nextInt());
+            fail("Did not throw S3ServerException");            
+        } catch (S3ServerException e) {
+            // Do nothing
+        }
     }
-
-    public void tearDown ()
-        throws Exception
-    {
-        TestS3Config.deleteBucket(_conn, _bucket);
-        _testFile.delete();
-    }
-
-    public void testUpload ()
-        throws Exception
-    {
-        /* Fire up an uploader with a 1 byte block size. */
-        InputStream input = new FileInputStream(_testFile);
-        UploadStreamer streamer = new UploadStreamer(_conn, _bucket, 2);
-        streamer.upload("test stream", input, 5);
-    }
-
-    /** Temporary test data file. */
-    protected File _testFile;
-
-    /** AWS S3 Connection. */
-    S3Connection _conn;
-
-    /** Test bucket name */
-    String _bucket;
 }

@@ -32,8 +32,8 @@
 package com.threerings.s3.pipe;
 
 import com.threerings.s3.client.S3Connection;
-import com.threerings.s3.client.S3ConnectionTest;
 import com.threerings.s3.client.S3ObjectListing;
+import com.threerings.s3.client.TestS3Config;
 
 import junit.framework.TestCase;
 
@@ -59,8 +59,8 @@ public class RemoteStreamTest extends TestCase
     public void setUp ()
         throws Exception
     {
-        _conn = S3ConnectionTest.createConnection();
-        _bucket = S3ConnectionTest.generateTestBucketName();
+        _conn = TestS3Config.createConnection();
+        _bucket = TestS3Config.generateTestBucketName();
         _stream = new RemoteStream(_conn, _bucket, STREAM_NAME);
 
         /* Set up our test bucket. */
@@ -70,7 +70,7 @@ public class RemoteStreamTest extends TestCase
     public void tearDown ()
         throws Exception
     {
-        S3ConnectionTest.deleteBucket(_conn, _bucket);
+        TestS3Config.deleteBucket(_conn, _bucket);
     }
 
     public void testGetAllStreams ()
