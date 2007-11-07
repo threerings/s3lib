@@ -96,7 +96,7 @@
             <property file="test.properties"/>
         </else></if>
 
-        <junit printsummary="yes" haltonfailure="yes">
+        <junit failureproperty="test.failure">
             <!-- Vend the aws. properties -->
             <syspropertyset>
                 <propertyref prefix="aws."/>
@@ -122,6 +122,8 @@
             <!-- run the requested test -->
             <test name="${test}" if="test"/>
         </junit>
+
+        <fail if="test.failure" message="Unit tests failed"/>
     </target>
 
     <!-- build the javadoc documentation -->
