@@ -70,7 +70,7 @@
       <!-- haul in the svn clean checker -->
       <taskdef name="svnclean" classname="com.threerings.ant.SVNClean" classpathref="classpath.ant"/>
       <svnclean>
-        <fileset dir="${basedir}"/>
+        <fileset dir="${basedir}" excludes="build-number.txt"/>
       </svnclean>
     </target>
 
