@@ -492,7 +492,7 @@ public class S3Connection {
      * appropriate S3Exception.
      * @param method HTTP method to execute.
      */
-    protected void executeS3Method (HttpMethod method)
+    private void executeS3Method (HttpMethod method)
         throws S3Exception
     {
         int statusCode;
