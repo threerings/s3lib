@@ -102,6 +102,7 @@ public class S3ObjectListingHandler extends DefaultHandler {
         return _data.commonPrefixes;
     }
 
+    @Override
     public void startDocument ()
         throws SAXException
     {
@@ -110,6 +111,7 @@ public class S3ObjectListingHandler extends DefaultHandler {
         _state.push(ParserState.DEFAULT);
     }
 
+    @Override
     public void endDocument ()
         throws SAXException
     {
@@ -122,6 +124,7 @@ public class S3ObjectListingHandler extends DefaultHandler {
         _data.validate();
     }
 
+    @Override
     public void startElement (String uri, String name, String qName, Attributes attrs)
         throws SAXException
     {
@@ -175,6 +178,7 @@ public class S3ObjectListingHandler extends DefaultHandler {
         _depth++;
     }
 
+    @Override
     public void endElement (String uri, String name, String qName)
         throws SAXException
     {
@@ -308,6 +312,7 @@ public class S3ObjectListingHandler extends DefaultHandler {
         _depth--;
     }
 
+    @Override
     public void characters(char ch[], int start, int length)
         throws SAXException
     {
