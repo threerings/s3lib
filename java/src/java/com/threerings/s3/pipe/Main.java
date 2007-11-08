@@ -57,6 +57,7 @@ final public class Main {
     enum PipeCommand {
         /** Read from stdin, write to an S3 stream. */
         UPLOAD {
+            @Override
             public void run (Main app)
                 throws S3Exception, RemoteStreamException
             {
@@ -68,6 +69,7 @@ final public class Main {
 
         /** Read from an S3 stream, write to stdout. */
         DOWNLOAD {
+            @Override
             public void run (Main app)
                 throws S3Exception, RemoteStreamException
             {
@@ -78,6 +80,7 @@ final public class Main {
 
         /** Delete a stream. */
         DELETE {
+            @Override
             public void run (Main app)
                 throws S3Exception, RemoteStreamException
             {
@@ -88,6 +91,7 @@ final public class Main {
 
         /** List all streams in a bucket. */
         LIST {
+            @Override
             public void run (Main app)
                 throws S3Exception, RemoteStreamException
             {
@@ -98,29 +102,34 @@ final public class Main {
                 }
             }
 
+            @Override
             public void validate (Main app) {}
         },
 
         /** Create a bucket. */
         CREATEBUCKET {
+            @Override
             public void run (Main app)
                 throws S3Exception
             {
                 app.connection.createBucket(app.bucketName);
             }
 
+            @Override
             public void validate (Main app) {}
         },
 
 
         /** Delete a bucket. */
         DELETEBUCKET {
+            @Override
             public void run (Main app)
                 throws S3Exception
             {
                 app.connection.deleteBucket(app.bucketName);
             }
 
+            @Override
             public void validate (Main app) {}
         };
 
