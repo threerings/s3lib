@@ -44,9 +44,9 @@ public class S3StreamObjectTest {
         throws Exception
     {
         final byte[] data = TEST_DATA.getBytes("utf8");        
-        streamObj = new S3StreamObject("aKey", data.length,
+        streamObj = new S3StreamObject("aKey", "text/plain", data.length,
                 new Hex().decode(TEST_DATA_MD5.getBytes("utf8")),
-                new ByteArrayInputStream(data));
+                new ByteArrayInputStream(data), 1L);
     }
     
     @Test
@@ -57,6 +57,7 @@ public class S3StreamObjectTest {
 
         int count = streamObj.getInputStream().read(bytes);        
         assertEquals(TEST_DATA, new String(bytes, 0, count));
+        assertEquals(1L, streamObj.lastModified());
     }
 
     @Test

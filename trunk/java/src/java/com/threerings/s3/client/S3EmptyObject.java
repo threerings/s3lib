@@ -51,15 +51,15 @@ class S3EmptyObject extends S3Object {
 			throw new IOException("No stream available");
 		}
 	}
-
-
+    
     /**
      * Instantiate an S3 object with the given key.
      */
-    public S3EmptyObject(String key, String mimeType, long length, byte[] digest,
-    	Map<String,String> metadata)
+    public S3EmptyObject (String key, String mimeType, long length, byte[] digest,
+        Map<String,String> metadata, long lastModified)
     {
         super(key, mimeType, metadata);
+        _lastModified = lastModified;
         _length = length;
         _md5digest = digest;
     }
@@ -67,6 +67,11 @@ class S3EmptyObject extends S3Object {
 	@Override
 	public InputStream getInputStream() throws S3ClientException {
 		return new NullInputStream();
+	}
+	
+	@Override
+	public long lastModified () {
+	    return _lastModified;
 	}
 	
 	@Override
@@ -78,6 +83,9 @@ class S3EmptyObject extends S3Object {
 	public long length() {
 		return _length;
 	}
+	
+	/** Last modified timestamp. */
+	private final long _lastModified;
 
     /** Data length in bytes. */
     private final long _length;

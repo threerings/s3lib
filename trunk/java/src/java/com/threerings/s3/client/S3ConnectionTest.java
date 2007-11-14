@@ -256,6 +256,15 @@ public class S3ConnectionTest {
 
         // Ensure that it is equal to the object we uploaded
         S3ObjectTest.testEquals(_fileObj, obj);
+        
+        // Time must have moved forward (provide 10 minutes of fuzz, in case you have a bad clock)
+        assertTrue(
+                String.format(
+                        "S3Object modified date: %d Original modified date: %d --- Is your clock correct?",
+                        obj.lastModified(), _fileObj.lastModified()),
+                        
+                obj.lastModified() >= (_fileObj.lastModified() - (10 * 60 * 1000))
+        );
 
         // Validate the object file data, too.
         ByteArrayOutputStream output = new ByteArrayOutputStream();

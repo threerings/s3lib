@@ -63,6 +63,8 @@ import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.protocol.Protocol;
+import org.apache.commons.httpclient.util.DateParseException;
+import org.apache.commons.httpclient.util.DateUtil;
 
 import org.xml.sax.SAXException;
 
@@ -342,18 +344,28 @@ public class S3Connection {
     private S3Object getObject (String objectKey, HttpMethodBase method, boolean hasBody)
     	throws S3Exception
     {
-        InputStream response;
-        HashMap<String,String> metadata;
-        String mimeType;
-        byte digest[];
-        long length;
+        final InputStream response;
+        final HashMap<String,String> metadata;
+        final String mimeType;
+        final byte digest[];
+        final long length;
+        long lastModified = 0L;
 
         // Execute the get request and retrieve all metadata from the response
         executeS3Method(method);
 
         // Mime type
         mimeType = getResponseHeader(method, CONTENT_TYPE_HEADER, true);
-
+        
+        // Last modified
+        final String dateString = getResponseHeader(method, LAST_MODIFIED_HEADER, false);
+        try {
+            if (dateString != null)
+                lastModified = DateUtil.parseDate(dateString).getTime();
+        } catch (DateParseException e) {
+            lastModified = 0L;
+        }
+        
         // Data length
         length = method.getResponseContentLength();
         if (length == -1) {
@@ -405,9 +417,9 @@ public class S3Connection {
                 throw new S3Exception("S3 failed to return any document body");
             }
 
-            return new S3StreamObject(objectKey, mimeType, length, digest, metadata, response);        
+            return new S3StreamObject(objectKey, mimeType, length, digest, metadata, response, lastModified);        
         } else {
-        	return new S3EmptyObject(objectKey, mimeType, length, digest, metadata);
+        	return new S3EmptyObject(objectKey, mimeType, length, digest, metadata, lastModified);
         }
 
     }
@@ -580,6 +592,9 @@ public class S3Connection {
 
     /** Header for MD5 checksum validation. */
     private static final String CONTENT_MD5_HEADER = "Content-MD5";
+    
+    /** Last-Modified date header. */
+    private static final String LAST_MODIFIED_HEADER = "Last-Modified";
 
     /** Mime Type Header. */
     private static final String CONTENT_TYPE_HEADER = "Content-Type";

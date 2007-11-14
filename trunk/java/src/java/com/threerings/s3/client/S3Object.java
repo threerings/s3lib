@@ -109,6 +109,14 @@ public abstract class S3Object {
     {
         _metadata = metadata;
     }
+    
+    /**
+     * Return the object's modification timestamp, or 0L if the timestamp
+     * is unknown or can not be read.
+     */
+    public long lastModified () {
+        return 0L;
+    }
 
     /**
      * Get the object's input stream, used to read object contents, potentially

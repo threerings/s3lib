@@ -57,6 +57,7 @@ public class S3StreamObject extends S3Object {
 
     /**
      * Instantiate an S3 stream object from an existing open stream.
+     * 
      * @param key S3 object key.
      * @param mimeType S3 object mime-type.
      * @param length Stream data length.
@@ -66,7 +67,7 @@ public class S3StreamObject extends S3Object {
     public S3StreamObject (String key, String mimeType, long length,
         byte[] digest, InputStream input)
     {
-        this(key, mimeType, length, digest, new HashMap<String,String>(), input);
+        this(key, mimeType, length, digest, input, 0L);
     }
 
     /**
@@ -76,16 +77,34 @@ public class S3StreamObject extends S3Object {
      * @param mimeType S3 object mime-type.
      * @param length Stream data length.
      * @param digest MD5 digest.
-     * @param metadata Object metadata.
      * @param input Data stream.
+     * @param lastModified Last modification timestamp.
      */
     public S3StreamObject (String key, String mimeType, long length,
-        byte[] digest, Map<String,String> metadata, InputStream input)
+        byte[] digest, InputStream input, long lastModified)
+    {
+        this(key, mimeType, length, digest, new HashMap<String,String>(), input, lastModified);
+    }
+    
+    /**
+     * Instantiate an S3 stream object from an existing open stream.
+     * 
+     * @param key S3 object key.
+     * @param mimeType S3 object mime-type.
+     * @param length Stream data length.
+     * @param digest MD5 digest.
+     * @param metadata Object metadata.
+     * @param input Data stream.
+     * @param lastModified Last modification timestamp.
+     */
+    public S3StreamObject (String key, String mimeType, long length,
+        byte[] digest, Map<String,String> metadata, InputStream input, long lastModified)
     {
         super(key, mimeType, metadata);
         this.length = length;
         this.digest = digest;
         this.input = input;
+        this.lastModified = lastModified;
     }
      
 
@@ -102,11 +121,19 @@ public class S3StreamObject extends S3Object {
     {
         return digest;
     }
+    
+    @Override // From S3Object
+    public long lastModified () {
+        return lastModified;
+    }
 
     @Override // From S3Object
     public long length () {
         return length;
     }
+
+    /** Modification timestamp. */
+    private final long lastModified;
     
     /** Data length in bytes. */
     private final long length;

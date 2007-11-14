@@ -66,9 +66,11 @@ public class S3ObjectTest {
     }
     
     /**
-     * We don't really have anything in S3Object to test, but junit doesn't like not having any tests
+     * Check that the last modified date is set.
      */
     @Test
-    public void testSomething () {
+    public void testLastModified () {
+        S3Object object = new S3ByteArrayObject("test", new byte[0], "text/plain");
+        assertEquals(0L, object.lastModified());
     }
 }
