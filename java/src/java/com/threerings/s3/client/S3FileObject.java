@@ -113,6 +113,11 @@ public class S3FileObject extends S3Object {
     }
 
     @Override // From S3Object
+    public long lastModified () {
+        return _file.lastModified();
+    }
+
+    @Override // From S3Object
     public long length () {
         return _file.length();
     }

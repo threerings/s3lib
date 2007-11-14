@@ -67,6 +67,11 @@ public class S3FileObjectTest {
     }
 
     @Test
+    public void testLastModified () {
+        assertTrue(_fileObj.lastModified() > 0L);
+    }
+
+    @Test
     public void testGetMD5Checksum ()
         throws Exception
     {
