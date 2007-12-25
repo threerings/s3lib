@@ -20,7 +20,7 @@
 #       Result is cached.
 #
 #	Defines and substitutes the following vars:
-#               SAFESTR_CPPFLAGS
+#               SAFESTR_CFLAGS
 #               SAFESTR_LIBS
 #
 #------------------------------------------------------------------------
@@ -75,6 +75,6 @@ AC_DEFUN(TR_SAFESTR, [
 	fi
 			
 
-	AC_SUBST(SAFESTR_CPPFLAGS)
+	AC_SUBST(SAFESTR_CFLAGS)
 	AC_SUBST(SAFESTR_LIBS)
 ])
