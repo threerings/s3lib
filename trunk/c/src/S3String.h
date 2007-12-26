@@ -1,11 +1,10 @@
 /*
- * tests.h vi:ts=4:sw=4:expandtab:
- * Amazon S3 Library Unit Tests
+ * S3String.h vi:ts=4:sw=4:expandtab:
+ * Amazon S3 Library
  *
  * Author: Landon Fuller <landonf@threerings.net>
  *
- * Copyright (c) 2006 - 2007 Landon Fuller <landonf@bikemonkey.org>
- * Copyright (c) 2006 - 2007 Three Rings Design, Inc.
+ * Copyright (c) 2007 Landon Fuller <landonf@bikemonkey.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,19 +32,32 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TESTS_H
-#define TESTS_H
+#ifndef S3STRING_H
+#define S3STRING_H
 
-#include <config.h>
-#include <check.h>
-#include <src/S3Lib.h>
+/**
+ * @file
+ * @brief S3Lib string implementation.
+ * @author Landon Fuller <landonf@threerings.net>
+ */
 
-Suite *S3Connection_suite(void);
-Suite *S3Error_suite(void);
-Suite *S3Header_suite(void);
-Suite *S3Lib_suite(void);
-Suite *S3List_suite(void);
-Suite *S3Request_suite(void);
-Suite *S3String_suite(void);
+/*!
+ * @addtogroup S3String
+ * @{
+ */
 
-#endif /* TESTS_H */
+typedef struct S3String S3String;
+
+S3_EXTERN S3String *s3string_new (const char *cstring);
+S3_EXTERN S3String *s3string_copy (S3String *string);
+S3_EXTERN const char *s3string_cstring (S3String *string);
+
+#ifdef S3LIB_PRIVATE_API
+S3_PRIVATE safestr_t s3string_safestr (S3String *string);
+#endif
+
+/*!
+ * @} S3String
+ */
+
+#endif /* S3STRING_H */

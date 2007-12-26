@@ -1,5 +1,5 @@
 /*
- * tests.h vi:ts=4:sw=4:expandtab:
+ * S3String.c vi:ts=4:sw=4:expandtab:
  * Amazon S3 Library Unit Tests
  *
  * Author: Landon Fuller <landonf@threerings.net>
@@ -33,19 +33,48 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TESTS_H
-#define TESTS_H
-
+#ifdef HAVE_CONFIG_H
 #include <config.h>
-#include <check.h>
-#include <src/S3Lib.h>
+#endif
 
-Suite *S3Connection_suite(void);
-Suite *S3Error_suite(void);
-Suite *S3Header_suite(void);
-Suite *S3Lib_suite(void);
-Suite *S3List_suite(void);
-Suite *S3Request_suite(void);
-Suite *S3String_suite(void);
+#include <string.h>
 
-#endif /* TESTS_H */
+#include "tests.h"
+
+/* String alloc/dealloc */
+START_TEST (test_new) {
+    S3String *string = s3string_new("hello");
+    fail_unless(strcmp("hello", s3string_cstring(string)) == 0);
+    s3_release(string);
+}
+END_TEST
+
+START_TEST (test_copy) {
+    S3String *string = s3string_new("hello");
+    S3String *copy = s3string_copy(string);
+
+    fail_unless(strcmp("hello", s3string_cstring(copy)) == 0);
+
+    s3_release(copy);
+    s3_release(string);
+}
+END_TEST
+
+START_TEST (test_cstring) {
+    S3String *string = s3string_new("hello");
+    fail_unless(strcmp("hello", s3string_cstring(string)) == 0);
+    s3_release(string);
+}
+END_TEST
+
+Suite *S3String_suite(void) {
+    Suite *s = suite_create("S3String");
+
+    TCase *tc_general = tcase_create("General");
+    suite_add_tcase(s, tc_general);
+    tcase_add_test(tc_general, test_new);
+    tcase_add_test(tc_general, test_copy);
+    tcase_add_test(tc_general, test_cstring);
+
+    return s;
+}

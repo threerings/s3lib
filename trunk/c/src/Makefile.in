@@ -14,6 +14,7 @@ LIBRARY_OBJS=	S3Connection.o \
 		S3Lib.o \
 		S3List.o \
 		S3Request.o \
+		S3String.o \
 		hash.o \
 		list.o
 
