@@ -105,7 +105,7 @@ START_TEST (test_header_values) {
     values = s3header_values(header);
 
     i = s3list_iterator_new(values);    
-    fail_unless(strcmp(s3list_iterator_next(i), "value") == 0);
+    fail_unless(strcmp(s3string_cstring(s3list_iterator_next(i)), "value") == 0);
 
     s3_release(i);
     s3_release(header);
