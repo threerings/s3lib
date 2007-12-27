@@ -126,6 +126,7 @@ static S3RuntimeClass S3HeaderClass = {
  */
 S3_DECLARE S3Header *s3header_new (const char *name, const char *value) {
     S3Header *header;
+    S3String *string = s3string_new(value);
 
     /* Allocate our empty header */
     header = s3_object_alloc(&S3HeaderClass, sizeof(S3Header));
@@ -140,14 +141,16 @@ S3_DECLARE S3Header *s3header_new (const char *name, const char *value) {
     if (header->values == NULL)
         goto error;
 
-    /* The first header value */
-    if (!s3list_append(header->values, value))
+    /* The first header value. TODO: Accept S3String values instead */
+    if (!s3list_append(header->values, string))
         goto error;
+    s3_release(string);
 
     /* All done */
     return header;
 
 error:
+    s3_release(string);
     s3_release(header);
     return NULL;
 }

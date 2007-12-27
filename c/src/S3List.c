@@ -134,9 +134,9 @@ static void s3list_dealloc (S3TypeRef obj) {
         lnode_t *next;
 
         /* Release the node value */
-        safestr_t val = lnode_get(node);
+        S3TypeRef val = lnode_get(node);
         assert(val != NULL);
-        safestr_release(val);
+        s3_release(val);
 
         /* Fetch the next node */
         next = list_next(&list->ctx, node);
@@ -154,7 +154,8 @@ static void s3list_dealloc (S3TypeRef obj) {
 }
 
 /**
- * Clone a list.
+ * Create a shallow copy of a list.
+ * Referenced objects will not be copied.
  *
  * @param list A S3List instance to copy.
  * @return Returns a newly allocated copy of @a list, or NULL if a failure occured.
@@ -179,9 +180,9 @@ S3_DECLARE S3List *s3list_copy (S3List *list) {
         lnode_t *next;
 
         /* Get the node value, add it to the new list */
-        safestr_t val = lnode_get(node);
-        
-        if (!s3list_append_safestr(copy, val))
+        S3TypeRef val = lnode_get(node);
+
+        if (!s3list_append(copy, val))
             goto error;
 
         /* Fetch the next node */
@@ -197,41 +198,18 @@ error:
 }
 
 /**
- * Append a string element to the list.
+ * Append a new S3 object to the list.
  * @param list S3List to modify
- * @param string The string to append to the list. The string will be copied.
+ * @param object The object to append to the list. This MUST be an S3 object type.
  * @return true on success, or false on failure. This function should not fail unless available memory has been exhausted.
  */
-S3_DECLARE bool s3list_append (S3List *list, const char *string) {
-    safestr_t data;
-    bool result;
-
-    data = s3_safestr_create(string, SAFESTR_IMMUTABLE);
-    if (!data)
-        return false;
-
-    /* Append the string, drop our implicit reference, and return the result. */
-    result = s3list_append_safestr(list, data);
-    safestr_release(data);
-    return (result);
-}
-
-/**
- * @internal
- *
- * Append a reference to the safestr element to the list.
- *
- * @param list S3List to modify
- * @param string The string to append to the list. The list will retain a string reference.
- * @return true on success, or false on failure. This function should not fail unless available memory has been exhausted.
- */
-S3_PRIVATE bool s3list_append_safestr (S3List *list, safestr_t string) {
+S3_DECLARE bool s3list_append (S3List *list, S3TypeRef object) {
     lnode_t *node;
 
-    /* Allocate a new node with a string reference */
-    node = lnode_create(safestr_reference(string));
+    /* Allocate a new node with an object reference */
+    node = lnode_create(s3_retain(object));
     if (!node) {
-        safestr_release(string);
+        s3_release(object);
         return false;
     }
 
@@ -292,8 +270,8 @@ static void s3list_iterator_dealloc (S3TypeRef obj) {
  * @param iterator An S3ListIterator instance.
  * @return The next list value, or NULL if none remain.
  */
-S3_DECLARE const char *s3list_iterator_next (S3ListIterator *iterator) {
-    safestr_t value;
+S3_DECLARE S3TypeRef s3list_iterator_next (S3ListIterator *iterator) {
+    S3TypeRef value;
 
     /* If node is NULL, end of list */
     if (iterator->current == NULL)
@@ -303,7 +281,7 @@ S3_DECLARE const char *s3list_iterator_next (S3ListIterator *iterator) {
     value = lnode_get(iterator->current);
     iterator->current = list_next(&(iterator->list->ctx), iterator->current);
 
-    return s3_safestr_char(value);
+    return value;
 }
 
 

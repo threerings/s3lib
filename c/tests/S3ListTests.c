@@ -52,33 +52,14 @@ END_TEST
 START_TEST (test_append) {
     S3List *list = s3list_new();
     S3ListIterator *i;
+    S3String *string = s3string_new("hello");
 
-    fail_unless(s3list_append(list, "hello"));
+    fail_unless(s3list_append(list, string));
     i = s3list_iterator_new(list);
-    fail_unless(strcmp(s3list_iterator_next(i), "hello") == 0);
+    fail_unless(strcmp(s3string_cstring(s3list_iterator_next(i)), "hello") == 0);
 
     s3_release(i);
-    s3_release(list);
-}
-END_TEST
-
-
-/* Append an element */
-START_TEST (test_append_safestr) {
-    S3List *list;
-    S3ListIterator *i;
-    safestr_t string;
-
-    list = s3list_new();
-
-    string = s3_safestr_create("hello", SAFESTR_IMMUTABLE);
-    fail_unless(s3list_append_safestr(list, string));
-    safestr_release(string);
-
-
-    i = s3list_iterator_new(list);
-    fail_unless(strcmp(s3list_iterator_next(i), "hello") == 0);
-
+    s3_release(string);
     s3_release(list);
 }
 END_TEST
@@ -88,21 +69,25 @@ START_TEST (test_copy) {
     S3List *orig;
     S3List *copy;
     S3ListIterator *i;
+    S3String *hello = s3string_new("hello");
+    S3String *world = s3string_new("world");
 
     orig = s3list_new();
-    s3list_append(orig, "hello");
-    s3list_append(orig, "world");
+    s3list_append(orig, hello);
+    s3list_append(orig, world);
 
     copy = s3list_copy(orig);    
     i = s3list_iterator_new(copy);
 
     /* Check the first node */
-    fail_unless(strcmp(s3list_iterator_next(i), "hello") == 0);
+    fail_unless(strcmp(s3string_cstring(s3list_iterator_next(i)), "hello") == 0);
 
     /* Check the second */
-    fail_unless(strcmp(s3list_iterator_next(i), "world") == 0);
+    fail_unless(strcmp(s3string_cstring(s3list_iterator_next(i)), "world") == 0);
 
     s3_release(i);
+    s3_release(hello);
+    s3_release(world);
     s3_release(orig);
     s3_release(copy);
 }
@@ -112,15 +97,17 @@ END_TEST
 START_TEST (test_next) {
     S3List *list = s3list_new();
     S3ListIterator *i;
+    S3String *hello = s3string_new("hello");
+    S3String *world = s3string_new("world");
 
     /* Append two elements */
-    fail_unless(s3list_append(list, "hello"));
-    fail_unless(s3list_append(list, "world"));
+    fail_unless(s3list_append(list, hello));
+    fail_unless(s3list_append(list, world));
 
     /* Fetch the two elements */
     i = s3list_iterator_new(list);
-    fail_unless(strcmp(s3list_iterator_next(i), "hello") == 0);
-    fail_unless(strcmp(s3list_iterator_next(i), "world") == 0);
+    fail_unless(strcmp(s3string_cstring(s3list_iterator_next(i)), "hello") == 0);
+    fail_unless(strcmp(s3string_cstring(s3list_iterator_next(i)), "world") == 0);
 
     /* Should hit the end of the list, and keep returning NULL */
     fail_unless(s3list_iterator_next(i) == NULL);
@@ -137,7 +124,6 @@ Suite *S3List_suite(void) {
     suite_add_tcase(s, tc_general);
     tcase_add_test(tc_general, test_new);
     tcase_add_test(tc_general, test_append);
-    tcase_add_test(tc_general, test_append_safestr);
     tcase_add_test(tc_general, test_copy);
     tcase_add_test(tc_general, test_next);
 
