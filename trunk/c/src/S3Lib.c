@@ -48,6 +48,7 @@
  * @author Landon Fuller <landonf@threerings.net>
  */
 
+
 /*!
  * @ingroup S3Library
  * @{
@@ -109,6 +110,7 @@ S3_PRIVATE S3TypeRef s3_object_alloc (S3RuntimeClass *class, size_t objectSize) 
     if (object == NULL)
         return NULL;
 
+    /* Initialize the object */
     objdata = (S3RuntimeBase *) object;
     objdata->refCount = 1;
     objdata->class = class;
@@ -155,11 +157,78 @@ S3_DECLARE void s3_release (S3TypeRef object) {
     objdata = (S3RuntimeBase *) object;
     objdata->refCount--;
 
-    if (objdata->refCount == 0)
+    if (objdata->refCount == 0) {
         objdata->class->dealloc(object);
+        free(object);
+    }
 }
 
 
 /*!
  * @} S3LibraryMemory
  */
+
+
+/*!
+ * @defgroup S3LibraryCompare Identifying and Comparing Instances
+ * @ingroup S3Library
+ * @{
+ */
+
+/**
+ * @internal
+ * Default hash implementation -- returns the address of the object.
+ */
+static long s3_default_hash (S3TypeRef object) {
+    return (long) object;
+}
+
+/**
+ * @internal
+ * Default equals implementation -- compares the addresses of the objects.
+ */
+static bool s3_default_equals (S3TypeRef self, S3TypeRef other) {
+    return (self == other);
+}
+
+/**
+ * Returns an integer that may be used as a table address in a hash
+ * table structure.
+ */
+S3_DECLARE long s3_hash (S3TypeRef object) {
+    S3RuntimeBase *objdata;
+    objdata = (S3RuntimeBase *) object;
+
+    if (objdata->class->hash != NULL)
+        return objdata->class->hash(object);
+    else
+        return s3_default_hash(object);
+}
+
+/**
+ * Compare two objects, returning true if they are equal in value.
+ *
+ * @note The default comparison function uses the memory address
+ * to determine equality. Subclasses will override this to implement 
+ * value equality comparison.
+ *
+ * @param self Object instance that will perform the comparison
+ * against @a other. For example, if a S3String is provided,
+ * S3String's comparison function will be used.
+ * @param other The object instance that the @a self parameter will be
+ * compared against.
+ */
+S3_DECLARE bool s3_equals (S3TypeRef self, S3TypeRef other) {
+    S3RuntimeBase *objdata = (S3RuntimeBase *) self;
+
+    if (objdata->class->equals != NULL)
+        return objdata->class->equals(self, other);
+    else
+        return s3_default_equals(self, other);
+}
+
+/*!
+ * @} S3LibraryCompare
+ */
+
+

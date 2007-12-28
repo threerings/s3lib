@@ -57,7 +57,28 @@
  * @internal
  * Object instance deallocator.
  */
-typedef void (*s3_dealloc_function) (S3TypeRef);
+typedef void (*s3_dealloc_function) (S3TypeRef object);
+
+/**
+ * @internal
+ * Returns an unsigned integer that may be used as a table address
+ * in a hash table structure.
+ *
+ * The value returned by this method must not change while the object is part
+ * of a collection that uses hash values to determine collection position.
+ *
+ * Two equal objects must hae the same hash.
+ */
+typedef long (*s3_hash_function) (S3TypeRef object);
+
+/**
+ * @internal
+ * Object equality.
+ *
+ * @param self The object responsible for the comparison
+ * @param other The object instance to be compared against.
+ */
+typedef bool (*s3_equals_function) (S3TypeRef self, S3TypeRef other);
 
 /**
  * @internal
@@ -65,8 +86,14 @@ typedef void (*s3_dealloc_function) (S3TypeRef);
  * operations on S3 objects.
  */
 typedef struct S3RuntimeClass {
-    /** Deallocation function */
+    /** Deallocation function. */
     s3_dealloc_function dealloc;
+
+    /** Hash function. */
+    s3_hash_function hash;
+
+    /** Equals function. */
+    s3_equals_function equals;
 } S3RuntimeClass;
 
 

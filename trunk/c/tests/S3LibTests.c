@@ -52,8 +52,8 @@ static S3RuntimeClass S3TestClass = {
     .dealloc = &s3test_class_dealloc
 };
 
-static void s3test_class_dealloc (S3TypeRef obj) {
-    free((S3Test *) obj);
+static void s3test_class_dealloc (S3_UNUSED S3TypeRef obj) {
+    /* Nothing to deallocate */
 }
 
 START_TEST (test_reference_counting) {
@@ -73,12 +73,41 @@ START_TEST (test_reference_counting) {
 }
 END_TEST
 
+START_TEST (test_hash) {
+    S3Test *obj;
+
+    obj = s3_object_alloc(&S3TestClass, sizeof(S3Test));
+    fail_unless(s3_hash(obj) == (long) obj);
+
+    s3_release(obj);
+}
+END_TEST
+
+START_TEST (test_equals) {
+    S3Test *a;
+    S3Test *b;
+
+    a = s3_object_alloc(&S3TestClass, sizeof(S3Test));
+    b = s3_object_alloc(&S3TestClass, sizeof(S3Test));
+    fail_unless(s3_equals(a, a));
+    fail_if(s3_equals(a, b));
+
+    s3_release(a);
+    s3_release(b);
+}
+END_TEST
+
 Suite *S3Lib_suite(void) {
     Suite *s = suite_create("S3Lib");
 
-    TCase *tc_general = tcase_create("Memory Management");
-    suite_add_tcase(s, tc_general);
-    tcase_add_test(tc_general, test_reference_counting);
+    TCase *tc_memory = tcase_create("Memory Management");
+    suite_add_tcase(s, tc_memory);
+    tcase_add_test(tc_memory, test_reference_counting);
+
+    TCase *tc_compare = tcase_create("Object Comparison");
+    suite_add_tcase(s, tc_compare);
+    tcase_add_test(tc_compare, test_hash);
+    tcase_add_test(tc_compare, test_equals);
 
     return s;
 }

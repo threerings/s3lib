@@ -150,7 +150,6 @@ static void s3list_dealloc (S3TypeRef obj) {
         node = next;
     }
     assert(list_isempty(&list->ctx));
-    free(list);
 }
 
 /**
@@ -259,8 +258,6 @@ static void s3list_iterator_dealloc (S3TypeRef obj) {
 
     if (iterator->list != NULL)
         s3_release(iterator->list);
-
-    free(iterator);
 }
 
 
