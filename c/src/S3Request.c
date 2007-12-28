@@ -138,8 +138,6 @@ static void s3request_dealloc (S3TypeRef object) {
 
     if (req->resource != NULL)
         safestr_release(req->resource);
-
-    free(req);
 }
 
 /*!

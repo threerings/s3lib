@@ -210,8 +210,6 @@ static void s3connection_dealloc (S3TypeRef obj) {
 
     if (conn->handle != NULL) 
         curl_easy_cleanup(conn->handle);
-
-    free(conn);
 }
 
 /**

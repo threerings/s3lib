@@ -113,6 +113,9 @@ S3_EXTERN S3TypeRef s3_retain (S3TypeRef object);
 S3_EXTERN uint32_t s3_reference_count (S3TypeRef object);
 S3_EXTERN void s3_release (S3TypeRef);
 
+S3_EXTERN long s3_hash (S3TypeRef);
+S3_EXTERN bool s3_equals (S3TypeRef, S3TypeRef);
+
 #ifdef S3LIB_PRIVATE_API
 S3_PRIVATE S3TypeRef s3_object_alloc (S3RuntimeClass *class, size_t objectSize);
 #endif

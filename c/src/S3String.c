@@ -120,8 +120,6 @@ static void s3string_dealloc (S3TypeRef obj) {
     
     /* Free any data */
     safestr_release(string->data);
-
-    free(string);
 }
 
 /**

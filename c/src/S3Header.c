@@ -169,8 +169,6 @@ static void s3header_dealloc (S3TypeRef object) {
 
     if (header->values != NULL)
         s3_release(header->values);
-
-    free(header);
 }
 
 
@@ -259,8 +257,6 @@ static void s3header_dict_dealloc(S3TypeRef object) {
         /* Free the hash table. */
         hash_destroy(headers->hash);
     }
-
-    free(headers);
 }
 
 /**
@@ -367,8 +363,6 @@ static void s3header_dict_iterator_dealloc (S3TypeRef object) {
 
     if (iterator->dict != NULL)
         s3_release(iterator->dict);
-
-    free(iterator);
 }
 
 

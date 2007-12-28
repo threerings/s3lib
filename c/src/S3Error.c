@@ -206,8 +206,6 @@ static void s3server_error_dealloc (S3TypeRef obj) {
     
     if (error->requestid != NULL)
         safestr_release(error->requestid);
-
-    free(error);
 }
 
 /*!
