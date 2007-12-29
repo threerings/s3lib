@@ -97,6 +97,18 @@ START_TEST (test_equals) {
 }
 END_TEST
 
+START_TEST (test_instanceof) {
+    S3Test *test = s3_object_alloc(&S3TestClass, sizeof(S3Test));
+    S3String *string = s3string_new("test string");
+
+    fail_unless(s3_instanceof(test, &S3TestClass));
+    fail_if(s3_instanceof(string, &S3TestClass));
+
+    s3_release(test);
+    s3_release(string);
+}
+END_TEST
+
 Suite *S3Lib_suite(void) {
     Suite *s = suite_create("S3Lib");
 
@@ -108,6 +120,7 @@ Suite *S3Lib_suite(void) {
     suite_add_tcase(s, tc_compare);
     tcase_add_test(tc_compare, test_hash);
     tcase_add_test(tc_compare, test_equals);
+    tcase_add_test(tc_compare, test_instanceof);
 
     return s;
 }

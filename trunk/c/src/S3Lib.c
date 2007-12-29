@@ -227,6 +227,20 @@ S3_DECLARE bool s3_equals (S3TypeRef self, S3TypeRef other) {
         return s3_default_equals(self, other);
 }
 
+/**
+ * @internal
+ *
+ * Return true if the object is an instance of the given class.
+ * Currently uses simple pointer comparison.
+ */
+S3_PRIVATE bool s3_instanceof (S3TypeRef object, S3RuntimeClass *class) {
+    S3RuntimeBase *objdata = (S3RuntimeBase *) object;
+
+    /* Simple pointer comparison */
+    return (objdata->class == class);
+}
+
+
 /*!
  * @} S3LibraryCompare
  */
