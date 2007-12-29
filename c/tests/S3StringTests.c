@@ -67,6 +67,40 @@ START_TEST (test_cstring) {
 }
 END_TEST
 
+START_TEST (test_hash) {
+    S3String *hello = s3string_new("hello");
+    S3String *helloagain = s3string_new("hello");
+    S3String *bye = s3string_new("bye");
+
+    /* Two different strings should have different hash values */
+    fail_if(s3_hash(hello) == s3_hash(bye));
+
+    /* The hash value for the same string value should always be the same */
+    fail_unless(s3_hash(hello) == s3_hash(helloagain));
+
+    s3_release(hello);
+    s3_release(helloagain);
+    s3_release(bye);
+}
+END_TEST
+
+START_TEST (test_equals) {
+    S3String *hello = s3string_new("hello");
+    S3String *helloagain = s3string_new("hello");
+    S3String *bye = s3string_new("bye");
+
+    /* Two different strings should not be equal */
+    fail_if(s3_equals(hello, bye));
+
+    /* The same string value should always be equal */
+    fail_unless(s3_equals(hello, helloagain));
+
+    s3_release(hello);
+    s3_release(helloagain);
+    s3_release(bye);
+}
+END_TEST
+
 Suite *S3String_suite(void) {
     Suite *s = suite_create("S3String");
 
@@ -75,6 +109,8 @@ Suite *S3String_suite(void) {
     tcase_add_test(tc_general, test_new);
     tcase_add_test(tc_general, test_copy);
     tcase_add_test(tc_general, test_cstring);
+    tcase_add_test(tc_general, test_hash);
+    tcase_add_test(tc_general, test_equals);
 
     return s;
 }

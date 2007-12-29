@@ -38,6 +38,7 @@
 #endif
 
 #include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 
 #include "S3Lib.h"
@@ -55,6 +56,8 @@
  */
 
 static void s3string_dealloc (S3TypeRef obj);
+static long s3string_hash (S3TypeRef obj);
+static bool s3string_equals (S3TypeRef self, S3TypeRef other);
 
 /**
  * An S3String wraps a simple immutable string buffer.
@@ -72,6 +75,8 @@ struct S3String {
 
 /** @internal S3String Class Definition */
 static S3RuntimeClass S3StringClass = {
+    .hash = s3string_hash,
+    .equals = s3string_equals,
     .dealloc = s3string_dealloc
 };
 
@@ -120,6 +125,68 @@ static void s3string_dealloc (S3TypeRef obj) {
     
     /* Free any data */
     safestr_release(string->data);
+}
+
+
+/**
+ * @internal
+ *
+ * S3String hash callback.
+ *
+ * Hash algorithm borrowed from kazlib.
+ * @warning Do not call directly, use #s3_hash
+ *
+ * @param obj A S3String instance.
+ */
+static long s3string_hash (S3TypeRef obj) {
+    S3String *string = (S3String *) obj;
+
+    static unsigned long randbox[] = {
+        0x49848f1bU, 0xe6255dbaU, 0x36da5bdcU, 0x47bf94e9U,
+        0x8cbcce22U, 0x559fc06aU, 0xd268f536U, 0xe10af79aU,
+        0xc1af4d69U, 0x1d2917b5U, 0xec4c304dU, 0x9ee5016cU,
+        0x69232f74U, 0xfead7bb3U, 0xe9089ab6U, 0xf012f6aeU,
+    };
+
+    const unsigned char *str = (const unsigned char *) s3string_cstring(string);
+    long acc = 0;
+
+    while (*str) {
+        acc ^= randbox[(*str + acc) & 0xf];
+        acc = (acc << 1) | (acc >> 31);
+        acc &= 0xffffffffU;
+        acc ^= randbox[((*str++ >> 4) + acc) & 0xf];
+        acc = (acc << 2) | (acc >> 30);
+        acc &= 0xffffffffU;
+    }
+
+    return acc;
+}
+
+/**
+ * @internal
+ *
+ * S3String equality callback.
+ * @warning Do not call directly, use #s3_hash
+ *
+ * @param self A S3String instance.
+ * @param other Object to compare against
+ */
+
+static bool s3string_equals (S3TypeRef self, S3TypeRef other) {
+    /* If it's not a string, it can't be equal */
+    if (!s3_instanceof(other, &S3StringClass))
+        return false;
+
+    /* Cast to strings. */
+    S3String *str1 = (S3String *) self;
+    S3String *str2 = (S3String *) other;
+
+    /* Do the comparison */
+    if (strcmp(s3string_cstring(str1), s3string_cstring(str2)) != 0)
+        return false;
+    else
+        return true;
 }
 
 /**

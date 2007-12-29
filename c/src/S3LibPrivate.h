@@ -130,9 +130,9 @@ static inline const char *s3_safestr_char (safestr_t string) {
     return (const char *)string;
 }
 
-
+/* Library-private functions */
 S3_PRIVATE bool s3lib_debugging ();
-
+S3_PRIVATE bool s3_instanceof (S3TypeRef object, S3RuntimeClass *class);
 
 #define DEBUG(msg, args...) \
     if (s3lib_debugging()) \
