@@ -9,6 +9,7 @@ include ${top_builddir}/Mk/subdir.mk
 
 LIBRARY_NAME=	libs3
 LIBRARY_OBJS=	S3Connection.o \
+		S3Dict.o \
 		S3Error.o \
 		S3Header.o \
 		S3Lib.o \
