@@ -120,6 +120,12 @@ START_TEST (test_dict_iterate) {
     fail_unless(s3dict_iterator_next(iterator) == NULL);
 
     /* Clean up */
+    s3_release(key1);
+    s3_release(value1);
+
+    s3_release(key2);
+    s3_release(value2);
+
     s3_release(iterator);
     s3_release(dict);
 }
