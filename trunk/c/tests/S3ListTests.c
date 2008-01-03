@@ -113,7 +113,10 @@ START_TEST (test_next) {
     fail_unless(s3list_iterator_next(i) == NULL);
     fail_unless(s3list_iterator_next(i) == NULL);
 
+    s3_release(i);
     s3_release(list);
+    s3_release(hello);
+    s3_release(world);
 }
 END_TEST
 
