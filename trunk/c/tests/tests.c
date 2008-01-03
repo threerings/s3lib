@@ -64,6 +64,7 @@ int main(int argc, char *argv[]) {
     /* Load all test suites */
     s = S3Connection_suite();
     sr = srunner_create(s);
+    srunner_add_suite(sr, S3Dict_suite());
     srunner_add_suite(sr, S3Error_suite());
     srunner_add_suite(sr, S3Header_suite());
     srunner_add_suite(sr, S3Lib_suite());

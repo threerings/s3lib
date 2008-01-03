@@ -9,6 +9,7 @@ include ${top_builddir}/Mk/compile.mk
 
 TEST_OBJS=	tests.o \
 		S3ConnectionTests.o \
+		S3DictTests.o \
 		S3ErrorTests.o \
 		S3HeaderTests.o \
 		S3LibTests.o \

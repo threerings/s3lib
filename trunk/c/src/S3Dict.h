@@ -1,11 +1,11 @@
 /*
- * tests.h vi:ts=4:sw=4:expandtab:
- * Amazon S3 Library Unit Tests
+ * S3Dict.h vi:ts=4:sw=4:expandtab:
+ * Amazon S3 Library
  *
- * Author: Landon Fuller <landonf@threerings.net>
+ * Author: Landon Fuller <landonf@bikemonkey.org>
  *
- * Copyright (c) 2006 - 2007 Landon Fuller <landonf@bikemonkey.org>
- * Copyright (c) 2006 - 2007 Three Rings Design, Inc.
+ * Copyright (c) 2007 Landon Fuller <landonf@bikemonkey.org>
+ * Copyright (c) 2007 Three Rings Design, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,20 +33,36 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TESTS_H
-#define TESTS_H
+#ifndef S3DICT_H
+#define S3DICT_H
 
-#include <config.h>
-#include <check.h>
-#include <src/S3Lib.h>
+/**
+ * @file
+ * @brief S3Lib Dictionary implementation.
+ * @author Landon Fuller <landonf@bikemonkey.org>
+ */
 
-Suite *S3Connection_suite(void);
-Suite *S3Dict_suite(void);
-Suite *S3Error_suite(void);
-Suite *S3Header_suite(void);
-Suite *S3Lib_suite(void);
-Suite *S3List_suite(void);
-Suite *S3Request_suite(void);
-Suite *S3String_suite(void);
+/*!
+ * @addtogroup S3Dict
+ * @{
+ */
 
-#endif /* TESTS_H */
+/* Dictionary */
+typedef struct S3Dict S3Dict;
+
+/* Dictionary Iterator */
+typedef struct S3DictIterator S3DictIterator;
+
+S3_EXTERN S3Dict *s3dict_new ();
+
+S3_EXTERN bool s3dict_put (S3Dict *dict, S3TypeRef key, S3TypeRef value);
+S3_EXTERN S3TypeRef s3dict_get (S3Dict *dict, S3TypeRef key);
+
+S3_EXTERN S3DictIterator *s3dict_iterator_new (S3Dict *dictionary);
+S3_EXTERN S3TypeRef s3dict_iterator_next (S3DictIterator *iterator);
+
+/*!
+ * @} S3Dict
+ */
+
+#endif /* S3DICT_H */

@@ -101,6 +101,7 @@ typedef void *S3TypeRef;
 #include "S3Connection.h"
 #include "S3Header.h"
 #include "S3Request.h"
+#include "S3Dict.h"
 
 
 /*
