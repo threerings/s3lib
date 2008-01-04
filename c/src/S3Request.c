@@ -81,7 +81,7 @@ struct S3Request {
 
     /** @internal
      * Request headers */
-    S3HeaderDict *headers;
+    S3Dict *headers;
 };
 
 /**
