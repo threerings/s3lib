@@ -24,7 +24,7 @@ HEADERS=	$(srcdir)/S3AutoreleasePool.h \
 		$(srcdir)/S3Connection.h \
 		$(srcdir)/S3Dict.h \
 		$(srcdir)/S3Error.h \
-		$(srcidr)/S3Header.h \
+		$(srcdir)/S3Header.h \
 		$(srcdir)/S3Lib.h \
 		$(srcdir)/S3List.h \
 		$(srcdir)/S3Request.h \
