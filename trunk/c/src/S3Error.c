@@ -74,19 +74,19 @@ struct S3ServerError {
 
     /** @internal
      * S3 error code. */
-    safestr_t code;
+    S3String *code;
 
     /** @internal
      * S3-generated error message. */
-    safestr_t message;
+    S3String *message;
 
     /** @internal
      * Resource requested. */
-    safestr_t resource;
+    S3String *resource;
 
     /** @internal
      * Associated request id. */
-    safestr_t requestid;
+    S3String *requestid;
 };
 
 /**
@@ -101,10 +101,9 @@ static S3RuntimeClass S3ServerErrorClass = {
  * Instantiate a new S3Error instance.
  *
  * @param xmlBuffer S3 XML error document.
- * @param length buffer length.
  * @return A new #S3ServerError instance.
  */
-S3_DECLARE S3ServerError *s3server_error_new (const char *xmlBuffer, int length) {
+S3_DECLARE S3ServerError *s3server_error_new (S3String *xmlBuffer) {
     S3ServerError *error = NULL;
     xmlDoc *doc = NULL;
     xmlNode *root;
@@ -116,7 +115,7 @@ S3_DECLARE S3ServerError *s3server_error_new (const char *xmlBuffer, int length)
         return NULL;
 
     /* Parse the error document. */
-    doc = xmlReadMemory(xmlBuffer, length, "noname.xml", NULL, XML_PARSE_NONET | XML_PARSE_NOERROR);
+    doc = xmlReadMemory(s3string_cstring(xmlBuffer), s3string_length(xmlBuffer), "noname.xml", NULL, XML_PARSE_NONET | XML_PARSE_NOERROR);
     if (doc == NULL)
         goto error;
 
@@ -142,22 +141,22 @@ S3_DECLARE S3ServerError *s3server_error_new (const char *xmlBuffer, int length)
 
         /* Code */
         if (xmlStrEqual(node->name, (xmlChar *) "Code")) {
-            error->code = s3_safestr_create((const char *) node->children->content, SAFESTR_IMMUTABLE);
+            error->code = s3string_new((const char *) node->children->content);
         }
 
         /* Message */
         else if (xmlStrEqual(node->name, (xmlChar *) "Message")) {
-            error->message = s3_safestr_create((const char *) node->children->content, SAFESTR_IMMUTABLE);
+            error->message = s3string_new((const char *) node->children->content);
         }
 
         /* Resource */
         else if (xmlStrEqual(node->name, (xmlChar *) "Resource")) {
-            error->resource = s3_safestr_create((const char *) node->children->content, SAFESTR_IMMUTABLE);
+            error->resource = s3string_new((const char *) node->children->content);
         }
         
         /* RequestId */
         else if (xmlStrEqual(node->name, (xmlChar *) "RequestId")) {
-            error->requestid = s3_safestr_create((const char *) node->children->content, SAFESTR_IMMUTABLE);
+            error->requestid = s3string_new((const char *) node->children->content);
         }
     }
 
@@ -180,8 +179,8 @@ error:
  * @param error A #S3ServerError instance
  * @return The request ID, or NULL if the server did not provide one.
  */
-S3_DECLARE const char *s3server_error_requestid (S3ServerError *error) {
-    return s3_safestr_char(error->requestid);
+S3_DECLARE S3String *s3server_error_requestid (S3ServerError *error) {
+    return error->requestid;
 }
 
 
@@ -196,16 +195,16 @@ static void s3server_error_dealloc (S3TypeRef obj) {
     S3ServerError *error = (S3ServerError *) obj;
 
     if (error->code != NULL)
-        safestr_release(error->code);
+        s3_release(error->code);
     
     if (error->message != NULL)
-        safestr_release(error->message);
+        s3_release(error->message);
 
     if (error->resource != NULL)
-        safestr_release(error->resource);
+        s3_release(error->resource);
     
     if (error->requestid != NULL)
-        safestr_release(error->requestid);
+        s3_release(error->requestid);
 }
 
 /*!

@@ -66,7 +66,7 @@ struct S3Header {
     S3RuntimeBase base;
 
     /** @internal The header name */
-    safestr_t name;
+    S3String *name;
 
     /** @internal The header value(s) */
     S3List *values;
@@ -84,9 +84,8 @@ static S3RuntimeClass S3HeaderClass = {
  * @return S3 header, or NULL on failure.
  * @sa s3header_append_value
  */
-S3_DECLARE S3Header *s3header_new (const char *name, const char *value) {
+S3_DECLARE S3Header *s3header_new (S3String *name, S3String *value) {
     S3Header *header;
-    S3String *string = s3string_new(value);
 
     /* Allocate our empty header */
     header = s3_object_alloc(&S3HeaderClass, sizeof(S3Header));
@@ -94,23 +93,21 @@ S3_DECLARE S3Header *s3header_new (const char *name, const char *value) {
         return NULL;
 
     /* The header name */
-    header->name = s3_safestr_create(name, SAFESTR_IMMUTABLE);
+    header->name = s3_retain(name);
 
     /* An new list for header value(s) */
     header->values = s3list_new();
     if (header->values == NULL)
         goto error;
 
-    /* The first header value. TODO: Accept S3String values instead */
-    if (!s3list_append(header->values, string))
+    /* The first header value. */
+    if (!s3list_append(header->values, value))
         goto error;
-    s3_release(string);
 
     /* All done */
     return header;
 
 error:
-    s3_release(string);
     s3_release(header);
     return NULL;
 }
@@ -125,7 +122,7 @@ static void s3header_dealloc (S3TypeRef object) {
     S3Header *header = (S3Header *) object;
 
     if (header->name != NULL)
-        safestr_release(header->name);
+        s3_release(header->name);
 
     if (header->values != NULL)
         s3_release(header->values);

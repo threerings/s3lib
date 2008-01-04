@@ -67,6 +67,13 @@ START_TEST (test_cstring) {
 }
 END_TEST
 
+START_TEST (test_length) {
+    S3String *string = s3string_new("hello");
+    fail_unless(s3string_length(string) == strlen(s3string_cstring(string)));
+    s3_release(string);
+}
+END_TEST
+
 START_TEST (test_hash) {
     S3String *hello = s3string_new("hello");
     S3String *helloagain = s3string_new("hello");
@@ -109,6 +116,7 @@ Suite *S3String_suite(void) {
     tcase_add_test(tc_general, test_new);
     tcase_add_test(tc_general, test_copy);
     tcase_add_test(tc_general, test_cstring);
+    tcase_add_test(tc_general, test_length);
     tcase_add_test(tc_general, test_hash);
     tcase_add_test(tc_general, test_equals);
 

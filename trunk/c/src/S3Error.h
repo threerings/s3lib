@@ -39,7 +39,7 @@
 /** S3 error result. */
 typedef struct S3ServerError S3ServerError;
 
-S3_EXTERN S3ServerError *s3server_error_new (const char *xmlData, int length);
-S3_EXTERN const char *s3server_error_requestid (S3ServerError *error);
+S3_EXTERN S3ServerError *s3server_error_new (S3String *xmlData);
+S3_EXTERN S3String *s3server_error_requestid (S3ServerError *error);
 
 #endif /* S3ERROR_H */

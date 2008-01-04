@@ -111,6 +111,18 @@ S3_DECLARE const char *s3string_cstring (S3String *string) {
 }
 
 /**
+ * Return the string's length in bytes.
+ *
+ * @param string The string instance.
+ */
+S3_DECLARE size_t s3string_length (S3String *string) {
+    /* safestr returns a uint32_t, but we don't want to limit our public API to less than the platform's size_t. */
+    assert(sizeof(uint32_t) >= sizeof(size_t));
+
+    return safestr_length(s3string_safestr(string));
+}
+
+/**
  * @internal
  *
  * S3String deallocation callback.
