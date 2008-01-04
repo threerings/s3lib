@@ -73,6 +73,24 @@ START_TEST (test_reference_counting) {
 }
 END_TEST
 
+START_TEST (test_autorelease) {
+    S3AutoreleasePool *pool = s3autorelease_pool_new();
+    S3Test *obj;
+
+    /* Create and auto release an object */
+    obj = s3_object_alloc(&S3TestClass, sizeof(S3Test));
+    s3_retain(obj);
+    s3_autorelease(obj);
+
+    /* Drop the pool and ensure that it released our object */
+    s3_release(pool);
+    fail_unless(s3_reference_count(obj) == 1);
+
+    /* Clean up */
+    s3_release(obj);
+}
+END_TEST
+
 START_TEST (test_hash) {
     S3Test *obj;
 
@@ -115,6 +133,7 @@ Suite *S3Lib_suite(void) {
     TCase *tc_memory = tcase_create("Memory Management");
     suite_add_tcase(s, tc_memory);
     tcase_add_test(tc_memory, test_reference_counting);
+    tcase_add_test(tc_memory, test_autorelease);
 
     TCase *tc_compare = tcase_create("Object Comparison");
     suite_add_tcase(s, tc_compare);

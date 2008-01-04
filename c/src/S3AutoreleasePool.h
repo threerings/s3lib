@@ -43,8 +43,12 @@ S3_EXTERN S3AutoreleasePool *s3autorelease_pool_new ();
 S3_EXTERN void s3autorelease_pool_add (S3AutoreleasePool *pool, S3TypeRef object);
 
 #ifdef S3LIB_PRIVATE_API
+// init & cleanup
 S3_PRIVATE void s3autorelease_pool_global_init ();
 S3_PRIVATE void s3autorelease_pool_global_cleanup ();
+
+// s3_autorelease support
+S3_PRIVATE void s3autorelease_pool_add_current ();
 #endif /* S3LIB_PRIVATE_API */
 
 #endif /* S3AUTORELEASEPOOL_H */

@@ -209,6 +209,20 @@ S3_DECLARE void s3_release (S3TypeRef object) {
     }
 }
 
+/**
+ * Add the object to the current #S3AutoreleasePool.
+ *
+ * You must own a reference to @a object. Once the object has been added
+ * to the pool, it will be released when the pool is deallocated.
+ *
+ * @param object Object instance to add to current #S3AutoreleasePool.
+ * @return Returns a reference to @a object.
+ */
+S3_DECLARE S3TypeRef *s3_autorelease (S3TypeRef object) {
+    s3autorelease_pool_add_current(object);
+    return object;
+}
+
 
 /*!
  * @} S3LibraryMemory
