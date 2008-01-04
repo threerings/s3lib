@@ -209,21 +209,17 @@ static void s3dict_dealloc(S3TypeRef object) {
  * @return True on success, or false on failure.
  */
 S3_DECLARE bool s3dict_put (S3Dict *dict, S3TypeRef key, S3TypeRef value) {
-    hnode_t *node = NULL;
     hnode_t *prev_node;
-
-    /* Node to hold the value. */
-    node = hnode_create(s3_retain(value));
-    if (node == NULL)
-        return false;
 
     /* Delete existing hash entry, if it exists */
     prev_node = hash_lookup(dict->hash, key);
     if (prev_node != NULL)
-        hash_delete(dict->hash, prev_node);
+        hash_delete_free(dict->hash, prev_node);
 
     /* Add the key-value to the hash. */
-    hash_insert(dict->hash, node, s3_retain(key));
+    if (!hash_alloc_insert(dict->hash, s3_retain(key), s3_retain(value)))
+        return false;
+
     return true;
 }
 
