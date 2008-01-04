@@ -218,7 +218,7 @@ S3_DECLARE void s3_release (S3TypeRef object) {
  * @param object Object instance to add to current #S3AutoreleasePool.
  * @return Returns a reference to @a object.
  */
-S3_DECLARE S3TypeRef *s3_autorelease (S3TypeRef object) {
+S3_DECLARE S3TypeRef s3_autorelease (S3TypeRef object) {
     s3autorelease_pool_add_current(object);
     return object;
 }

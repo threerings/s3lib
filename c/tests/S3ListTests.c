@@ -50,34 +50,35 @@ END_TEST
 
 /* Append an element */
 START_TEST (test_append) {
-    S3List *list = s3list_new();
-    S3ListIterator *i;
-    S3String *string = s3string_new("hello");
+    S3AutoreleasePool *pool = s3autorelease_pool_new();
+
+    S3List *list = s3_autorelease(s3list_new());
+    S3String *string = s3_autorelease(s3string_new("hello"));
 
     fail_unless(s3list_append(list, string));
-    i = s3list_iterator_new(list);
+    S3ListIterator *i = s3_autorelease(s3list_iterator_new(list));
     fail_unless(strcmp(s3string_cstring(s3list_iterator_next(i)), "hello") == 0);
 
-    s3_release(i);
-    s3_release(string);
-    s3_release(list);
+    s3_release(pool);
 }
 END_TEST
 
 /* Clone a list. */
 START_TEST (test_copy) {
-    S3List *orig;
-    S3List *copy;
-    S3ListIterator *i;
-    S3String *hello = s3string_new("hello");
-    S3String *world = s3string_new("world");
+    S3AutoreleasePool *pool = s3autorelease_pool_new();
 
-    orig = s3list_new();
+    /* Strings */
+    S3String *hello = s3_autorelease(s3string_new("hello"));
+    S3String *world = s3_autorelease(s3string_new("world"));
+
+    /* Original List */
+    S3List *orig = s3_autorelease(s3list_new());
     s3list_append(orig, hello);
     s3list_append(orig, world);
 
-    copy = s3list_copy(orig);    
-    i = s3list_iterator_new(copy);
+    /* Copy */
+    S3List *copy = s3_autorelease(s3list_copy(orig));
+    S3ListIterator *i = s3_autorelease(s3list_iterator_new(copy));
 
     /* Check the first node */
     fail_unless(strcmp(s3string_cstring(s3list_iterator_next(i)), "hello") == 0);
@@ -85,27 +86,24 @@ START_TEST (test_copy) {
     /* Check the second */
     fail_unless(strcmp(s3string_cstring(s3list_iterator_next(i)), "world") == 0);
 
-    s3_release(i);
-    s3_release(hello);
-    s3_release(world);
-    s3_release(orig);
-    s3_release(copy);
+    s3_release(pool);
 }
 END_TEST
 
 /* Test list iteration */
 START_TEST (test_next) {
-    S3List *list = s3list_new();
-    S3ListIterator *i;
-    S3String *hello = s3string_new("hello");
-    S3String *world = s3string_new("world");
+    S3AutoreleasePool *pool = s3autorelease_pool_new();
+
+    S3List *list = s3_autorelease(s3list_new());
+    S3String *hello = s3_autorelease(s3string_new("hello"));
+    S3String *world = s3_autorelease(s3string_new("world"));
 
     /* Append two elements */
     fail_unless(s3list_append(list, hello));
     fail_unless(s3list_append(list, world));
 
     /* Fetch the two elements */
-    i = s3list_iterator_new(list);
+    S3ListIterator *i = s3_autorelease(s3list_iterator_new(list));
     fail_unless(strcmp(s3string_cstring(s3list_iterator_next(i)), "hello") == 0);
     fail_unless(strcmp(s3string_cstring(s3list_iterator_next(i)), "world") == 0);
 
@@ -113,10 +111,7 @@ START_TEST (test_next) {
     fail_unless(s3list_iterator_next(i) == NULL);
     fail_unless(s3list_iterator_next(i) == NULL);
 
-    s3_release(i);
-    s3_release(list);
-    s3_release(hello);
-    s3_release(world);
+    s3_release(pool);
 }
 END_TEST
 
