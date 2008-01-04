@@ -54,13 +54,11 @@ START_TEST (test_new) {
     S3ServerError *error;
 
     /* Parse the error. */
-    error = s3server_error_new(S3STR(error_document));
+    error = s3_autorelease(s3server_error_new(S3STR(error_document)));
 
     /* Check the request id. */
     fail_if(s3server_error_requestid(error) == NULL);
-    fail_unless(strcmp(s3string_cstring(s3server_error_requestid(error)), "4442587FB7D0A2F9") == 0);
-
-    s3_release(error);
+    fail_unless(s3_equals(s3server_error_requestid(error), S3STR("4442587FB7D0A2F9")));
 }
 END_TEST
 

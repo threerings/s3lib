@@ -57,7 +57,7 @@ START_TEST (test_append) {
 
     fail_unless(s3list_append(list, string));
     S3ListIterator *i = s3_autorelease(s3list_iterator_new(list));
-    fail_unless(strcmp(s3string_cstring(s3list_iterator_next(i)), "hello") == 0);
+    fail_unless(s3_equals(s3list_iterator_next(i), S3STR("hello")));
 
     s3_release(pool);
 }
@@ -81,10 +81,14 @@ START_TEST (test_copy) {
     S3ListIterator *i = s3_autorelease(s3list_iterator_new(copy));
 
     /* Check the first node */
-    fail_unless(strcmp(s3string_cstring(s3list_iterator_next(i)), "hello") == 0);
+    fail_unless(
+        s3_equals(s3list_iterator_next(i), S3STR("hello"))
+    );
 
     /* Check the second */
-    fail_unless(strcmp(s3string_cstring(s3list_iterator_next(i)), "world") == 0);
+    fail_unless(
+        s3_equals(s3list_iterator_next(i), S3STR("world"))
+    );
 
     s3_release(pool);
 }
@@ -104,8 +108,12 @@ START_TEST (test_next) {
 
     /* Fetch the two elements */
     S3ListIterator *i = s3_autorelease(s3list_iterator_new(list));
-    fail_unless(strcmp(s3string_cstring(s3list_iterator_next(i)), "hello") == 0);
-    fail_unless(strcmp(s3string_cstring(s3list_iterator_next(i)), "world") == 0);
+    fail_unless(
+        s3_equals(s3list_iterator_next(i), S3STR("hello"))
+    );
+    fail_unless(
+        s3_equals(s3list_iterator_next(i), S3STR("world"))
+    );
 
     /* Should hit the end of the list, and keep returning NULL */
     fail_unless(s3list_iterator_next(i) == NULL);

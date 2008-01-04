@@ -48,86 +48,64 @@ START_TEST (test_dict_new) {
 END_TEST
 
 START_TEST (test_dict_put_get) {
-    S3Dict *dict = s3dict_new();
+    S3Dict *dict = s3_autorelease(s3dict_new());
     S3String *key;
     S3String *value;
 
     /* Put a value. */
-    key = s3string_new("key");
-    value = s3string_new("value");
+    key = S3STR("key");
+    value = S3STR("value");
 
     fail_unless(s3dict_put(dict, key, value));
 
-    s3_release(key);
-    s3_release(value);
-
-    /* Get it back out again */
-    key = s3string_new("key");
-
+    /* Get it back out again (use a different copy of the key, to ensure hashing works as expected) */
+    key = s3_autorelease(s3string_new("key"));
     fail_if(s3dict_get(dict, key) == NULL);
 
-    s3_release(key);
-
     /* And now overwrite it, for good measure. */
-    key = s3string_new("key");
-    value = s3string_new("value");
+    key = S3STR("key");
+    value = S3STR("value");
 
     fail_unless(s3dict_put(dict, key, value));
-
-    s3_release(key);
-    s3_release(value);
-
-    /* All done */
-    s3_release(dict);
 }
 END_TEST
 
 START_TEST (test_dict_iterate) {
-    S3Dict *dict = s3dict_new();
+    S3Dict *dict = s3_autorelease(s3dict_new());
     S3DictIterator *iterator;
     S3String *next;
 
     /* Example data */
-    S3String *key1 = s3string_new("key1");
-    S3String *value1 = s3string_new("value1");
+    S3String *key1 = S3STR("key1");
+    S3String *value1 = S3STR("value1");
 
-    S3String *key2 = s3string_new("key2");
-    S3String *value2 = s3string_new("value2");
+    S3String *key2 = S3STR("key2");
+    S3String *value2 = S3STR("value2");
 
     /* Put two values */
     fail_unless(s3dict_put(dict, key1, value1));
     fail_unless(s3dict_put(dict, key2, value2));
 
     /* Iterate */
-    iterator = s3dict_iterator_new(dict);
+    iterator = s3_autorelease(s3dict_iterator_new(dict));
     fail_if(iterator == NULL);
 
     /* Get the first value */
     next = s3dict_iterator_next(iterator);
     fail_unless(
-            strcmp(s3string_cstring(next), "key1") == 0 ||
-            strcmp(s3string_cstring(next), "key2") == 0
+            s3_equals(next, S3STR("key1")) ||
+            s3_equals(next, S3STR("key2"))
     );
     
     /* Get the next value */
     next = s3dict_iterator_next(iterator);
     fail_unless(
-            strcmp(s3string_cstring(next), "key1") == 0 ||
-            strcmp(s3string_cstring(next), "key2") == 0
+            s3_equals(next, S3STR("key1")) ||
+            s3_equals(next, S3STR("key2"))
     );
 
     /* No more values, should return NULL */
     fail_unless(s3dict_iterator_next(iterator) == NULL);
-
-    /* Clean up */
-    s3_release(key1);
-    s3_release(value1);
-
-    s3_release(key2);
-    s3_release(value2);
-
-    s3_release(iterator);
-    s3_release(dict);
 }
 END_TEST
 
