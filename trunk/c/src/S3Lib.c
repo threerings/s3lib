@@ -38,7 +38,9 @@
 #endif
 
 #include <libxml/parser.h>
+
 #include <assert.h>
+#include <pthread.h>
 
 #include "S3Lib.h"
 
@@ -54,16 +56,60 @@
  * @{
  */
 
-/** @internal Set to true if debugging is enabled */
+/** @internal Set to true if debugging is enabled. */
 static bool debug = false;
 
+/** @internal Set to true if the library has been initialized. Should be locked via init_lock */
+static bool initialized = false;
+
+/** @internal Initialization lock. Used to prevent race conditions in
+ * global library initialization (unlikely as they are). */
+static pthread_mutex_t init_lock = PTHREAD_MUTEX_INITIALIZER;
+
 /**
- * Perform global library initialization. This
- * does not initialize libcurl.
+ * Perform global library initialization.
+ * This should be coupled with a call to #s3lib_global_cleanup
+ *
+ * This does not initialize libcurl.
  */
 S3_DECLARE void s3lib_global_init (void) {
+    pthread_mutex_lock(&init_lock);
+
+    /* Are we already initialized? */
+    if (initialized)
+        goto done;
+
     /* Verify libxml version compatibility. */
     LIBXML_TEST_VERSION;
+
+    /* Perform global initialization of library modules (if any) */
+    s3autorelease_pool_global_init();
+
+    /* Mark library initialized */
+    initialized = true;
+
+done:
+    pthread_mutex_unlock(&init_lock);
+}
+
+/**
+ * Clean up any global library resources.
+ */
+S3_DECLARE void s3lib_global_cleanup (void) {
+    pthread_mutex_lock(&init_lock);
+
+    /* Are we already de-initialized? */
+    if (!initialized)
+        goto done;
+
+    /* Perform global cleanup of library modules (if any) */
+    s3autorelease_pool_global_cleanup();
+
+    /* Mark library de-initialized */
+    initialized = true;
+
+done:
+    pthread_mutex_unlock(&init_lock);
 }
 
 /**

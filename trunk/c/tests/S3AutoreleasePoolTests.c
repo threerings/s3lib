@@ -1,5 +1,5 @@
 /*
- * tests.c vi:ts=4:sw=4:expandtab:
+ * S3AutoreleasePoolTests.c vi:ts=4:sw=4:expandtab:
  * Amazon S3 Library Unit Tests
  *
  * Author: Landon Fuller <landonf@threerings.net>
@@ -35,64 +35,43 @@
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-#endif /* HAVE_CONFIG_H */
+#endif
 
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdio.h>
+#include "tests.h"
 
-#include <curl/curl.h>
-#include <check.h>
+/* Pool alloc/dealloc */
+START_TEST (test_add) {
+    S3AutoreleasePool *pool;
+    S3String *obj;
+    int i;
 
-#include <tests.h>
+    /* Allocate a pool */
+    pool = s3autorelease_pool_new();
+    fail_if(pool == NULL, "s3autorelease_pool_new() returned NULL.\n");
 
-void print_usage(const char *name) {
-    printf("Usage: %s [filename]\n", name);
-    printf(" [filename]\tWrite XML log to <filename>\n");
-}
+    /* Allocate an object to auto-release */
+    obj = s3string_new("Hello, World");
 
-int main(int argc, char *argv[]) {
-    Suite *s;
-    SRunner *sr;
-    int nf;
-
-    if (argc > 2) {
-        print_usage(argv[0]);
-        exit(1);
+    /* Exercise the pool */
+    for (i = 0; i < 4096; i++) {
+        s3_retain(obj);
+        s3autorelease_pool_add(pool, obj);
     }
 
-    /* Load all test suites */
-    s = S3AutoreleasePool_suite();
-    sr = srunner_create(s);
-    srunner_add_suite(sr, S3Connection_suite());
-    srunner_add_suite(sr, S3Dict_suite());
-    srunner_add_suite(sr, S3Error_suite());
-    srunner_add_suite(sr, S3Header_suite());
-    srunner_add_suite(sr, S3Lib_suite());
-    srunner_add_suite(sr, S3List_suite());
-    srunner_add_suite(sr, S3Request_suite());
-    srunner_add_suite(sr, S3String_suite());
+    /* Release it */
+    s3_release(pool);
 
-    /* Enable XML output */
-    if (argc == 2)
-        srunner_set_xml(sr, argv[1]);
+    fail_unless(s3_reference_count(obj) == 1, "S3AutoreleasePool failed to release %d objects.", s3_reference_count(obj) - 1);
+    s3_release(obj);
+}
+END_TEST
 
-    /* Library Initializers */
-    s3lib_global_init();
-    s3lib_enable_debugging(true); // XXX for now
-    curl_global_init(CURL_GLOBAL_ALL);
+Suite *S3AutoreleasePool_suite(void) {
+    Suite *s = suite_create("S3AutoreleasePool");
 
-    /* Run tests */
-    srunner_run_all(sr, CK_NORMAL);
+    TCase *tc_general = tcase_create("General");
+    suite_add_tcase(s, tc_general);
+    tcase_add_test(tc_general, test_add);
 
-    nf = srunner_ntests_failed(sr);
-    srunner_free(sr);
-
-    /* Library cleanup */
-    s3lib_global_cleanup();
-
-    if (nf == 0)
-        exit(EXIT_SUCCESS);
-    else
-        exit(EXIT_FAILURE);
+    return s;
 }

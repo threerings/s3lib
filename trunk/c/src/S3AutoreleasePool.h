@@ -1,11 +1,11 @@
 /*
- * tests.h vi:ts=4:sw=4:expandtab:
- * Amazon S3 Library Unit Tests
+ * S3AutoreleasePool.h vi:ts=4:sw=4:expandtab:
+ * Amazon S3 Library
  *
- * Author: Landon Fuller <landonf@threerings.net>
+ * Author: Landon Fuller <landonf@bikemonkey.org>
  *
- * Copyright (c) 2006 - 2007 Landon Fuller <landonf@bikemonkey.org>
- * Copyright (c) 2006 - 2007 Three Rings Design, Inc.
+ * Copyright (c) 2007 Landon Fuller <landonf@bikemonkey.org>
+ * Copyright (c) 2007 Three Rings Design, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,21 +33,18 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TESTS_H
-#define TESTS_H
+#ifndef S3AUTORELEASEPOOL_H
+#define S3AUTORELEASEPOOL_H
 
-#include <config.h>
-#include <check.h>
-#include <src/S3Lib.h>
+/* S3Lib Object Allocation Pool */
+typedef struct S3AutoreleasePool S3AutoreleasePool;
 
-Suite *S3AutoreleasePool_suite(void);
-Suite *S3Connection_suite(void);
-Suite *S3Dict_suite(void);
-Suite *S3Error_suite(void);
-Suite *S3Header_suite(void);
-Suite *S3Lib_suite(void);
-Suite *S3List_suite(void);
-Suite *S3Request_suite(void);
-Suite *S3String_suite(void);
+S3_EXTERN S3AutoreleasePool *s3autorelease_pool_new ();
+S3_EXTERN void s3autorelease_pool_add (S3AutoreleasePool *pool, S3TypeRef object);
 
-#endif /* TESTS_H */
+#ifdef S3LIB_PRIVATE_API
+S3_PRIVATE void s3autorelease_pool_global_init ();
+S3_PRIVATE void s3autorelease_pool_global_cleanup ();
+#endif /* S3LIB_PRIVATE_API */
+
+#endif /* S3AUTORELEASEPOOL_H */

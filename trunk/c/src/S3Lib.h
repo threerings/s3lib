@@ -80,7 +80,7 @@
  */
 
 /** 'Base type' for polymorphic operations. */
-typedef void *S3TypeRef;
+typedef void * S3TypeRef;
 
 
 /*
@@ -102,12 +102,13 @@ typedef void *S3TypeRef;
 #include "S3Header.h"
 #include "S3Request.h"
 #include "S3Dict.h"
-
+#include "S3AutoreleasePool.h"
 
 /*
  * S3lib functions
  */
 S3_EXTERN void s3lib_global_init (void);
+S3_EXTERN void s3lib_global_cleanup (void);
 S3_EXTERN void s3lib_enable_debugging (bool flag);
 
 S3_EXTERN S3TypeRef s3_retain (S3TypeRef object);
