@@ -52,6 +52,9 @@ S3_EXTERN S3String *s3string_new (const char *cstring);
 S3_EXTERN S3String *s3string_copy (S3String *string);
 S3_EXTERN const char *s3string_cstring (S3String *string);
 
+/** Create a new 'constant' S3 string. The returned string will be autoreleased, and you do not need to free it. */
+#define S3STR(s) ((S3String *) s3_autorelease(s3string_new(s)))
+
 #ifdef S3LIB_PRIVATE_API
 S3_PRIVATE safestr_t s3string_safestr (S3String *string);
 #endif
