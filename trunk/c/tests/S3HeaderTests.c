@@ -1,5 +1,5 @@
 /*
- * S3Request.c vi:ts=4:sw=4:expandtab:
+ * S3HeaderTests.c vi:ts=4:sw=4:expandtab:
  * Amazon S3 Library Unit Tests
  *
  * Author: Landon Fuller <landonf@threerings.net>
@@ -41,55 +41,6 @@
 
 #include "tests.h"
 
-START_TEST (test_header_dict_new) {
-    S3HeaderDict *headers = s3header_dict_new();
-    s3_release(headers);
-}
-END_TEST
-
-START_TEST (test_header_dict_put) {
-    S3HeaderDict *headers = s3header_dict_new();
-
-    /* Put a value. */
-    fail_unless(s3header_dict_put(headers, "Date", "value"));
-
-    /* And now overwrite it again, for good measure. */
-    fail_unless(s3header_dict_put(headers, "Date", "value"));
-
-    s3_release(headers);
-}
-END_TEST
-
-START_TEST (test_header_dict_iterate) {
-    S3HeaderDict *headers = s3header_dict_new();
-    S3HeaderDictIterator *iterator;
-    S3Header *next;
-
-    /* Put two values */
-    fail_unless(s3header_dict_put(headers, "key1", "value1"));
-    fail_unless(s3header_dict_put(headers, "key2", "value2"));
-
-    /* Iterate */
-    iterator = s3header_dict_iterator_new(headers);
-    fail_if(iterator == NULL);
-
-    /* Get the first value */
-    next = s3header_dict_next(iterator);
-    // fail_unless(strcmp())
-    
-    /* Get the next value */
-    next = s3header_dict_next(iterator);
-    // fail_unless(strcmp())
-
-    /* No more values, should return NULL */
-    fail_unless(s3header_dict_next(iterator) == NULL);
-
-    /* Clean up */
-    s3_release(iterator);
-    s3_release(headers);
-}
-END_TEST
-
 START_TEST (test_header_new) {
     S3Header *header = s3header_new("Date", "value");
     s3_release(header);
@@ -117,9 +68,6 @@ Suite *S3Header_suite(void) {
 
     TCase *tc_headers = tcase_create("Headers");
     suite_add_tcase(s, tc_headers);
-    tcase_add_test(tc_headers, test_header_dict_new);
-    tcase_add_test(tc_headers, test_header_dict_put);
-    tcase_add_test(tc_headers, test_header_dict_iterate);    
     tcase_add_test(tc_headers, test_header_new);
     tcase_add_test(tc_headers, test_header_values);
 
