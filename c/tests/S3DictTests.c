@@ -68,7 +68,7 @@ START_TEST (test_dict_put_get) {
 
     s3_release(key);
 
-    /* And now overwrite it again, for good measure. */
+    /* And now overwrite it, for good measure. */
     key = s3string_new("key");
     value = s3string_new("value");
 
