@@ -39,7 +39,6 @@
 
 #include "tests.h"
 
-/* Pool alloc/dealloc */
 START_TEST (test_add) {
     S3AutoreleasePool *pool;
     S3String *obj;
@@ -66,12 +65,36 @@ START_TEST (test_add) {
 }
 END_TEST
 
+START_TEST (test_add_current) {
+    S3AutoreleasePool *pool;
+    S3String *obj;
+
+    /* Allocate a pool */
+    pool = s3autorelease_pool_new();
+    fail_if(pool == NULL, "s3autorelease_pool_new() returned NULL.\n");
+
+    /* Allocate an object to auto-release */
+    obj = s3string_new("Hello, World");
+
+    /* Exercise the current pool */
+    s3_retain(obj);
+    s3autorelease_pool_add_current(obj);
+
+    /* Release it */
+    s3_release(pool);
+
+    fail_unless(s3_reference_count(obj) == 1, "s3autorelease_pool_add_current did not add the object to the current pool\n");
+    s3_release(obj);
+}
+END_TEST
+
 Suite *S3AutoreleasePool_suite(void) {
     Suite *s = suite_create("S3AutoreleasePool");
 
     TCase *tc_general = tcase_create("General");
     suite_add_tcase(s, tc_general);
     tcase_add_test(tc_general, test_add);
+    tcase_add_test(tc_general, test_add_current);
 
     return s;
 }

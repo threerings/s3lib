@@ -285,6 +285,28 @@ S3_DECLARE void s3autorelease_pool_add (S3AutoreleasePool *pool, S3TypeRef objec
     pool->bucket->count++;
 }
 
+/**
+ * @internal
+ *
+ * Add an object to the current thread's autorelease pool.
+ *
+ * Generally you should not call this directly, and instead use #s3_autorelease
+ */
+S3_PRIVATE void s3autorelease_pool_add_current (S3TypeRef object) {
+    ARThreadLocalData *tld;
+
+    tld = pthread_getspecific(stack_tld_key);
+    if (tld == NULL || tld->stack == NULL) {
+        // Programmer error, there MUST be an autorelease pool. Provide a nicer
+        // error message.
+        fprintf(stderr, "S3LIB: Can not find S3AutoreleasePool for thread, aborting\n");
+        assert(tld != NULL && tld->stack != NULL);
+        abort();
+    }
+
+    s3autorelease_pool_add(tld->stack->pool, object);
+}
+
 
 /**
  * @internal
