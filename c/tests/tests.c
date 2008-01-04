@@ -82,8 +82,14 @@ int main(int argc, char *argv[]) {
     s3lib_enable_debugging(true); // XXX for now
     curl_global_init(CURL_GLOBAL_ALL);
 
+    /* Fallback autorelease pool */
+    S3AutoreleasePool *pool = s3autorelease_pool_new();
+
     /* Run tests */
     srunner_run_all(sr, CK_NORMAL);
+
+    /* Clear the pool */
+    s3_release(pool);
 
     nf = srunner_ntests_failed(sr);
     srunner_free(sr);
