@@ -42,7 +42,7 @@
 #include "tests.h"
 
 START_TEST (test_header_new) {
-    S3Header *header = s3header_new("Date", "value");
+    S3Header *header = s3header_new(S3STR("Date"), S3STR("value"));
     s3_release(header);
 }
 END_TEST
@@ -52,11 +52,11 @@ START_TEST (test_header_values) {
     S3List *values;
     S3ListIterator *i;
 
-    header = s3header_new("Date", "value");
+    header = s3header_new(S3STR("Date"), S3STR("value"));
     values = s3header_values(header);
 
     i = s3list_iterator_new(values);    
-    fail_unless(strcmp(s3string_cstring(s3list_iterator_next(i)), "value") == 0);
+    fail_unless(s3_equals(s3list_iterator_next(i), S3STR("value")));
 
     s3_release(i);
     s3_release(header);

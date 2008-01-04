@@ -70,15 +70,15 @@ struct S3Connection {
 
     /** @internal
      * AWS access key id. */
-    safestr_t aws_id;
+    S3String *aws_id;
 
     /** @internal
      * AWS private key. */
-    safestr_t aws_key;
+    S3String *aws_key;
 
     /** @internal
      * S3 server url. */
-    safestr_t s3_url;
+    S3String *s3_url;
 
     /** @internal
      * Cached cURL handle (not thread-safe). */
@@ -102,7 +102,7 @@ static S3RuntimeClass S3ConnectionClass = {
  * @param aws_key Your Amazon AWS Secret Key.
  * @return A new #S3Connection instance, or NULL on failure.
  */
-S3_DECLARE S3Connection *s3connection_new (const char *aws_id, const char *aws_key) {
+S3_DECLARE S3Connection *s3connection_new (S3String *aws_id, S3String *aws_key) {
     S3Connection *conn;
 
     /* Allocate a new S3 Connection. */
@@ -111,13 +111,13 @@ S3_DECLARE S3Connection *s3connection_new (const char *aws_id, const char *aws_k
         return NULL;
 
     /* Access id */
-    conn->aws_id = s3_safestr_create(aws_id, SAFESTR_IMMUTABLE);
+    conn->aws_id = s3_retain(aws_id);
 
     /* Access key */
-    conn->aws_key = s3_safestr_create(aws_key, SAFESTR_IMMUTABLE);
+    conn->aws_key = s3_retain(aws_key);
 
     /* Default S3 URL */
-    conn->s3_url = s3_safestr_create(S3_DEFAULT_URL, SAFESTR_IMMUTABLE);
+    conn->s3_url = s3string_new(S3_DEFAULT_URL);
 
     /* cURL handle */
     conn->handle = curl_easy_init();
@@ -140,13 +140,13 @@ error:
  * @param s3_url The new S3 service URL.
  * @return true on success, false on failure.
  */
-S3_DECLARE bool s3connection_set_url (S3Connection *conn, const char *s3_url) {
-    /* Free the old URL. */
+S3_DECLARE bool s3connection_set_url (S3Connection *conn, S3String *s3_url) {
+    /* Release the old URL. */
     if (conn->s3_url != NULL)
-        safestr_release(conn->s3_url);
+        s3_release(conn->s3_url);
 
-    /* Copy the new URL */
-    conn->s3_url = s3_safestr_create(s3_url, SAFESTR_IMMUTABLE);
+    /* Retain the new URL */
+    conn->s3_url = s3_retain(s3_url);
 
     /* Success */
     return true;
@@ -173,7 +173,7 @@ static void s3connection_reset_curl (S3Connection *conn) {
  * @param bucketName The name of the bucket to create.
  * @return A #s3error_t result.
  */
-S3_DECLARE void *s3connection_create_bucket (S3Connection *conn, const char *bucketName) {
+S3_DECLARE void *s3connection_create_bucket (S3Connection *conn, S3String *bucketName) {
     CURLcode error;
     
     if (s3curl_create_bucket(conn, bucketName, &error) == NULL)
@@ -200,13 +200,13 @@ static void s3connection_dealloc (S3TypeRef obj) {
     S3Connection *conn = (S3Connection *) obj;
 
     if (conn->aws_id != NULL)
-        safestr_release(conn->aws_id);
+        s3_release(conn->aws_id);
 
     if (conn->aws_key != NULL)
-        safestr_release(conn->aws_key);
+        s3_release(conn->aws_key);
 
     if (conn->s3_url != NULL)
-        safestr_release(conn->s3_url);
+        s3_release(conn->s3_url);
 
     if (conn->handle != NULL) 
         curl_easy_cleanup(conn->handle);
@@ -232,7 +232,7 @@ static void s3connection_dealloc (S3TypeRef obj) {
  * @return A borrowed reference to a configured CURL handle, or NULL on failure.
  * If failure occurs, the CURL error code will be stored in \a error.
  */
-S3_DECLARE CURL *s3curl_create_bucket (S3Connection *conn, const char *bucketName, CURLcode *error) {
+S3_DECLARE CURL *s3curl_create_bucket (S3Connection *conn, S3String *bucketName, CURLcode *error) {
     safestr_t url;
     safestr_t resource;
     char *escaped;
@@ -248,16 +248,16 @@ S3_DECLARE CURL *s3curl_create_bucket (S3Connection *conn, const char *bucketNam
         return NULL;
 
     /* Create and set the resource URL. */
-    escaped = curl_easy_escape(conn->handle, bucketName, 0);
+    escaped = curl_easy_escape(conn->handle, s3string_cstring(bucketName), 0);
     resource = s3_safestr_create(escaped, SAFESTR_IMMUTABLE);
     curl_free(escaped);
     
     /* Allocate a string large enough for s3_url + "/" (possibly) + resource */
-    index = safestr_length(conn->s3_url);
+    index = safestr_length(s3string_safestr(conn->s3_url));
 
     /* Set the base URL */
     url = safestr_alloc(index + 1 + safestr_length(resource), 0);
-    safestr_append(&url, conn->s3_url);
+    safestr_append(&url, s3string_safestr(conn->s3_url));
     
     /* Check for, and append, if necessary, a trailing / */
     if (safestr_charat(url, index - 1) != '/')

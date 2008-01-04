@@ -40,7 +40,7 @@
 #include "tests.h"
 
 START_TEST (test_new) {
-    S3Connection *conn = s3connection_new("id", "key");
+    S3Connection *conn = s3connection_new(S3STR("id"), S3STR("key"));
     fail_if(conn == NULL);
 
     s3_release(conn);
@@ -48,15 +48,15 @@ START_TEST (test_new) {
 END_TEST
 
 START_TEST (test_set_url) {
-    S3Connection *conn = s3connection_new("id", "key");
-    s3connection_set_url(conn, "http://localhost");
+    S3Connection *conn = s3connection_new(S3STR("id"), S3STR("key"));
+    s3connection_set_url(conn, S3STR("http://localhost"));
     s3_release(conn);
 }
 END_TEST
 
 START_TEST (test_create_bucket) {
-    S3Connection *conn = s3connection_new("id", "key");
-    s3connection_create_bucket(conn, "test");
+    S3Connection *conn = s3connection_new(S3STR("id"), S3STR("key"));
+    s3connection_create_bucket(conn, S3STR("test"));
     s3_release(conn);
 }
 END_TEST

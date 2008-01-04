@@ -73,11 +73,11 @@ struct S3Request {
 
     /** @internal
      * Request bucket. */
-    safestr_t bucket;
+    S3String *bucket;
 
     /** @internal
      * Request Resource. */
-    safestr_t resource;
+    S3String *resource;
 
     /** @internal
      * Request headers */
@@ -102,7 +102,7 @@ static S3RuntimeClass S3RequestClass = {
  *
  * @attention 
  */
-S3_DECLARE S3Request *s3request_new (S3HTTPMethod method, const char *bucket, const char *resource) {
+S3_DECLARE S3Request *s3request_new (S3HTTPMethod method, S3String *bucket, S3String *resource) {
     S3Request *req;
 
     /* Allocate a new S3 Request. */
@@ -111,10 +111,10 @@ S3_DECLARE S3Request *s3request_new (S3HTTPMethod method, const char *bucket, co
         return NULL;
 
     /* S3 Bucket */
-    req->bucket = s3_safestr_create(bucket, SAFESTR_IMMUTABLE);
+    req->bucket = s3_retain(bucket);
 
     /* S3 Resource */
-    req->resource = s3_safestr_create(resource, SAFESTR_IMMUTABLE);
+    req->resource = s3_retain(resource);
 
     /* Request method */
     req->method = method;
@@ -134,10 +134,10 @@ static void s3request_dealloc (S3TypeRef object) {
     S3Request *req = (S3Request *) object;
 
     if (req->bucket != NULL)
-        safestr_release(req->bucket);
+        s3_release(req->bucket);
 
     if (req->resource != NULL)
-        safestr_release(req->resource);
+        s3_release(req->resource);
 }
 
 /*!

@@ -38,8 +38,8 @@ typedef struct S3Connection S3Connection;
 
 S3_EXTERN const char S3_DEFAULT_URL[];
 
-S3_EXTERN S3Connection *s3connection_new (const char *aws_id, const char *aws_key);
-S3_EXTERN bool s3connection_set_url (S3Connection *conn, const char *s3_url);
+S3_EXTERN S3Connection *s3connection_new (S3String *aws_id, S3String *aws_key);
+S3_EXTERN bool s3connection_set_url (S3Connection *conn, S3String *s3_url);
 
-S3_EXTERN void *s3connection_create_bucket (S3Connection *conn, const char *bucketName);
-S3_EXTERN CURL *s3curl_create_bucket (S3Connection *conn, const char *bucketName, CURLcode *error);
+S3_EXTERN void *s3connection_create_bucket (S3Connection *conn, S3String *bucketName);
+S3_EXTERN CURL *s3curl_create_bucket (S3Connection *conn, S3String *bucketName, CURLcode *error);
