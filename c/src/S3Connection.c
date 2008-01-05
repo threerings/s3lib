@@ -55,7 +55,7 @@
  * @{
  */
 
-/** Default Amazon S3 URL. */
+/** Default Amazon S3 URL. XXX replace with method, should not be an extern global */
 S3_DECLARE const char S3_DEFAULT_URL[] = "https://s3.amazonaws.com";
 
 static void s3connection_dealloc (S3TypeRef obj);
