@@ -51,7 +51,7 @@
  */
 
 /*!
- * @defgroup S3AutoreleasePool Object Allocation Pool
+ * @defgroup S3AutoreleasePool Auto-release Object Pools
  * @ingroup S3Library
  * @{
  */

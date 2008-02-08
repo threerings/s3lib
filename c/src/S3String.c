@@ -50,8 +50,8 @@
  */
 
 /**
- * @defgroup S3String Simple strings
- * @ingroup S3Library
+ * @defgroup S3String Simple string
+ * @ingroup S3DataStructures
  * @{
  */
 
@@ -204,7 +204,7 @@ static bool s3string_equals (S3TypeRef self, S3TypeRef other) {
 /**
  * Clone a string.
  *
- * @param S3String A S3String instance to copy.
+ * @param string A S3String instance to copy.
  * @return Returns a newly allocated copy of @a string, or NULL if a failure occured.
  * This function should not fail unless available memory has been exhausted.
  * @attention It is the caller's responsibility to free the returned string.

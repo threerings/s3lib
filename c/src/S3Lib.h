@@ -49,6 +49,10 @@
  * @{
  */
 
+/*!
+ * @defgroup S3DataStructures Data Structures
+ */
+
 /*
  * Declaration visibility scoping
  */
