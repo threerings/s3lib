@@ -50,7 +50,7 @@
  */
 
 /**
- * @defgroup S3Dict 
+ * @defgroup S3Dict Hash table implementation.
  * @ingroup S3Library
  * @{
  */
