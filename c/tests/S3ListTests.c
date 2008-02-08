@@ -123,6 +123,36 @@ START_TEST (test_next) {
 }
 END_TEST
 
+/* Test list iteration */
+START_TEST (test_hasnext) {
+    S3AutoreleasePool *pool = s3autorelease_pool_new();
+
+    S3List *list = s3_autorelease(s3list_new());
+    S3String *hello = S3STR("hello");
+    S3String *world = S3STR("world");
+
+    /* Append two elements */
+    fail_unless(s3list_append(list, hello));
+    fail_unless(s3list_append(list, world));
+
+    /* Fetch the two elements */
+    S3ListIterator *i = s3_autorelease(s3list_iterator_new(list));
+    
+    /* First element */
+    fail_unless(s3list_iterator_hasnext(i));
+    fail_if(s3list_iterator_next(i) == NULL);
+
+    /* Second */
+    fail_unless(s3list_iterator_hasnext(i));
+    fail_if(s3list_iterator_next(i) == NULL);
+    
+    /* The end */
+    fail_if(s3list_iterator_hasnext(i));
+
+    s3_release(pool);
+}
+END_TEST
+
 Suite *S3List_suite(void) {
     Suite *s = suite_create("S3List");
 
@@ -132,6 +162,7 @@ Suite *S3List_suite(void) {
     tcase_add_test(tc_general, test_append);
     tcase_add_test(tc_general, test_copy);
     tcase_add_test(tc_general, test_next);
+    tcase_add_test(tc_general, test_hasnext);
 
     return s;
 }

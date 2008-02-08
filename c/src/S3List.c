@@ -281,6 +281,20 @@ S3_DECLARE S3TypeRef s3list_iterator_next (S3ListIterator *iterator) {
     return value;
 }
 
+/**
+ * Return true if any unvisited list nodes remain, or false if the end
+ * of the list has been released.
+ *
+ * @param iterator An S3ListIterator instance.
+ * @return true if any unvisited list nodes remain.
+ */
+S3_DECLARE bool s3list_iterator_hasnext (S3ListIterator *iterator) {
+    /* If node is NULL, end of list */
+    if (iterator->current == NULL)
+        return false;
+
+    return true;
+}
 
 /*!
  * @} S3List
