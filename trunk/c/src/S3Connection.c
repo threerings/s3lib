@@ -50,7 +50,7 @@
  */
 
 /**
- * @defgroup S3Connection S3 Connection
+ * @defgroup S3Connection S3 Client Connection
  * @ingroup S3Library
  * @{
  */

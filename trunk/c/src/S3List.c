@@ -49,8 +49,8 @@
  */
 
 /**
- * @defgroup S3List Linked Lists
- * @ingroup S3Library
+ * @defgroup S3List Linked List
+ * @ingroup S3DataStructures
  * @{
  */
 
