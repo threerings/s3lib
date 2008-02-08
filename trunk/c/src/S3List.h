@@ -56,6 +56,7 @@ S3_EXTERN bool s3list_append (S3List *list, S3TypeRef object);
 
 S3_EXTERN S3ListIterator *s3list_iterator_new (S3List *list);
 S3_EXTERN S3TypeRef s3list_iterator_next (S3ListIterator *iterator);
+S3_EXTERN bool s3list_iterator_hasnext (S3ListIterator *iterator);
 
 /*!
  * @} S3List
