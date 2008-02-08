@@ -261,7 +261,7 @@ static void s3list_iterator_dealloc (S3TypeRef obj) {
 }
 
 
-/*
+/**
  * Returns a borrowed reference to the next list value, if any unvisited nodes remain, or NULL.
  *
  * @param iterator An S3ListIterator instance.
