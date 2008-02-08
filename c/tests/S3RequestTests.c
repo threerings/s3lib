@@ -39,8 +39,56 @@
 
 #include "tests.h"
 
+static S3Request *create_request () {
+    S3List *headers;
+    S3Header *header;
+    
+    headers = s3_autorelease(s3list_new());
+    header = s3_autorelease(s3header_new(S3STR("test"), S3STR("value")));
+    s3list_append(headers, header);
+
+    return s3request_new(S3_HTTP_PUT, S3STR("bucket"), S3STR("object"), headers);
+}
+
 START_TEST (test_new) {
-    S3Request *req = s3request_new(S3_HTTP_PUT, S3STR("bucket"), S3STR("resource"));
+    S3Request *req = create_request();
+    s3_release(req);
+}
+END_TEST
+
+START_TEST (test_bucket) {
+    S3Request *req = create_request();
+    fail_unless(s3_equals(s3request_bucket(req), S3STR("bucket")));
+    s3_release(req);
+}
+END_TEST
+
+START_TEST (test_object) {
+    S3Request *req = create_request();
+    fail_unless(s3_equals(s3request_object(req), S3STR("object")));
+    s3_release(req);
+}
+END_TEST
+
+START_TEST (test_method) {
+    S3Request *req = create_request();
+    fail_unless(s3request_method(req) == S3_HTTP_PUT);
+    s3_release(req);
+}
+END_TEST
+
+START_TEST (test_headers) {
+    S3Request *req = create_request();
+    fail_unless(s3request_method(req) == S3_HTTP_PUT);
+    s3_release(req);
+}
+END_TEST
+
+START_TEST (test_sign) {
+    S3Request *req = create_request();
+    
+    s3request_sign(req);
+
     s3_release(req);
 }
 END_TEST
@@ -51,6 +99,11 @@ Suite *S3Request_suite(void) {
     TCase *tc_general = tcase_create("General");
     suite_add_tcase(s, tc_general);
     tcase_add_test(tc_general, test_new);
+    tcase_add_test(tc_general, test_bucket);
+    tcase_add_test(tc_general, test_object);
+    tcase_add_test(tc_general, test_method);
+    tcase_add_test(tc_general, test_headers);
+    tcase_add_test(tc_general, test_sign);
 
     return s;
 }

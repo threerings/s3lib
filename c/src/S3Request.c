@@ -76,12 +76,12 @@ struct S3Request {
     S3String *bucket;
 
     /** @internal
-     * Request Resource. */
-    S3String *resource;
+     * Request object. */
+    S3String *object;
 
     /** @internal
      * Request headers */
-    S3Dict *headers;
+    S3List *headers;
 };
 
 /**
@@ -97,12 +97,13 @@ static S3RuntimeClass S3RequestClass = {
  *
  * @param method The request HTTP method.
  * @param bucket The S3 bucket
- * @param resource An S3 resource
+ * @param object An S3 object key
+ * @param headers An list of S3Header values.
  * @return A new S3Request instance, or NULL on failure.
  *
  * @attention 
  */
-S3_DECLARE S3Request *s3request_new (S3HTTPMethod method, S3String *bucket, S3String *resource) {
+S3_DECLARE S3Request *s3request_new (S3HTTPMethod method, S3String *bucket, S3String *object, S3List *headers) {
     S3Request *req;
 
     /* Allocate a new S3 Request. */
@@ -110,18 +111,65 @@ S3_DECLARE S3Request *s3request_new (S3HTTPMethod method, S3String *bucket, S3St
     if (req == NULL)
         return NULL;
 
+    /* Request method */
+    req->method = method;
+
     /* S3 Bucket */
     req->bucket = s3_retain(bucket);
 
-    /* S3 Resource */
-    req->resource = s3_retain(resource);
-
-    /* Request method */
-    req->method = method;
+    /* S3 Object */
+    req->object = s3_retain(object);
+    
+    /* Headers */
+    req->headers = s3_retain(headers);
 
     return (req);
 }
 
+/**
+ * Return the request method.
+ * @param request A S3Request instance.
+ * @return The S3HTTPMethod to be used for this request.
+ */
+S3_EXTERN S3HTTPMethod s3request_method (S3Request *request) {
+    return request->method;
+}
+
+/**
+ * Return the request bucket.
+ * @param request A S3Request instance.
+ * @return The request S3 bucket.
+ */
+S3_EXTERN S3String *s3request_bucket (S3Request *request) {
+    return request->bucket;
+}
+
+/**
+ * Return the request S3 object.
+ * @param request A S3Request instance.
+ * @return The S3 object key for this request.
+ */
+S3_EXTERN S3String *s3request_object (S3Request *request) {
+    return request->object;
+}
+
+/**
+ * Return the request HTTP headers.
+ * @param request A S3Request instance.
+ * @return A list of S3Header values.
+ */
+S3_EXTERN S3List *s3request_headers (S3Request *request) {
+    return request->headers;
+}
+
+/**
+ * Sign the request.
+ * @param request A S3Request instance.
+ */
+S3_EXTERN void s3request_sign (S3_UNUSED S3Request *request) {
+    //S3Dict *allHeaders = s3dict_new();
+    
+}
 
 /**
  * @internal
@@ -136,8 +184,11 @@ static void s3request_dealloc (S3TypeRef object) {
     if (req->bucket != NULL)
         s3_release(req->bucket);
 
-    if (req->resource != NULL)
-        s3_release(req->resource);
+    if (req->object != NULL)
+        s3_release(req->object);
+        
+    if (req->headers != NULL)
+        s3_release(req->headers);
 }
 
 /*!
