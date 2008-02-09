@@ -60,6 +60,7 @@ S3_EXTERN S3TypeRef s3dict_get (S3Dict *dict, S3TypeRef key);
 
 S3_EXTERN S3DictIterator *s3dict_iterator_new (S3Dict *dictionary);
 S3_EXTERN S3TypeRef s3dict_iterator_next (S3DictIterator *iterator);
+S3_EXTERN bool s3dict_iterator_hasnext (S3DictIterator *iterator);
 
 /*!
  * @} S3Dict

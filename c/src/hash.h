@@ -206,6 +206,7 @@ S3_PRIVATE int hash_isempty(hash_t *);
 
 S3_PRIVATE void hash_scan_begin(hscan_t *, hash_t *);
 S3_PRIVATE hnode_t *hash_scan_next(hscan_t *);
+S3_PRIVATE bool hash_scan_hasnext(hscan_t *);
 S3_PRIVATE hnode_t *hash_scan_delete(hash_t *, hnode_t *);
 S3_PRIVATE void hash_scan_delfree(hash_t *, hnode_t *);
 
