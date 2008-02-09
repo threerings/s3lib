@@ -45,6 +45,7 @@
 #include <openssl/evp.h>
 
 #include "S3Lib.h"
+#include "base64.h"
 
 /**
  * @file
@@ -65,6 +66,9 @@ static const char AMAZON_HEADER_PREFIX[] = "x-amz-";
 
 /** @internal Header for S3's alternate date. */
 static const char ALTERNATIVE_DATE_HEADER[] = "x-amz-date";
+
+/** @internal Header for Amazon Authorization. */
+static const char AMAZON_AUTHORIZATION_HEADER[] = "Authorization";
 
 /* @internal SHA-1 message digest size */
 #define CRYPTO_DIGEST_SHA1_SIZE 20    /* 160 bits */
@@ -234,11 +238,11 @@ static const char *s3request_http_verb (S3HTTPMethod method) {
  *
  * @param request A S3Request instance.
  */
-S3_DECLARE void s3request_sign (S3Request *req, S3_UNUSED S3String *awsId, S3String *awsKey) {
+S3_DECLARE void s3request_sign (S3Request *req, S3String *awsId, S3String *awsKey) {
     S3AutoreleasePool *pool = s3autorelease_pool_new();
 
     /* Header keys */
-    S3String *amz_prefix = S3STR(AMAZON_HEADER_PREFIX);
+    S3String *amz_prefix =  S3STR(AMAZON_HEADER_PREFIX);
     S3String *content_md5 = S3STR("content-md5");
     S3String *content_type = S3STR("content-type");
     S3String *date_header_str = S3STR("date");
@@ -302,6 +306,9 @@ S3_DECLARE void s3request_sign (S3Request *req, S3_UNUSED S3String *awsId, S3Str
 
         if (s3dict_get(signed_headers, content_type) == NULL)
             s3dict_put(signed_headers, content_type, blank);
+            
+        /* Sort the AMZ headers lexicographically */
+        s3list_sort(amz_headers, &s3list_lexicographical_compare, NULL);
     }
 
 
@@ -309,12 +316,16 @@ S3_DECLARE void s3request_sign (S3Request *req, S3_UNUSED S3String *awsId, S3Str
      * HMAC the request
      */
     {
-        HMAC_CTX hmac;
-        S3String *str;
+        HMAC_CTX        hmac;
+        S3String        *str;
+        const EVP_MD    *md;
+        
+        unsigned char   output[CRYPTO_DIGEST_SHA1_SIZE];
+        unsigned int    output_len;
+
         const unsigned char newline[] = "\n";
-        const EVP_MD *md;
-        unsigned char output[CRYPTO_DIGEST_SHA1_SIZE];
-        unsigned int output_len;
+        const unsigned char slash[] = "/";
+        const unsigned char colon[] = ":";
 
         /* Set up the context */
         md = EVP_sha1();
@@ -345,7 +356,6 @@ S3_DECLARE void s3request_sign (S3Request *req, S3_UNUSED S3String *awsId, S3Str
         while (s3list_iterator_hasnext(i)) {
             S3String *key = s3string_lowercase( s3list_iterator_next(i) );
             S3String *value = s3dict_get(signed_headers, key);
-            const unsigned char colon[] = ":";
             
             assert(value != NULL);
             
@@ -355,14 +365,43 @@ S3_DECLARE void s3request_sign (S3Request *req, S3_UNUSED S3String *awsId, S3Str
             HMAC_Update(&hmac, newline, sizeof(newline));
         }
 
-        /* Canonicalized Resource: TODO */
+        /* Canonicalized Resource */
+        HMAC_Update(&hmac, slash, sizeof(slash));
+        HMAC_Update(&hmac, (const unsigned char *) s3string_cstring(req->bucket), s3string_length(req->bucket));
+        HMAC_Update(&hmac, slash, sizeof(slash));
+        HMAC_Update(&hmac, (const unsigned char *) s3string_cstring(req->object), s3string_length(req->object));
 
+        /* TODO: sub-resource, if present -- "?acl", "?location", "?logging", or "?torrent" */
+
+        /* Output the HMAC */
         output_len = sizeof(output);
         HMAC_Final(&hmac, output, &output_len);
         HMAC_CTX_cleanup(&hmac);
+        
+        /* Create the authorization header */
+        {
+            char *b64;
+            char *authstring;
+
+            /* Base64 the signature */
+            if (s3_base64_encode(output, output_len, &b64) == -1) {
+                // XXX report error
+                goto cleanup;
+            }
+
+            /* Create the authorization header */
+            asprintf(&authstring, "AWS %s:%s", s3string_cstring(awsId), b64);
+            if (authstring == NULL) {
+                // XXX report error
+                goto cleanup;
+            }
+            s3dict_put(req->headers, S3STR(AMAZON_AUTHORIZATION_HEADER), S3STR(authstring));
+        }
+
     }
 
-    
+
+cleanup:
     /* Free our pool */
     s3_release(pool);
 }

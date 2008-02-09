@@ -49,5 +49,6 @@ Suite *S3Lib_suite(void);
 Suite *S3List_suite(void);
 Suite *S3Request_suite(void);
 Suite *S3String_suite(void);
+Suite *base64_suite(void);
 
 #endif /* TESTS_H */

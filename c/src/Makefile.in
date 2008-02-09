@@ -16,6 +16,7 @@ LIBRARY_OBJS=	S3AutoreleasePool.o \
 		S3List.o \
 		S3Request.o \
 		S3String.o \
+		base64.o \
 		hash.o \
 		list.o
 
