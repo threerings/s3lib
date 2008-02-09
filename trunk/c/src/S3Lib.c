@@ -41,6 +41,7 @@
 
 #include <assert.h>
 #include <pthread.h>
+#include <stdlib.h>
 
 #include "S3Lib.h"
 
@@ -65,6 +66,20 @@ static bool initialized = false;
 /** @internal Initialization lock. Used to prevent race conditions in
  * global library initialization (unlikely as they are). */
 static pthread_mutex_t init_lock = PTHREAD_MUTEX_INITIALIZER;
+
+/** @internal 'Magic' value, used to detect non-objects passed to polymorphic functions. */
+#define MAGIC 0xCAFE;
+
+/**
+ * @internal 
+ * Assert that pointer is a valid object.
+ */
+#define ASSERT_VALID_OBJ(obj) { \
+    if (((S3RuntimeBase *)obj)->magic != 0xCAFE) { \
+        fprintf(stderr, "FATAL: non-object %p passed to %s().\n", obj, __func__); \
+        abort(); \
+    } \
+}
 
 /**
  * Perform global library initialization.
@@ -158,6 +173,7 @@ S3_PRIVATE S3TypeRef s3_object_alloc (S3RuntimeClass *class, size_t objectSize) 
 
     /* Initialize the object */
     objdata = (S3RuntimeBase *) object;
+    objdata->magic = 0xCAFE;
     objdata->refCount = 1;
     objdata->class = class;
 
@@ -171,6 +187,7 @@ S3_PRIVATE S3TypeRef s3_object_alloc (S3RuntimeClass *class, size_t objectSize) 
  * @result Returns a reference to @a object.
  */
 S3_DECLARE S3TypeRef s3_retain (S3TypeRef object) {
+    ASSERT_VALID_OBJ(object);
     assert(s3_reference_count(object) != UINT32_MAX);
 
     ((S3RuntimeBase *) object)->refCount++;
@@ -185,6 +202,7 @@ S3_DECLARE S3TypeRef s3_retain (S3TypeRef object) {
  * @result The provided @a instance's reference count.
  */
 S3_DECLARE uint32_t s3_reference_count (S3TypeRef object) {
+    ASSERT_VALID_OBJ(object);
     return ((S3RuntimeBase *) object)->refCount;
 }
 
@@ -198,6 +216,7 @@ S3_DECLARE uint32_t s3_reference_count (S3TypeRef object) {
 S3_DECLARE void s3_release (S3TypeRef object) {
     S3RuntimeBase *objdata;
 
+    ASSERT_VALID_OBJ(object);
     assert(s3_reference_count(object) > 0);
 
     objdata = (S3RuntimeBase *) object;
@@ -219,6 +238,7 @@ S3_DECLARE void s3_release (S3TypeRef object) {
  * @return Returns a reference to @a object.
  */
 S3_DECLARE S3TypeRef s3_autorelease (S3TypeRef object) {
+    ASSERT_VALID_OBJ(object);
     s3autorelease_pool_add_current(object);
     return object;
 }
@@ -259,6 +279,7 @@ S3_DECLARE long s3_hash (S3TypeRef object) {
     S3RuntimeBase *objdata;
     objdata = (S3RuntimeBase *) object;
 
+    ASSERT_VALID_OBJ(object);
     if (objdata->class->hash != NULL)
         return objdata->class->hash(object);
     else
@@ -281,6 +302,8 @@ S3_DECLARE long s3_hash (S3TypeRef object) {
 S3_DECLARE bool s3_equals (S3TypeRef self, S3TypeRef other) {
     S3RuntimeBase *objdata = (S3RuntimeBase *) self;
 
+    ASSERT_VALID_OBJ(self);
+    ASSERT_VALID_OBJ(other);
     if (objdata->class->equals != NULL)
         return objdata->class->equals(self, other);
     else
@@ -295,6 +318,8 @@ S3_DECLARE bool s3_equals (S3TypeRef self, S3TypeRef other) {
  */
 S3_PRIVATE bool s3_instanceof (S3TypeRef object, S3RuntimeClass *class) {
     S3RuntimeBase *objdata = (S3RuntimeBase *) object;
+    
+    ASSERT_VALID_OBJ(object);
 
     /* Simple pointer comparison */
     return (objdata->class == class);
