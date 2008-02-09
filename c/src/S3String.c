@@ -113,6 +113,27 @@ S3_DECLARE bool s3string_startswith (S3String *string, S3String *substring) {
 }
 
 /**
+ * Returns a lowercase representation of the given string.
+ *
+ * @param string The source string to be converted.
+ * @return A lowercase conversion of the provided string.
+ */
+S3_DECLARE S3String *s3string_lowercase (S3String *string) {
+    safestr_t lower;
+
+    /* Convert the string to lowercase */
+    lower = safestr_clone(s3string_safestr(string), 0);
+    safestr_convert(lower, SAFESTR_CONVERT_LOWERCASE);
+
+    /* Create the return value */
+    S3String *result = s3string_new(s3_safestr_char(lower));
+
+    /* Clean up and return */
+    safestr_release(lower);
+    return (s3_autorelease(result));
+}
+
+/**
  * Return a borrowed reference to the S3String's backing
  * character buffer.
  *

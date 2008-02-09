@@ -69,6 +69,14 @@ START_TEST (test_startswith) {
 }
 END_TEST
 
+START_TEST (test_lowercase) {
+    S3String *string = s3string_new("HeLlO WoRlD");
+    S3String *lower = s3string_lowercase(string);
+    fail_unless(s3_equals(lower, S3STR("hello world")));
+    s3_release(string);
+}
+END_TEST
+
 START_TEST (test_cstring) {
     S3String *string = s3string_new("hello");
     fail_unless(strcmp("hello", s3string_cstring(string)) == 0);
@@ -125,6 +133,7 @@ Suite *S3String_suite(void) {
     tcase_add_test(tc_general, test_new);
     tcase_add_test(tc_general, test_copy);
     tcase_add_test(tc_general, test_startswith);
+    tcase_add_test(tc_general, test_lowercase);
     tcase_add_test(tc_general, test_cstring);
     tcase_add_test(tc_general, test_length);
     tcase_add_test(tc_general, test_hash);

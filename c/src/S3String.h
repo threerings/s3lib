@@ -51,6 +51,7 @@ typedef struct S3String S3String;
 S3_EXTERN S3String *s3string_new (const char *cstring);
 S3_EXTERN S3String *s3string_copy (S3String *string);
 S3_EXTERN bool s3string_startswith (S3String *string, S3String *substring);
+S3_EXTERN S3String *s3string_lowercase (S3String *string);
 S3_EXTERN const char *s3string_cstring (S3String *string);
 S3_EXTERN size_t s3string_length (S3String *string);
 
