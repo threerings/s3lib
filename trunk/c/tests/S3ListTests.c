@@ -95,7 +95,7 @@ START_TEST (test_copy) {
 END_TEST
 
 /* Sort a list */
-static int lexcompare (S3_UNUSED S3TypeRef elem1, S3_UNUSED S3TypeRef elem2, S3_UNUSED const void *context) {
+static int lexcompare (S3TypeRef elem1, S3TypeRef elem2, const void *context) {
     fail_unless(context == (const void *) 5);
     return strcmp(s3string_cstring(elem1), s3string_cstring(elem2));
 }
@@ -127,6 +127,21 @@ START_TEST (test_sort) {
     );
 
     fail_if(s3list_iterator_hasnext(i));
+}
+END_TEST
+
+START_TEST (test_lexicographical_compare) {
+    fail_unless(
+        s3list_lexicographical_compare(S3STR("a"), S3STR("b"), NULL) < 0
+    );
+    
+    fail_unless(
+        s3list_lexicographical_compare(S3STR("b"), S3STR("a"), NULL) > 0
+    );
+
+    fail_unless(
+        s3list_lexicographical_compare(S3STR("b"), S3STR("b"), NULL) == 0
+    );
 }
 END_TEST
 
@@ -198,6 +213,7 @@ Suite *S3List_suite(void) {
     tcase_add_test(tc_general, test_append);
     tcase_add_test(tc_general, test_copy);
     tcase_add_test(tc_general, test_sort);
+    tcase_add_test(tc_general, test_lexicographical_compare);
     tcase_add_test(tc_general, test_next);
     tcase_add_test(tc_general, test_hasnext);
 

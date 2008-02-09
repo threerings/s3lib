@@ -37,6 +37,7 @@
 #include <config.h>
 #endif
 
+#include <string.h>
 #include <stdlib.h>
 #include <assert.h>
 
@@ -215,6 +216,14 @@ S3_DECLARE bool s3list_append (S3List *list, S3TypeRef object) {
     /* Append the node */
     list_append(&list->ctx, node);
     return true;
+}
+
+/**
+ * @internal
+ * An implementation of a ASCII lexicographical #S3String comparison function for use with #s3list_sort.
+ */
+S3_PRIVATE int s3list_lexicographical_compare (S3TypeRef elem1, S3TypeRef elem2, S3_UNUSED const void *context) {
+    return strcmp(s3string_cstring(elem1), s3string_cstring(elem2));
 }
 
 /**

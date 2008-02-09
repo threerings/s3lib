@@ -67,6 +67,10 @@ S3_EXTERN S3ListIterator *s3list_iterator_new (S3List *list);
 S3_EXTERN S3TypeRef s3list_iterator_next (S3ListIterator *iterator);
 S3_EXTERN bool s3list_iterator_hasnext (S3ListIterator *iterator);
 
+#ifdef S3LIB_PRIVATE_API
+S3_PRIVATE int s3list_lexicographical_compare (S3TypeRef elem1, S3TypeRef elem2, S3_UNUSED const void *context);
+#endif /* S3LIB_PRIVATE_API */
+
 /*!
  * @} S3List
  */
