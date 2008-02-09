@@ -101,6 +101,18 @@ S3_DECLARE S3String *s3string_new (const char *cstring) {
 }
 
 /**
+ * Returns true if the S3String instance starts with the given
+ * string.
+ *
+ * @param string The string to be checked.
+ * @param substring The substring to look for.
+ * @return True if the string starts with substring, false others.
+ */
+S3_DECLARE bool s3string_startswith (S3String *string, S3String *substring) {
+    return safestr_startswith(s3string_safestr(string), s3string_safestr(substring));
+}
+
+/**
  * Return a borrowed reference to the S3String's backing
  * character buffer.
  *
