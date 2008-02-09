@@ -103,6 +103,10 @@ typedef struct S3RuntimeClass {
  * @warning Never reference any of these elements directly.
  */
 typedef struct S3RuntimeBase {
+    /** Object magic number. Used to verify that the given
+        pointer is a valid s3 object instance. */
+    uint16_t magic;
+    
     /** Object reference count */
     uint32_t refCount;
 
