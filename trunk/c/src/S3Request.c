@@ -57,6 +57,12 @@
 
 static void s3request_dealloc (S3TypeRef object);
 
+/** @internal Header prefix for generic S3 headers. */
+static const char AMAZON_HEADER_PREFIX[] = "x-amz-";
+
+/** @internal Header for S3's alternate date. */
+static const char ALTERNATIVE_DATE_HEADER[] = "x-amz-date";
+
 /**
  * S3 HTTP Request Context.
  * The request context exposes the URL, method, and headers of a composed S3 REST request.
@@ -80,8 +86,8 @@ struct S3Request {
     S3String *object;
 
     /** @internal
-     * Request headers */
-    S3List *headers;
+     * Request headers (String, String) */
+    S3Dict *headers;
 };
 
 /**
@@ -98,12 +104,12 @@ static S3RuntimeClass S3RequestClass = {
  * @param method The request HTTP method.
  * @param bucket The S3 bucket
  * @param object An S3 object key
- * @param headers An list of S3Header values.
+ * @param headers A dictionary of S3String header names and values.
  * @return A new S3Request instance, or NULL on failure.
  *
  * @attention 
  */
-S3_DECLARE S3Request *s3request_new (S3HTTPMethod method, S3String *bucket, S3String *object, S3List *headers) {
+S3_DECLARE S3Request *s3request_new (S3HTTPMethod method, S3String *bucket, S3String *object, S3Dict *headers) {
     S3Request *req;
 
     /* Allocate a new S3 Request. */
@@ -131,7 +137,7 @@ S3_DECLARE S3Request *s3request_new (S3HTTPMethod method, S3String *bucket, S3St
  * @param request A S3Request instance.
  * @return The S3HTTPMethod to be used for this request.
  */
-S3_EXTERN S3HTTPMethod s3request_method (S3Request *request) {
+S3_DECLARE S3HTTPMethod s3request_method (S3Request *request) {
     return request->method;
 }
 
@@ -140,7 +146,7 @@ S3_EXTERN S3HTTPMethod s3request_method (S3Request *request) {
  * @param request A S3Request instance.
  * @return The request S3 bucket.
  */
-S3_EXTERN S3String *s3request_bucket (S3Request *request) {
+S3_DECLARE S3String *s3request_bucket (S3Request *request) {
     return request->bucket;
 }
 
@@ -149,26 +155,109 @@ S3_EXTERN S3String *s3request_bucket (S3Request *request) {
  * @param request A S3Request instance.
  * @return The S3 object key for this request.
  */
-S3_EXTERN S3String *s3request_object (S3Request *request) {
+S3_DECLARE S3String *s3request_object (S3Request *request) {
     return request->object;
 }
 
 /**
- * Return the request HTTP headers.
+ * Return the request HTTP header dictionary.
  * @param request A S3Request instance.
- * @return A list of S3Header values.
+ * @return A dictionary of S3String header name, value pairs.
  */
-S3_EXTERN S3List *s3request_headers (S3Request *request) {
+S3_DECLARE S3Dict *s3request_headers (S3Request *request) {
     return request->headers;
 }
 
 /**
- * Sign the request.
+ * @internal
+ * Returns the current time as an RFC 822 formatted string,
+ * or NULL if a failure occurs.
+ */
+S3_UNUSED static S3String *rfc822_now () {
+    /* RFC 822 format; '%a %d %b %Y %T GMT' -- Maximum size of 29 bytes */
+    char buf[29];
+    time_t now;
+    struct tm gmt;
+        
+    /* Get the current time */
+    if (time(&now) == (time_t)-1) {
+        DEBUG("time() failed, returned %jd", (intmax_t) now);
+        return NULL;   
+    }
+
+    if (gmtime_r(&now, &gmt) == NULL) {
+        DEBUG("gmtime() failed");
+        return NULL;
+    }
+
+    /* Write out the date string */
+    if (strftime(buf, sizeof(buf), "%a %d %b %Y %T GMT", &gmt) == 0) {
+        DEBUG("strftime() failed, returned 0");
+        return NULL;
+    }
+
+    return s3_autorelease( s3string_new(buf) );
+}
+
+/**
+ * Sign the request. Any missing, mandatory headers (eg, Date) will be added to
+ * the request.
+ *
  * @param request A S3Request instance.
  */
-S3_EXTERN void s3request_sign (S3_UNUSED S3Request *request) {
-    //S3Dict *allHeaders = s3dict_new();
+S3_DECLARE void s3request_sign (S3_UNUSED S3Request *req) {
+#if 0
+    S3AutoreleasePool *pool = s3autorelease_pool_new();
+
+    /* Header keys */
+    S3String *amz_prefix = S3STR(AMAZON_HEADER_PREFIX);
+    S3String *content_md5 = S3STR("content-md5");
+    S3String *content_type = S3STR("content-type");
+    S3String *date_header_str = S3STR("date");
     
+    /*
+     * Add all headers needing signing to the signed_headers dictionary
+     */
+    S3Dict *signed_headers = s3_autorelease( s3dict_new() );
+    S3ListIterator *i = s3_autorelease( s3list_iterator_new(req->headers) );
+    
+    while (s3list_iterator_hasnext(i)) {
+        S3Header *header = s3list_iterator_next(i);
+        S3String *name = s3string_lowercase(s3header_name(header));
+
+        /* x-amz- header */
+        if (s3string_startswith(name, amz_prefix)) {
+            s3dict_put(signed_headers, name, header);
+        
+        /* content-md5 header */
+        } else if (s3_equals(name, content_md5)) {
+            s3dict_put(signed_headers, name, header);
+        
+        /* content-type header */
+        } else if (s3_equals(name, content_type)) {
+            s3dict_put(signed_headers, name, header);
+        
+        /* date header */
+        } else if (s3_equals(name, date_header_str)) {
+            s3dict_put(signed_headers, name, header);
+        }
+    }
+
+    /* Add a Date header, if necessary */
+    if (s3dict_get(signed_headers, date_header_str) == NULL) {
+        S3String *date;
+    
+        date = rfc822_now();
+        assert(date != NULL);
+
+        S3Header *header = s3_autorelease( s3header_new(S3STR("Date"), date) );
+        s3list_append(req->headers, header);
+        s3dict_put(signed_headers, date_header_str, header);
+    }
+
+    /* Free our pool */
+    s3_release(pool);
+#endif
 }
 
 /**

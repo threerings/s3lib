@@ -12,7 +12,6 @@ LIBRARY_OBJS=	S3AutoreleasePool.o \
 		S3Connection.o \
 		S3Dict.o \
 		S3Error.o \
-		S3Header.o \
 		S3Lib.o \
 		S3List.o \
 		S3Request.o \
@@ -24,7 +23,6 @@ HEADERS=	$(srcdir)/S3AutoreleasePool.h \
 		$(srcdir)/S3Connection.h \
 		$(srcdir)/S3Dict.h \
 		$(srcdir)/S3Error.h \
-		$(srcdir)/S3Header.h \
 		$(srcdir)/S3Lib.h \
 		$(srcdir)/S3List.h \
 		$(srcdir)/S3Request.h \

@@ -67,7 +67,6 @@ int main(int argc, char *argv[]) {
     srunner_add_suite(sr, S3Connection_suite());
     srunner_add_suite(sr, S3Dict_suite());
     srunner_add_suite(sr, S3Error_suite());
-    srunner_add_suite(sr, S3Header_suite());
     srunner_add_suite(sr, S3Lib_suite());
     srunner_add_suite(sr, S3List_suite());
     srunner_add_suite(sr, S3Request_suite());
