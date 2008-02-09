@@ -50,9 +50,18 @@
 typedef struct S3List S3List;
 typedef struct S3ListIterator S3ListIterator;
 
+
+/**
+ * The comparison function is used to compare two list elements, and should return
+ * an integer greater than, equal to, or less than 0, if the element elem1
+ * is greater than, equal to, or less than the element elem2.
+ */
+typedef int (*s3list_compare_t) (const S3TypeRef elem1, const S3TypeRef elem2, const void *context);
+
 S3_EXTERN S3List *s3list_new ();
 S3_EXTERN S3List *s3list_copy (S3List *list);
 S3_EXTERN bool s3list_append (S3List *list, S3TypeRef object);
+S3_EXTERN void s3list_sort (S3List *list, s3list_compare_t func, const void *context);
 
 S3_EXTERN S3ListIterator *s3list_iterator_new (S3List *list);
 S3_EXTERN S3TypeRef s3list_iterator_next (S3ListIterator *iterator);

@@ -94,6 +94,42 @@ START_TEST (test_copy) {
 }
 END_TEST
 
+/* Sort a list */
+static int lexcompare (S3_UNUSED S3TypeRef elem1, S3_UNUSED S3TypeRef elem2, S3_UNUSED const void *context) {
+    fail_unless(context == (const void *) 5);
+    return strcmp(s3string_cstring(elem1), s3string_cstring(elem2));
+}
+
+START_TEST (test_sort) {
+    S3List *list = s3_autorelease(s3list_new());
+    S3String *a = S3STR("a");
+    S3String *b = S3STR("b");
+    S3String *c = S3STR("c");
+
+    /* Append elements out of order */
+    s3list_append(list, b);
+    s3list_append(list, a);
+    s3list_append(list, c);
+
+    /* Sort the list, setting context to a testable value */
+    s3list_sort(list, lexcompare, (const void *) 5);
+
+    /* Verify sorting */
+    S3ListIterator *i = s3_autorelease(s3list_iterator_new(list));
+    fail_unless(
+        s3_equals(s3list_iterator_next(i), S3STR("a"))
+    );
+    fail_unless(
+        s3_equals(s3list_iterator_next(i), S3STR("b"))
+    );
+    fail_unless(
+        s3_equals(s3list_iterator_next(i), S3STR("c"))
+    );
+
+    fail_if(s3list_iterator_hasnext(i));
+}
+END_TEST
+
 /* Test list iteration */
 START_TEST (test_next) {
     S3AutoreleasePool *pool = s3autorelease_pool_new();
@@ -123,7 +159,7 @@ START_TEST (test_next) {
 }
 END_TEST
 
-/* Test list iteration */
+/* Test list hasnext */
 START_TEST (test_hasnext) {
     S3AutoreleasePool *pool = s3autorelease_pool_new();
 
@@ -161,6 +197,7 @@ Suite *S3List_suite(void) {
     tcase_add_test(tc_general, test_new);
     tcase_add_test(tc_general, test_append);
     tcase_add_test(tc_general, test_copy);
+    tcase_add_test(tc_general, test_sort);
     tcase_add_test(tc_general, test_next);
     tcase_add_test(tc_general, test_hasnext);
 

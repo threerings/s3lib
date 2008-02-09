@@ -144,10 +144,10 @@ S3_PRIVATE int list_verify(list_t *);
 
 S3_PRIVATE void list_extract(list_t *, list_t *, lnode_t *, lnode_t *);
 S3_PRIVATE void list_transfer(list_t *, list_t *, lnode_t *first);
-S3_PRIVATE void list_merge(list_t *, list_t *, int (const void *, const void *));
-S3_PRIVATE void list_sort(list_t *, int (const void *, const void *));
-S3_PRIVATE lnode_t *list_find(list_t *, const void *, int (const void *, const void *));
-S3_PRIVATE int list_is_sorted(list_t *, int (const void *, const void *));
+S3_PRIVATE void list_merge(list_t *, list_t *, int (const void *, const void *, const void *), const void *);
+S3_PRIVATE void list_sort(list_t *, int (const void *, const void *, const void *), const void *);
+S3_PRIVATE lnode_t *list_find(list_t *, const void *, int (const void *, const void *, const void *), const void *);
+S3_PRIVATE int list_is_sorted(list_t *, int (const void *, const void *, const void *), const void *);
 
 #ifdef __cplusplus
 }
