@@ -91,6 +91,7 @@ START_TEST (test_dict_iterate) {
     fail_if(iterator == NULL);
 
     /* Get the first value */
+    fail_unless(s3dict_iterator_hasnext(iterator));
     next = s3dict_iterator_next(iterator);
     fail_unless(
             s3_equals(next, S3STR("key1")) ||
@@ -98,13 +99,15 @@ START_TEST (test_dict_iterate) {
     );
     
     /* Get the next value */
+    fail_unless(s3dict_iterator_hasnext(iterator));
     next = s3dict_iterator_next(iterator);
     fail_unless(
             s3_equals(next, S3STR("key1")) ||
             s3_equals(next, S3STR("key2"))
     );
 
-    /* No more values, should return NULL */
+    /* No more values, hasnext() should return false, next() should return NULL */
+    fail_if(s3dict_iterator_hasnext(iterator));
     fail_unless(s3dict_iterator_next(iterator) == NULL);
 }
 END_TEST

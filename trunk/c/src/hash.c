@@ -509,6 +509,16 @@ S3_PRIVATE hnode_t *hash_scan_next(hscan_t *scan)
 }
 
 /*
+ * Return true if any unvisited nodes remain.
+ */
+S3_PRIVATE bool hash_scan_hasnext(hscan_t *scan) {
+    if (scan->next != NULL)
+        return true;
+    else
+        return false;
+}
+
+/*
  * Insert a node into the hash table.
  * Notes:
  * 1. It's illegal to insert more than the maximum number of nodes. The client

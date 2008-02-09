@@ -273,7 +273,6 @@ S3_DECLARE S3DictIterator *s3dict_iterator_new (S3Dict *dict) {
     return iterator;
 }
 
-
 /**
  * Returns the next dictionary key, if any unvisited nodes remain, or NULL.
  *
@@ -288,6 +287,16 @@ S3_DECLARE S3TypeRef s3dict_iterator_next (S3DictIterator *iterator) {
         return NULL;
 
     return (S3TypeRef) hnode_getkey(node);
+}
+
+/**
+ * Return true if any unvisited list nodes remain.
+ *
+ * @param iterator An S3DictIterator instance allocated via #s3dict_iterator_new
+ * @return true if any unvisited list nodes remain.
+ */
+S3_DECLARE bool s3dict_iterator_hasnext (S3DictIterator *iterator) {
+    return hash_scan_hasnext(&iterator->scanner);
 }
 
 
