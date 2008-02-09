@@ -38,7 +38,7 @@
 
 #include "S3Lib.h"
 
-S3_PRIVATE int s3_base64_encode(const void *data, int size, char **str);
+S3_PRIVATE S3String *s3_base64_encode(const void *data, int size);
 S3_PRIVATE int s3_base64_decode(const char *str, void *data);
 
 #endif

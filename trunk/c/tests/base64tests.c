@@ -48,15 +48,15 @@ START_TEST (test_encode) {
     struct test {
         void *data;
         size_t len;
-        const char *result;
+        S3String *result;
     } *t, tests[] = {
-        { "", 0 , "" },
-        { "1", 1, "MQ==" },
-        { "22", 2, "MjI=" },
-        { "333", 3, "MzMz" },
-        { "4444", 4, "NDQ0NA==" },
-        { "55555", 5, "NTU1NTU=" },
-        { "abc:def", 7, "YWJjOmRlZg==" },
+        { "", 0 , S3STR("") },
+        { "1", 1, S3STR("MQ==") },
+        { "22", 2, S3STR("MjI=") },
+        { "333", 3, S3STR("MzMz") },
+        { "4444", 4, S3STR("NDQ0NA==") },
+        { "55555", 5, S3STR("NTU1NTU=") },
+        { "abc:def", 7, S3STR("YWJjOmRlZg==") },
         { NULL, 0, NULL }
     };
 
@@ -64,12 +64,11 @@ START_TEST (test_encode) {
         char *str;
         size_t len;
 
-        len = s3_base64_encode(t->data, t->len, &str);
-        fail_unless(strcmp(str, t->result) == 0, "failed test %d: %s != %s\n", numtest, str, t->result);
-        free(str);
+        S3String *encoded = s3_base64_encode(t->data, t->len);
+        fail_unless(s3_equals(encoded, t->result), "failed test %d: %s != %s\n", numtest, s3string_cstring(encoded), s3string_cstring(t->result));
 
-        str = strdup(t->result);
-        len = s3_base64_decode(t->result, str);
+        str = strdup(s3string_cstring(t->result));
+        len = s3_base64_decode(s3string_cstring(t->result), str);
         fail_unless(len == t->len, "failed test %d: len %d != %d\n", numtest, len, t->len);
         fail_unless(memcmp(str, t->data, t->len) == 0, "failed test %d: data\n", numtest);
         free(str);
