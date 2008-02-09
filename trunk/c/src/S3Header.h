@@ -51,7 +51,8 @@
 typedef struct S3Header S3Header;
 
 S3_EXTERN S3Header *s3header_new (S3String *name, S3String *value);
-S3_EXTERN S3List *s3header_values (S3Header *header);
+S3_EXTERN S3String *s3header_name (S3Header *header);
+S3_EXTERN S3String *s3header_value (S3Header *header);
 
 /*!
  * @} S3Header

@@ -47,18 +47,21 @@ START_TEST (test_header_new) {
 }
 END_TEST
 
-START_TEST (test_header_values) {
-    S3Header *header;
-    S3List *values;
-    S3ListIterator *i;
+START_TEST (test_header_name) {
+    S3Header *header = s3header_new(S3STR("Date"), S3STR("value"));
+    S3String *name = s3header_name(header);
 
-    header = s3header_new(S3STR("Date"), S3STR("value"));
-    values = s3header_values(header);
+    fail_unless(s3_equals(name, S3STR("Date")));
+    s3_release(header);
+}
+END_TEST
 
-    i = s3list_iterator_new(values);    
-    fail_unless(s3_equals(s3list_iterator_next(i), S3STR("value")));
+START_TEST (test_header_value) {
+    S3Header *header = s3header_new(S3STR("Date"), S3STR("value"));
+    S3String *value = s3header_value(header);
 
-    s3_release(i);
+    fail_unless(s3_equals(value, S3STR("value")));
+
     s3_release(header);
 }
 END_TEST
@@ -69,7 +72,8 @@ Suite *S3Header_suite(void) {
     TCase *tc_headers = tcase_create("Headers");
     suite_add_tcase(s, tc_headers);
     tcase_add_test(tc_headers, test_header_new);
-    tcase_add_test(tc_headers, test_header_values);
+    tcase_add_test(tc_headers, test_header_name);
+    tcase_add_test(tc_headers, test_header_value);
 
     return s;
 }

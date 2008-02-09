@@ -58,9 +58,7 @@
 static void s3header_dealloc (S3TypeRef object);
 
 /**
- * S3Header
- *
- * HTTP header and its associated value(s).
+ * HTTP header value(s)
  */
 struct S3Header {
     S3RuntimeBase base;
@@ -68,8 +66,8 @@ struct S3Header {
     /** @internal The header name */
     S3String *name;
 
-    /** @internal The header value(s) */
-    S3List *values;
+    /** @internal The header value */
+    S3String *value;
 };
 
 /** @internal S3Header Class Definition */
@@ -95,21 +93,11 @@ S3_DECLARE S3Header *s3header_new (S3String *name, S3String *value) {
     /* The header name */
     header->name = s3_retain(name);
 
-    /* An new list for header value(s) */
-    header->values = s3list_new();
-    if (header->values == NULL)
-        goto error;
-
-    /* The first header value. */
-    if (!s3list_append(header->values, value))
-        goto error;
+    /* The header value */
+    header->value = s3_retain(value);
 
     /* All done */
     return header;
-
-error:
-    s3_release(header);
-    return NULL;
 }
 
 
@@ -124,19 +112,26 @@ static void s3header_dealloc (S3TypeRef object) {
     if (header->name != NULL)
         s3_release(header->name);
 
-    if (header->values != NULL)
-        s3_release(header->values);
+    if (header->value != NULL)
+        s3_release(header->value);
 }
 
+/**
+ * Returns a borrowed reference to the header name.
+ * @param header A S3Header instance.
+ */
+S3_DECLARE S3String *s3header_name (S3Header *header) {
+    return header->name;
+}
 
 /**
- * Returns a borrowed reference to the header value list.
+ * Returns a borrowed reference to the header value.
  *
  * @param header A S3Header instance.
- * @return Borrowed reference to the header value list.
+ * @return Borrowed reference to the header value.
  */
-S3_DECLARE S3List *s3header_values (S3Header *header) {
-    return header->values;
+S3_DECLARE S3String *s3header_value (S3Header *header) {
+    return header->value;
 }
 
 /*!
