@@ -485,7 +485,7 @@ S3_PRIVATE void list_transfer(list_t *dest, list_t *source, lnode_t *first)
 }
 
 S3_PRIVATE void list_merge(list_t *dest, list_t *sour,
-	int compare (const void *, const void *))
+	int compare (const void *, const void *, const void *), const void *context)
 {
     lnode_t *dn, *sn, *tn;
     lnode_t *d_nil = list_nil(dest), *s_nil = list_nil(sour);
@@ -494,14 +494,14 @@ S3_PRIVATE void list_merge(list_t *dest, list_t *sour,
     assert (list_count(sour) + list_count(dest) > list_count(sour));
 
     /* lists must be sorted */
-    assert (list_is_sorted(sour, compare));
-    assert (list_is_sorted(dest, compare));
+    assert (list_is_sorted(sour, compare, context));
+    assert (list_is_sorted(dest, compare, context));
 
     dn = list_first_priv(dest);
     sn = list_first_priv(sour);
 
     while (dn != d_nil && sn != s_nil) {
-	if (compare(lnode_get(dn), lnode_get(sn)) >= 0) {
+	if (compare(lnode_get(dn), lnode_get(sn), context) >= 0) {
 	    tn = lnode_next(sn);
 	    list_delete(sour, sn);
 	    list_ins_before(dest, sn, dn);
@@ -518,7 +518,7 @@ S3_PRIVATE void list_merge(list_t *dest, list_t *sour,
 	list_transfer(dest, sour, sn);
 }
 
-S3_PRIVATE void list_sort(list_t *list, int compare(const void *, const void *))
+S3_PRIVATE void list_sort(list_t *list, int compare(const void *, const void *, const void *), const void *context)
 {
     list_t extra;
     listcount_t middle;
@@ -534,19 +534,19 @@ S3_PRIVATE void list_sort(list_t *list, int compare(const void *, const void *))
 	    node = lnode_next(node);
 	
 	list_transfer(&extra, list, node);
-	list_sort(list, compare);
-	list_sort(&extra, compare);
-	list_merge(list, &extra, compare);
+	list_sort(list, compare, context);
+	list_sort(&extra, compare, context);
+	list_merge(list, &extra, compare, context);
     } 
-    assert (list_is_sorted(list, compare));
+    assert (list_is_sorted(list, compare, context));
 }
 
-S3_PRIVATE lnode_t *list_find(list_t *list, const void *key, int compare(const void *, const void *))
+S3_PRIVATE lnode_t *list_find(list_t *list, const void *key, int compare(const void *, const void *, const void *), const void *context)
 {
     lnode_t *node;
 
     for (node = list_first_priv(list); node != list_nil(list); node = node->next) {
-	if (compare(lnode_get(node), key) == 0)
+	if (compare(lnode_get(node), key, context) == 0)
 	    return node;
     }
     
@@ -558,7 +558,7 @@ S3_PRIVATE lnode_t *list_find(list_t *list, const void *key, int compare(const v
  * Return 1 if the list is in sorted order, 0 otherwise
  */
 
-S3_PRIVATE int list_is_sorted(list_t *list, int compare(const void *, const void *))
+S3_PRIVATE int list_is_sorted(list_t *list, int compare(const void *, const void *, const void *), const void *context)
 {
     lnode_t *node, *next, *nil;
 
@@ -569,7 +569,7 @@ S3_PRIVATE int list_is_sorted(list_t *list, int compare(const void *, const void
 	next = lnode_next(node);
 
     for (; next != nil; node = next, next = lnode_next(next)) {
-	if (compare(lnode_get(node), lnode_get(next)) > 0)
+	if (compare(lnode_get(node), lnode_get(next), context) > 0)
 	    return 0;
     }
 

@@ -218,6 +218,42 @@ S3_DECLARE bool s3list_append (S3List *list, S3TypeRef object) {
 }
 
 /**
+ * @internal
+ * Maintains the #s3list_compare_t comparison function for use by the
+ * #list_compare implementation.
+ */
+struct ListSortContext {
+    s3list_compare_t func;
+    const void *context;
+};
+
+/**
+ * @internal
+ * A comparison function compatible with our backing list's sort implementation. Simply calls out to the
+ * real s3list_compare_t implementation.
+ */
+static int list_compare (const void *entry1, const void *entry2, const void *context) {
+    const struct ListSortContext *sorter = context;
+    
+    return sorter->func((S3TypeRef)entry1, (S3TypeRef)entry2, sorter->context);
+}
+
+/**
+ * Sort the list, using the provided comparison function.
+ * @param list S3List to sort.
+ * @param func Comparison function.
+ * @param context Context passed to comparison function.
+ */
+S3_DECLARE void s3list_sort (S3List *list, s3list_compare_t func, const void *context) {
+    struct ListSortContext sorter = {
+        .func = func,
+        .context = context
+    };
+
+    list_sort(&list->ctx, &list_compare, &sorter);
+}
+
+/**
  * Returns a newly allocated S3ListIterator iteration context for the provided
  * S3List. The provided context can be used to iterate over all entries of the
  * S3List.
