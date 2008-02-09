@@ -88,7 +88,7 @@ END_TEST
 START_TEST (test_sign) {
     S3Request *req = create_request();
 
-    s3request_sign(req);
+    s3request_sign(req, S3STR("id"), S3STR("key"));
 
     s3_release(req);
 }
