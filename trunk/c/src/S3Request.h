@@ -73,7 +73,7 @@ S3_EXTERN S3HTTPMethod s3request_method (S3Request *);
 S3_EXTERN S3String *s3request_bucket (S3Request *);
 S3_EXTERN S3String *s3request_object (S3Request *);
 S3_EXTERN S3Dict *s3request_headers (S3Request *);
-S3_EXTERN void s3request_sign (S3Request *);
+S3_EXTERN void s3request_sign (S3Request *, S3String *awsId, S3String *awsKey);
 
 /*!
  * @} S3Library

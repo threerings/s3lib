@@ -3,6 +3,7 @@ builtin(include,platform.m4)
 builtin(include,check.m4)
 builtin(include,libcurl.m4)
 builtin(include,libxml.m4)
+builtin(include,openssl.m4)
 builtin(include,safestr.m4)
 
 #------------------------------------------------------------------------

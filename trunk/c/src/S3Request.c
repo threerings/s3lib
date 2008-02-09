@@ -4,7 +4,7 @@
  *
  * Author: Landon Fuller <landonf@threerings.net>
  *
- * Copyright (c) 2007 Landon Fuller <landonf@bikemonkey.org>
+ * Copyright (c) 2005 - 2008 Landon Fuller <landonf@bikemonkey.org>
  * Copyright (c) 2007 Three Rings Design, Inc.
  * All rights reserved.
  *
@@ -41,6 +41,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <openssl/hmac.h>
+#include <openssl/evp.h>
+
 #include "S3Lib.h"
 
 /**
@@ -62,6 +65,9 @@ static const char AMAZON_HEADER_PREFIX[] = "x-amz-";
 
 /** @internal Header for S3's alternate date. */
 static const char ALTERNATIVE_DATE_HEADER[] = "x-amz-date";
+
+/* @internal SHA-1 message digest size */
+#define CRYPTO_DIGEST_SHA1_SIZE 20    /* 160 bits */
 
 /**
  * S3 HTTP Request Context.
@@ -173,7 +179,7 @@ S3_DECLARE S3Dict *s3request_headers (S3Request *request) {
  * Returns the current time as an RFC 822 formatted string,
  * or NULL if a failure occurs.
  */
-S3_UNUSED static S3String *rfc822_now () {
+static S3String *rfc822_now () {
     /* RFC 822 format; '%a %d %b %Y %T GMT' -- Maximum size of 29 bytes */
     char buf[29];
     time_t now;
@@ -200,13 +206,35 @@ S3_UNUSED static S3String *rfc822_now () {
 }
 
 /**
+ * @internal
+ * Return the HTTP method string for a given S3HTTPMethod. Used for S3
+ * request signing.
+ */
+static const char *s3request_http_verb (S3HTTPMethod method) {
+    /* HTTP-Verb */
+    switch (method) {
+        case S3_HTTP_PUT:
+            return "PUT";
+        case S3_HTTP_GET:
+            return "GET";
+        case S3_HTTP_HEAD:
+            return "HEAD";
+        case S3_HTTP_DELETE:
+            return "DELETE";
+    }
+
+    DEBUG("BUG: Missing HTTP method");
+    assert(0);
+    return "";
+}
+
+/**
  * Sign the request. Any missing, mandatory headers (eg, Date) will be added to
  * the request.
  *
  * @param request A S3Request instance.
  */
-S3_DECLARE void s3request_sign (S3_UNUSED S3Request *req) {
-#if 0
+S3_DECLARE void s3request_sign (S3Request *req, S3_UNUSED S3String *awsId, S3String *awsKey) {
     S3AutoreleasePool *pool = s3autorelease_pool_new();
 
     /* Header keys */
@@ -219,45 +247,124 @@ S3_DECLARE void s3request_sign (S3_UNUSED S3Request *req) {
      * Add all headers needing signing to the signed_headers dictionary
      */
     S3Dict *signed_headers = s3_autorelease( s3dict_new() );
-    S3ListIterator *i = s3_autorelease( s3list_iterator_new(req->headers) );
-    
-    while (s3list_iterator_hasnext(i)) {
-        S3Header *header = s3list_iterator_next(i);
-        S3String *name = s3string_lowercase(s3header_name(header));
+    S3List *amz_headers = s3_autorelease ( s3list_new() );
+    {
+        S3DictIterator *i = s3_autorelease( s3dict_iterator_new(req->headers) );
 
-        /* x-amz- header */
-        if (s3string_startswith(name, amz_prefix)) {
-            s3dict_put(signed_headers, name, header);
-        
-        /* content-md5 header */
-        } else if (s3_equals(name, content_md5)) {
-            s3dict_put(signed_headers, name, header);
-        
-        /* content-type header */
-        } else if (s3_equals(name, content_type)) {
-            s3dict_put(signed_headers, name, header);
-        
-        /* date header */
-        } else if (s3_equals(name, date_header_str)) {
-            s3dict_put(signed_headers, name, header);
+        /* Estimated size of the signing string buffer. TODO: Guess the size of the HTTP-Request-URI */
+        size_t size_estimate = 0;
+
+        while (s3dict_iterator_hasnext(i)) {
+            S3String *key = s3dict_iterator_next(i);
+            S3String *name = s3string_lowercase(key);
+            S3String *value = s3dict_get(req->headers, key);
+            
+            assert(value != NULL);
+
+            /* Increase the estimate size of the signing buffer by length(value) + '\n' */
+            size_estimate += s3string_length(value) + 1;
+
+            /* x-amz- headers (must be sorted ) */
+            if (s3string_startswith(name, amz_prefix)) {
+                s3dict_put(signed_headers, name, value);
+                s3list_append(amz_headers, key);
+
+            /* content-md5 header */
+            } else if (s3_equals(name, content_md5)) {
+                s3dict_put(signed_headers, name, value);
+
+            /* content-type header */
+            } else if (s3_equals(name, content_type)) {
+                s3dict_put(signed_headers, name, value);
+
+            /* date header */
+            } else if (s3_equals(name, date_header_str)) {
+                s3dict_put(signed_headers, name, value);
+            }
         }
+
+        /* Add a Date header, if necessary */
+        if (s3dict_get(signed_headers, date_header_str) == NULL) {
+            S3String *date;
+
+            date = rfc822_now();
+            assert(date != NULL);
+
+            s3dict_put(req->headers, date_header_str, date);
+            s3dict_put(signed_headers, date_header_str, date);
+        }
+
+        /* Fill in missing mandatory headers with blank strings */
+        S3String *blank = S3STR("");
+
+        if (s3dict_get(signed_headers, content_md5) == NULL)
+            s3dict_put(signed_headers, content_md5, blank);
+
+        if (s3dict_get(signed_headers, content_type) == NULL)
+            s3dict_put(signed_headers, content_type, blank);
     }
 
-    /* Add a Date header, if necessary */
-    if (s3dict_get(signed_headers, date_header_str) == NULL) {
-        S3String *date;
+
+    /*
+     * HMAC the request
+     */
+    {
+        HMAC_CTX hmac;
+        S3String *str;
+        const unsigned char newline[] = "\n";
+        const EVP_MD *md;
+        unsigned char output[CRYPTO_DIGEST_SHA1_SIZE];
+        unsigned int output_len;
+
+        /* Set up the context */
+        md = EVP_sha1();
+        HMAC_CTX_init(&hmac);
+        HMAC_Init_ex(&hmac, s3string_cstring(awsKey), s3string_length(awsKey), md, NULL);
+
+        /* HTTP-Verb */
+        HMAC_Update(&hmac, (const unsigned char *) s3request_http_verb(req->method), strlen(s3request_http_verb(req->method)));
+        HMAC_Update(&hmac, newline, sizeof(newline));
+
+        /* Content-MD5 */
+        str = s3dict_get(signed_headers, content_md5);
+        HMAC_Update(&hmac, (const unsigned char *) s3string_cstring(str), s3string_length(str));
+        HMAC_Update(&hmac, newline, sizeof(newline));
     
-        date = rfc822_now();
-        assert(date != NULL);
+        /* Content-Type */
+        str = s3dict_get(signed_headers, content_type);
+        HMAC_Update(&hmac, (const unsigned char *) s3string_cstring(str), s3string_length(str));
+        HMAC_Update(&hmac, newline, sizeof(newline));
+        
+        /* Date */
+        str = s3dict_get(signed_headers, date_header_str);
+        HMAC_Update(&hmac, (const unsigned char *) s3string_cstring(str), s3string_length(str));
+        HMAC_Update(&hmac, newline, sizeof(newline));
+                
+        /* Canonicalized AMZ Headers */
+        S3ListIterator *i = s3list_iterator_new(amz_headers);
+        while (s3list_iterator_hasnext(i)) {
+            S3String *key = s3string_lowercase( s3list_iterator_next(i) );
+            S3String *value = s3dict_get(signed_headers, key);
+            const unsigned char colon[] = ":";
+            
+            assert(value != NULL);
+            
+            HMAC_Update(&hmac, (const unsigned char *) s3string_cstring(key), s3string_length(key));
+            HMAC_Update(&hmac, colon, sizeof(colon));
+            HMAC_Update(&hmac, (const unsigned char *) s3string_cstring(value), s3string_length(value));
+            HMAC_Update(&hmac, newline, sizeof(newline));
+        }
 
-        S3Header *header = s3_autorelease( s3header_new(S3STR("Date"), date) );
-        s3list_append(req->headers, header);
-        s3dict_put(signed_headers, date_header_str, header);
+        /* Canonicalized Resource: TODO */
+
+        output_len = sizeof(output);
+        HMAC_Final(&hmac, output, &output_len);
+        HMAC_CTX_cleanup(&hmac);
     }
 
+    
     /* Free our pool */
     s3_release(pool);
-#endif
 }
 
 /**

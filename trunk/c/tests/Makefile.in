@@ -17,8 +17,8 @@ TEST_OBJS=	tests.o \
 		S3RequestTests.o \
 		S3StringTests.o
 
-CFLAGS+=	@CHECK_CFLAGS@ $(LIBCURL_CFLAGS) $(XML_CFLAGS) $(SAFESTR_CFLAGS) -DTEST_DATA=\"${srcdir}/data\"
-LIBS+=		-ls3-testing $(LIBCURL_LDFLAGS) $(XML_LDFLAGS) $(SAFESTR_LDFLAGS) @CHECK_LIBS@
+CFLAGS+=	@CHECK_CFLAGS@ $(LIBCURL_CFLAGS) $(XML_CFLAGS) $(SAFESTR_CFLAGS) $(OPENSSL_CFLAGS) -DTEST_DATA=\"${srcdir}/data\"
+LIBS+=		-ls3-testing $(LIBCURL_LDFLAGS) $(XML_LDFLAGS) $(SAFESTR_LDFLAGS) $(OPENSSL_LDFLAGS) @CHECK_LIBS@
 LDFLAGS+=	-L${top_builddir}/src $(LIBS)
 
 # Recompile the tests every time
