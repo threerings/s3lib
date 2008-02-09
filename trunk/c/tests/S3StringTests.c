@@ -60,6 +60,15 @@ START_TEST (test_copy) {
 }
 END_TEST
 
+START_TEST (test_startswith) {
+    S3String *string = s3string_new("hello");
+    fail_unless(s3string_startswith(string, S3STR("he")));
+    fail_unless(s3string_startswith(string, S3STR("hel")));
+    fail_if(s3string_startswith(string, S3STR("fhel")));
+    s3_release(string);
+}
+END_TEST
+
 START_TEST (test_cstring) {
     S3String *string = s3string_new("hello");
     fail_unless(strcmp("hello", s3string_cstring(string)) == 0);
@@ -115,6 +124,7 @@ Suite *S3String_suite(void) {
     suite_add_tcase(s, tc_general);
     tcase_add_test(tc_general, test_new);
     tcase_add_test(tc_general, test_copy);
+    tcase_add_test(tc_general, test_startswith);
     tcase_add_test(tc_general, test_cstring);
     tcase_add_test(tc_general, test_length);
     tcase_add_test(tc_general, test_hash);
