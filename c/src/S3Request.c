@@ -380,22 +380,20 @@ S3_DECLARE void s3request_sign (S3Request *req, S3String *awsId, S3String *awsKe
         
         /* Create the authorization header */
         {
-            char *b64;
+            S3String *b64;
             char *authstring;
 
             /* Base64 the signature */
-            if (s3_base64_encode(output, output_len, &b64) == -1) {
-                // XXX report error
-                goto cleanup;
-            }
+            b64 = s3_base64_encode(output, output_len);
 
             /* Create the authorization header */
-            asprintf(&authstring, "AWS %s:%s", s3string_cstring(awsId), b64);
+            asprintf(&authstring, "AWS %s:%s", s3string_cstring(awsId), s3string_cstring(b64));
             if (authstring == NULL) {
                 // XXX report error
                 goto cleanup;
             }
             s3dict_put(req->headers, S3STR(AMAZON_AUTHORIZATION_HEADER), S3STR(authstring));
+            free(authstring);
         }
 
     }

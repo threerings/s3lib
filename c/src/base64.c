@@ -51,40 +51,41 @@ pos(char c)
     return -1;
 }
 
-S3_PRIVATE int s3_base64_encode(const void *data, int size, char **str) {
-    char *s, *p;
+S3_PRIVATE S3String *s3_base64_encode(const void *data, int size) {
+    char *p;
     int i;
     int c;
     const unsigned char *q;
+    char output[size * 4 / 3 + 4];
 
-    p = s = (char *) malloc(size * 4 / 3 + 4);
-    if (p == NULL)
-	return -1;
+    p = output;
+
     q = (const unsigned char *) data;
     i = 0;
+
     for (i = 0; i < size;) {
-	c = q[i++];
-	c *= 256;
-	if (i < size)
-	    c += q[i];
-	i++;
-	c *= 256;
-	if (i < size)
-	    c += q[i];
-	i++;
-	p[0] = base64_chars[(c & 0x00fc0000) >> 18];
-	p[1] = base64_chars[(c & 0x0003f000) >> 12];
-	p[2] = base64_chars[(c & 0x00000fc0) >> 6];
-	p[3] = base64_chars[(c & 0x0000003f) >> 0];
-	if (i > size)
-	    p[3] = '=';
-	if (i > size + 1)
-	    p[2] = '=';
-	p += 4;
+        c = q[i++];
+        c *= 256;
+        if (i < size)
+            c += q[i];
+        i++;
+        c *= 256;
+        if (i < size)
+            c += q[i];
+        i++;
+        p[0] = base64_chars[(c & 0x00fc0000) >> 18];
+        p[1] = base64_chars[(c & 0x0003f000) >> 12];
+        p[2] = base64_chars[(c & 0x00000fc0) >> 6];
+        p[3] = base64_chars[(c & 0x0000003f) >> 0];
+        if (i > size)
+            p[3] = '=';
+        if (i > size + 1)
+            p[2] = '=';
+        p += 4;
     }
+
     *p = 0;
-    *str = s;
-    return strlen(s);
+    return S3STR(output);
 }
 
 #define DECODE_ERROR 0xffffffff
@@ -111,6 +112,7 @@ token_decode(const char *token)
     return (marker << 24) | val;
 }
 
+// TODO: Implement an S3Data class.
 S3_PRIVATE int s3_base64_decode(const char *str, void *data) {
     const char *p;
     unsigned char *q;
