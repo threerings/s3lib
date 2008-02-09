@@ -15,7 +15,8 @@ TEST_OBJS=	tests.o \
 		S3LibTests.o \
 		S3ListTests.o \
 		S3RequestTests.o \
-		S3StringTests.o
+		S3StringTests.o \
+		base64tests.o
 
 CFLAGS+=	@CHECK_CFLAGS@ $(LIBCURL_CFLAGS) $(XML_CFLAGS) $(SAFESTR_CFLAGS) $(OPENSSL_CFLAGS) -DTEST_DATA=\"${srcdir}/data\"
 LIBS+=		-ls3-testing $(LIBCURL_LDFLAGS) $(XML_LDFLAGS) $(SAFESTR_LDFLAGS) $(OPENSSL_LDFLAGS) @CHECK_LIBS@
