@@ -208,27 +208,7 @@ static void s3string_dealloc (S3TypeRef obj) {
  */
 static long s3string_hash (S3TypeRef obj) {
     S3String *string = (S3String *) obj;
-
-    static unsigned long randbox[] = {
-        0x49848f1bU, 0xe6255dbaU, 0x36da5bdcU, 0x47bf94e9U,
-        0x8cbcce22U, 0x559fc06aU, 0xd268f536U, 0xe10af79aU,
-        0xc1af4d69U, 0x1d2917b5U, 0xec4c304dU, 0x9ee5016cU,
-        0x69232f74U, 0xfead7bb3U, 0xe9089ab6U, 0xf012f6aeU,
-    };
-
-    const unsigned char *str = (const unsigned char *) s3string_cstring(string);
-    long acc = 0;
-
-    while (*str) {
-        acc ^= randbox[(*str + acc) & 0xf];
-        acc = (acc << 1) | (acc >> 31);
-        acc &= 0xffffffffU;
-        acc ^= randbox[((*str++ >> 4) + acc) & 0xf];
-        acc = (acc << 2) | (acc >> 30);
-        acc &= 0xffffffffU;
-    }
-
-    return acc;
+    return s3cstring_hash(s3string_cstring(string));
 }
 
 /**
@@ -271,6 +251,31 @@ S3_DECLARE S3String *s3string_copy (S3String *string) {
     return string;
 }
 
+/**
+ * @internal
+ * Hash a NULL-terminated character array.
+ */
+S3_PRIVATE long s3cstring_hash (const char *string) {
+    static unsigned long randbox[] = {
+        0x49848f1bU, 0xe6255dbaU, 0x36da5bdcU, 0x47bf94e9U,
+        0x8cbcce22U, 0x559fc06aU, 0xd268f536U, 0xe10af79aU,
+        0xc1af4d69U, 0x1d2917b5U, 0xec4c304dU, 0x9ee5016cU,
+        0x69232f74U, 0xfead7bb3U, 0xe9089ab6U, 0xf012f6aeU,
+    };
+    const unsigned char *p = (const unsigned char *) string;
+    long acc = 0;
+
+    while (*p) {
+        acc ^= randbox[(*p + acc) & 0xf];
+        acc = (acc << 1) | (acc >> 31);
+        acc &= 0xffffffffU;
+        acc ^= randbox[((*p++ >> 4) + acc) & 0xf];
+        acc = (acc << 2) | (acc >> 30);
+        acc &= 0xffffffffU;
+    }
+
+    return acc;
+}
 
 /**
  * @internal
