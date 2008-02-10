@@ -93,13 +93,14 @@ START_TEST (test_sign) {
     /* Create the request */
     headers = s3_autorelease( s3dict_new() );
     s3dict_put(headers, S3STR("Date"), S3STR("Sat 09 Feb 2008 10:54:31 GMT"));
+    s3dict_put(headers, S3STR("x-amz-meta-test"), S3STR("metadata"));
     request = s3_autorelease( s3request_new(S3_HTTP_DELETE, S3STR("bucket"), S3STR("object"), headers) );
 
     /* Sign the request */
     s3request_sign(request, S3STR("accessId"), S3STR("accessKey"));
     authorization = s3dict_get(s3request_headers(request), S3STR("Authorization"));
     fail_if(authorization == NULL);
-    fail_unless(s3_equals(authorization, S3STR("AWS accessId:u0sBn527zaJ1Ni/YYWdk903tToM=")));
+    fail_unless(s3_equals(authorization, S3STR("AWS accessId:AeKXBWEUhOG1KMzTPMRZrS6NndU=")));
 }
 END_TEST
 
