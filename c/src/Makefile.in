@@ -8,7 +8,9 @@ include ${top_builddir}/Mk/compile.mk
 include ${top_builddir}/Mk/subdir.mk
 
 LIBRARY_NAME=	libs3
-LIBRARY_OBJS=	S3AutoreleasePool.o \
+LIBRARY_OBJS= \
+        $(srcdir)/S3Account.o \
+        S3AutoreleasePool.o \
 		S3Connection.o \
 		S3Dict.o \
 		S3Error.o \
@@ -20,7 +22,9 @@ LIBRARY_OBJS=	S3AutoreleasePool.o \
 		hash.o \
 		list.o
 
-HEADERS=	$(srcdir)/S3AutoreleasePool.h \
+HEADERS= \
+        $(srcdir)/S3Account.h \
+        $(srcdir)/S3AutoreleasePool.h \
 		$(srcdir)/S3Connection.h \
 		$(srcdir)/S3Dict.h \
 		$(srcdir)/S3Error.h \
