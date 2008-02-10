@@ -255,18 +255,12 @@ S3_DECLARE void s3request_sign (S3Request *req, S3String *awsId, S3String *awsKe
     {
         S3DictIterator *i = s3_autorelease( s3dict_iterator_new(req->headers) );
 
-        /* Estimated size of the signing string buffer. TODO: Guess the size of the HTTP-Request-URI */
-        size_t size_estimate = 0;
-
         while (s3dict_iterator_hasnext(i)) {
             S3String *key = s3dict_iterator_next(i);
             S3String *name = s3string_lowercase(key);
             S3String *value = s3dict_get(req->headers, key);
             
             assert(value != NULL);
-
-            /* Increase the estimate size of the signing buffer by length(value) + '\n' */
-            size_estimate += s3string_length(value) + 1;
 
             /* x-amz- headers (must be sorted ) */
             if (s3string_startswith(name, amz_prefix)) {
