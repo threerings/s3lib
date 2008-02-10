@@ -1,11 +1,11 @@
 /*
- * tests.h vi:ts=4:sw=4:expandtab:
- * Amazon S3 Library Unit Tests
+ * S3Account.h vi:ts=4:sw=4:expandtab:
+ * Amazon S3 Library
  *
  * Author: Landon Fuller <landonf@threerings.net>
  *
- * Copyright (c) 2006 - 2007 Landon Fuller <landonf@bikemonkey.org>
- * Copyright (c) 2006 - 2007 Three Rings Design, Inc.
+ * Copyright (c) 2007 Landon Fuller <landonf@bikemonkey.org>
+ * Copyright (c) 2007 Three Rings Design, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,23 +33,27 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TESTS_H
-#define TESTS_H
+#ifndef S3ACCOUNT_H
+#define S3ACCOUNT_H
 
-#include <config.h>
-#include <check.h>
-#include <src/S3Lib.h>
+/**
+ * @file
+ * @brief S3 User Account Credentials
+ * @author Landon Fuller <landonf@threerings.net>
+ */
 
-Suite *S3Account_suite(void);
-Suite *S3AutoreleasePool_suite(void);
-Suite *S3Connection_suite(void);
-Suite *S3Dict_suite(void);
-Suite *S3Error_suite(void);
-Suite *S3Header_suite(void);
-Suite *S3Lib_suite(void);
-Suite *S3List_suite(void);
-Suite *S3Request_suite(void);
-Suite *S3String_suite(void);
-Suite *base64_suite(void);
+/*!
+ * @addtogroup S3Account
+ * @{
+ */
 
-#endif /* TESTS_H */
+/* S3 Account Credentials. */
+typedef struct S3Account S3Account;
+
+S3_EXTERN S3Account *s3account_new (S3String *awsId, S3String *awsKey);
+
+/*!
+ * @} S3Account
+ */
+
+#endif /* S3ACCOUNT_H */
