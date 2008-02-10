@@ -72,6 +72,7 @@ int main(int argc, char *argv[]) {
     srunner_add_suite(sr, S3List_suite());
     srunner_add_suite(sr, S3Request_suite());
     srunner_add_suite(sr, S3String_suite());
+    srunner_add_suite(sr, S3StringBuilder_suite());
     srunner_add_suite(sr, base64_suite());
 
     /* Enable XML output */

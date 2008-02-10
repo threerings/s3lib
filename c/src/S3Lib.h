@@ -100,6 +100,7 @@ typedef void * S3TypeRef;
  * S3lib includes
  */
 #include "S3String.h"
+#include "S3StringBuilder.h"
 #include "S3List.h"
 #include "S3Dict.h"
 #include "S3Error.h"

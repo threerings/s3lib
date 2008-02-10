@@ -1,11 +1,10 @@
 /*
- * tests.h vi:ts=4:sw=4:expandtab:
- * Amazon S3 Library Unit Tests
+ * S3StringBuilder.h vi:ts=4:sw=4:expandtab:
+ * Amazon S3 Library
  *
  * Author: Landon Fuller <landonf@threerings.net>
  *
- * Copyright (c) 2006 - 2007 Landon Fuller <landonf@bikemonkey.org>
- * Copyright (c) 2006 - 2007 Three Rings Design, Inc.
+ * Copyright (c) 2007 Landon Fuller <landonf@bikemonkey.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,24 +32,29 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TESTS_H
-#define TESTS_H
+#ifndef S3STRINGBUILDER_H
+#define S3STRINGBUILDER_H
 
-#include <config.h>
-#include <check.h>
-#include <src/S3Lib.h>
+/**
+ * @file
+ * @brief S3Lib Mutable strings. 
+ * @author Landon Fuller <landonf@threerings.net>
+ */
 
-Suite *S3Account_suite(void);
-Suite *S3AutoreleasePool_suite(void);
-Suite *S3Connection_suite(void);
-Suite *S3Dict_suite(void);
-Suite *S3Error_suite(void);
-Suite *S3Header_suite(void);
-Suite *S3Lib_suite(void);
-Suite *S3List_suite(void);
-Suite *S3Request_suite(void);
-Suite *S3String_suite(void);
-Suite *S3StringBuilder_suite(void);
-Suite *base64_suite(void);
+/*!
+ * @addtogroup S3StringBuilder
+ * @{
+ */
 
-#endif /* TESTS_H */
+typedef struct S3StringBuilder S3StringBuilder;
+
+S3_EXTERN S3StringBuilder *s3stringbuilder_new ();
+S3_EXTERN S3String *s3stringbuilder_string (S3StringBuilder *builder);
+S3_EXTERN size_t s3stringbuilder_length (S3StringBuilder *builder);
+S3_EXTERN void s3stringbuilder_append (S3StringBuilder *builder, S3String *source);
+
+/*!
+ * @} S3StringBuilder
+ */
+
+#endif /* S3STRINGBUILDER_H */

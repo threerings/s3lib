@@ -61,6 +61,7 @@ S3_EXTERN size_t s3string_length (S3String *string);
 
 #ifdef S3LIB_PRIVATE_API
 S3_PRIVATE safestr_t s3string_safestr (S3String *string);
+S3_PRIVATE long s3cstring_hash (const char *string);
 #endif
 
 /*!
