@@ -60,6 +60,12 @@ START_TEST (test_copy) {
 }
 END_TEST
 
+START_TEST (test_withformat) {
+    S3String *string = s3string_withformat("%s %s", "test", "string");
+    fail_unless(s3_equals(string, S3STR("test string")));
+}
+END_TEST
+
 START_TEST (test_startswith) {
     S3String *string = s3string_new("hello");
     fail_unless(s3string_startswith(string, S3STR("he")));
@@ -132,6 +138,7 @@ Suite *S3String_suite(void) {
     suite_add_tcase(s, tc_general);
     tcase_add_test(tc_general, test_new);
     tcase_add_test(tc_general, test_copy);
+    tcase_add_test(tc_general, test_withformat);
     tcase_add_test(tc_general, test_startswith);
     tcase_add_test(tc_general, test_lowercase);
     tcase_add_test(tc_general, test_cstring);

@@ -101,6 +101,29 @@ S3_DECLARE S3String *s3string_new (const char *cstring) {
 }
 
 /**
+ * Create a new S3String instance, using the provided printf-style format string and arguments.
+ * The returned string will be autoreleased, and you do not need to free it.
+ *
+ * @param format printf-style format string.
+ * @return An auto-released S3String instance.
+ */
+S3_DECLARE S3String *s3string_withformat (const char *format, ...) {
+    va_list ap;
+    char *output;
+    S3String *ret;
+
+    va_start(ap, format);
+    vasprintf(&output, format, ap);
+    va_end(ap);
+
+    assert(output != NULL);
+    ret = s3string_new(output);
+    free(output);
+
+    return s3_autorelease(ret);
+}
+
+/**
  * Returns true if the S3String instance starts with the given
  * string.
  *
