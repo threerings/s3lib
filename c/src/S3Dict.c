@@ -56,6 +56,8 @@
  */
 
 static void s3dict_dealloc (S3TypeRef object);
+static long s3dict_hash (S3TypeRef obj);
+static bool s3dict_equals (S3TypeRef self, S3TypeRef other);
 static void s3dict_iterator_dealloc (S3TypeRef object);
 
 /**
@@ -74,7 +76,9 @@ struct S3Dict {
 /** @internal S3Dict Class Definition */
 static S3RuntimeClass S3DictClass = {
     .version = S3_CURRENT_RUNTIME_CLASS_VERSION,
-    .dealloc = s3dict_dealloc
+    .dealloc = s3dict_dealloc,
+    .hash = s3dict_hash,
+    .equals = s3dict_equals
 };
 
 /**
@@ -183,6 +187,35 @@ error:
     return NULL;
 }
 
+/**
+ * Create a shallow copy of a dictionary.
+ * Referenced objects will not be copied.
+ *
+ * @param dict A S3Dict instance to copy.
+ * @return Returns a newly allocated copy of @a list, or NULL if a failure occured.
+ 
+ * This function should not fail unless available memory has been exhausted.
+ * @attention It is the caller's responsibility to release the returned dictionary.
+ */
+S3_EXTERN S3Dict *s3dict_copy (S3Dict *dict) {
+    S3AutoreleasePool *pool = s3autorelease_pool_new();
+    S3Dict *copy;
+    S3DictIterator *i;
+
+    copy = s3dict_new();
+    if (copy == NULL)
+        return NULL;
+
+    i = s3_autorelease( s3dict_iterator_new(dict) );
+    while (s3dict_iterator_hasnext(i)) {
+        S3String *key = s3dict_iterator_next(i);
+        S3String *value = s3dict_get(dict, key);
+        s3dict_put(copy, key, value);
+    }
+
+    s3_release(pool);
+    return copy;
+}
 
 /**
  * Deallocate all resources assocated with @a object.
@@ -245,6 +278,88 @@ S3_DECLARE S3TypeRef s3dict_get (S3Dict *dict, S3TypeRef key) {
 
     /* Return the value */
     return (S3TypeRef) hnode_get(node);
+}
+
+/**
+ * @internal
+ *
+ * S3Dict hash callback.
+ *
+ * @warning Do not call directly, use #s3_hash
+ *
+ * @param obj A S3Dictionary instance.
+ */
+static long s3dict_hash (S3TypeRef obj) {
+    S3AutoreleasePool *pool = s3autorelease_pool_new();    
+    S3Dict *dict;
+    S3DictIterator *i;
+    long hash = 0;
+
+    dict = (S3Dict *) obj;
+    i = s3_autorelease( s3dict_iterator_new(dict) );
+
+    while (s3dict_iterator_hasnext(i)) {
+        S3String *key = s3dict_iterator_next(i);
+        S3String *value = s3dict_get(dict, key);
+        hash += s3_hash(key);
+        hash += s3_hash(value);
+    }
+
+    s3_release(pool);
+    return hash;
+}
+
+/**
+ * @internal
+ *
+ * S3Dict equality callback.
+ * @warning Do not call directly, use #s3_hash
+ *
+ * @param self A S3Dict instance.
+ * @param other Object to compare against
+ */
+static bool s3dict_equals (S3TypeRef self, S3TypeRef other) {
+    S3DictIterator *i;
+    bool result = false;
+
+    /* If it's not a dictionary, it can't be equal */
+    if (!s3_instanceof(other, &S3DictClass))
+        return false;
+
+    /* Cast to strings. */
+    S3Dict *dict1 = (S3Dict *) self;
+    S3Dict *dict2 = (S3Dict *) other;
+
+    /* If it's not equal in size, it can't be equal */
+    if (hash_count(dict1->hash) != hash_count(dict2->hash))
+        return false;
+
+    /* Do the comparison */
+    i = s3dict_iterator_new(dict1);
+    while (s3dict_iterator_hasnext(i)) {
+        S3String *key = s3dict_iterator_next(i);
+        S3TypeRef val1 = s3dict_get(dict1, key);
+        S3TypeRef val2 = s3dict_get(dict2, key);
+
+        /* Missing key? */
+        if (val2 == NULL) {
+            result = false;
+            goto done;
+        }
+
+        /* Values unequal? */
+        if (!s3_equals(val1, val2)) {
+            result = false;
+            goto done;
+        }
+    }
+
+    /* Success */
+    result = true;
+
+done:
+    s3_release(i);
+    return result;
 }
 
 /**

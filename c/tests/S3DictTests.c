@@ -41,13 +41,44 @@
 
 #include "tests.h"
 
-START_TEST (test_dict_new) {
+START_TEST (test_new) {
     S3Dict *dict = s3dict_new();
     s3_release(dict);
 }
 END_TEST
 
-START_TEST (test_dict_put_get) {
+START_TEST (test_copy) {
+    S3Dict *dict = s3_autorelease(s3dict_new());
+    S3Dict *copy;
+
+    s3dict_put(dict, S3STR("key"), S3STR("value"));
+    copy = s3_autorelease( s3dict_copy(dict) );
+    
+    fail_unless(s3_equals(dict, copy));
+}
+END_TEST
+
+START_TEST (test_equals_hash) {
+    S3Dict *dict = s3_autorelease(s3dict_new());
+    S3Dict *copy = s3_autorelease(s3dict_new());
+
+    /* Should be unequal */
+    s3dict_put(dict, S3STR("key"), S3STR("value"));
+    s3dict_put(copy, S3STR("key"), S3STR("value"));
+
+    fail_unless(s3_equals(dict, copy));
+    fail_unless(s3_hash(dict) == s3_hash(copy));
+
+    /* Should be unequal */
+    s3dict_put(dict, S3STR("key2"), S3STR("val2"));
+    s3dict_put(copy, S3STR("key2"), S3STR("notval"));
+
+    fail_if(s3_equals(dict, copy));
+    fail_if(s3_hash(dict) == s3_hash(copy));
+}
+END_TEST
+
+START_TEST (test_put_get) {
     S3Dict *dict = s3_autorelease(s3dict_new());
     S3String *key;
     S3String *value;
@@ -70,7 +101,7 @@ START_TEST (test_dict_put_get) {
 }
 END_TEST
 
-START_TEST (test_dict_iterate) {
+START_TEST (test_iterate) {
     S3Dict *dict = s3_autorelease(s3dict_new());
     S3DictIterator *iterator;
     S3String *next;
@@ -117,9 +148,11 @@ Suite *S3Dict_suite(void) {
 
     TCase *tc_dict = tcase_create("Dict");
     suite_add_tcase(s, tc_dict);
-    tcase_add_test(tc_dict, test_dict_new);
-    tcase_add_test(tc_dict, test_dict_put_get);
-    tcase_add_test(tc_dict, test_dict_iterate);    
+    tcase_add_test(tc_dict, test_new);
+    tcase_add_test(tc_dict, test_copy);
+    tcase_add_test(tc_dict, test_equals_hash);
+    tcase_add_test(tc_dict, test_put_get);
+    tcase_add_test(tc_dict, test_iterate);    
 
     return s;
 }

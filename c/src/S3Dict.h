@@ -54,6 +54,7 @@ typedef struct S3Dict S3Dict;
 typedef struct S3DictIterator S3DictIterator;
 
 S3_EXTERN S3Dict *s3dict_new ();
+S3_EXTERN S3Dict *s3dict_copy (S3Dict *dict);
 
 S3_EXTERN bool s3dict_put (S3Dict *dict, S3TypeRef key, S3TypeRef value);
 S3_EXTERN S3TypeRef s3dict_get (S3Dict *dict, S3TypeRef key);
