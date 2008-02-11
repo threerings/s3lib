@@ -39,6 +39,10 @@
 
 #include "S3Lib.h"
 
+#include <openssl/hmac.h>
+#include <openssl/evp.h>
+#include <openssl/sha.h>
+
 /**
  * @file
  * @brief S3 User Account Credentials
@@ -102,6 +106,39 @@ S3_DECLARE S3Account *s3account_new (S3String *awsId, S3String *awsKey) {
     account->awsKey = s3_retain(awsKey);
 
     return (account);
+}
+
+/**
+ * Sign a S3 request policy, using the AWS key, returning a base64 SHA1 HMAC. This signature can be
+ * passed via the Authorization header or request parameter.
+ *
+ * http://docs.amazonwebservices.com/AmazonS3/2006-03-01/RESTAuthentication.html
+ *
+ * @param account Account containing the signing credentials.
+ * @param policy Policy to be signed.
+ * @return An #S3String containing the base64-encoded HMAC-SHA1 signature.
+ */
+S3_DECLARE S3String *s3account_sign_policy (S3Account *account, S3String *policy) {
+    HMAC_CTX        hmac;
+    const EVP_MD    *md;
+    unsigned char   output[SHA_DIGEST_LENGTH];
+    unsigned int    output_len;
+
+    /* Set up the HMAC context */
+    HMAC_CTX_init(&hmac);
+    md = EVP_sha1();
+    HMAC_Init_ex(&hmac, s3string_cstring(account->awsKey), s3string_length(account->awsKey), md, NULL);
+    
+    /* Add the policy data */
+    HMAC_Update(&hmac, (const unsigned char *) s3string_cstring(policy), s3string_length(policy));
+
+    /* Output the HMAC */
+    output_len = sizeof(output);
+    HMAC_Final(&hmac, output, &output_len);
+    HMAC_CTX_cleanup(&hmac);
+
+    /* Return the base64 encoded signature */
+    return s3_base64_encode(output, output_len);
 }
 
 /**

@@ -1,5 +1,5 @@
 /*
- * S3AutoreleasePoolTests.c vi:ts=4:sw=4:expandtab:
+ * S3Account.c vi:ts=4:sw=4:expandtab:
  * Amazon S3 Library Unit Tests
  *
  * Author: Landon Fuller <landonf@threerings.net>
@@ -45,12 +45,24 @@ START_TEST (test_new) {
 }
 END_TEST
 
+START_TEST (test_sign_policy) {
+    S3Account *account = s3account_new(S3STR("id"), S3STR("key"));
+    S3String *signature = s3account_sign_policy(account, S3STR("test policy"));
+
+    /* Compare against the pre-compiled HMAC-SHA1(key, test policy) base64'd result */
+    fail_unless(s3_equals(signature, S3STR("mFXhmeY8JXn71YSnWY8xSFJS7Q8=")));
+
+    s3_release(account);
+}
+END_TEST
+
 Suite *S3Account_suite(void) {
     Suite *s = suite_create("S3Account");
 
     TCase *tc_general = tcase_create("General");
     suite_add_tcase(s, tc_general);
     tcase_add_test(tc_general, test_new);
+    tcase_add_test(tc_general, test_sign_policy);
 
     return s;
 }
