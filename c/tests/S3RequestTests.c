@@ -45,13 +45,17 @@ static S3Request *create_request () {
     headers = s3_autorelease(s3dict_new());
     s3dict_put(headers, S3STR("test"), S3STR("value"));
 
-    return s3_autorelease( s3request_new(S3_HTTP_PUT, S3STR("bucket"), S3STR("object"), headers) );
+    return s3_autorelease( s3request_new(S3_HTTP_PUT, S3STR("bucket"), S3STR("object"), headers, NULL) );
 }
 
 START_TEST (test_new) {
     S3Request *req = create_request();
-    s3_retain(req);
-    s3_release(req);
+    S3Dict *headers = s3request_headers(req);
+    
+    /* Verify that the Date header was set */
+    S3String *date = s3dict_get(headers, S3STR("Date"));
+    fail_if(date == NULL);
+    fail_if(s3string_length(date) == 0);
 }
 END_TEST
 
@@ -87,14 +91,14 @@ START_TEST (test_policy) {
     S3Dict      *headers;
     S3String    *policy;
     S3String    *expected;
+    time_t      expire = 1202554471; /* Sat 09 Feb 2008 10:54:31 GMT */
 
     /* Create the request */
     headers = s3_autorelease( s3dict_new() );
     s3dict_put(headers, S3STR("Content-Type"), S3STR("text/html"));
     s3dict_put(headers, S3STR("Content-MD5"), S3STR("CAFE"));
-    s3dict_put(headers, S3STR("Date"), S3STR("Sat 09 Feb 2008 10:54:31 GMT"));
     s3dict_put(headers, S3STR("x-amz-meta-test"), S3STR("metadata"));
-    request = s3_autorelease( s3request_new(S3_HTTP_DELETE, S3STR("bucket"), S3STR("object"), headers) );
+    request = s3_autorelease( s3request_new(S3_HTTP_DELETE, S3STR("bucket"), S3STR("object"), headers, &expire) );
 
     policy = s3request_policy(request);
     expected = S3STR(
