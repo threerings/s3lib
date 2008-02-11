@@ -108,6 +108,7 @@ typedef void * S3TypeRef;
 #include "S3Request.h"
 #include "S3Account.h"
 #include "S3AutoreleasePool.h"
+#include "base64.h"
 
 /*
  * S3lib functions

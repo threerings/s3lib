@@ -51,6 +51,7 @@
 typedef struct S3Account S3Account;
 
 S3_EXTERN S3Account *s3account_new (S3String *awsId, S3String *awsKey);
+S3_EXTERN S3String *s3account_sign_policy (S3Account *account, S3String *policy);
 
 /*!
  * @} S3Account

@@ -45,11 +45,12 @@ static S3Request *create_request () {
     headers = s3_autorelease(s3dict_new());
     s3dict_put(headers, S3STR("test"), S3STR("value"));
 
-    return s3request_new(S3_HTTP_PUT, S3STR("bucket"), S3STR("object"), headers);
+    return s3_autorelease( s3request_new(S3_HTTP_PUT, S3STR("bucket"), S3STR("object"), headers) );
 }
 
 START_TEST (test_new) {
     S3Request *req = create_request();
+    s3_retain(req);
     s3_release(req);
 }
 END_TEST
@@ -57,21 +58,18 @@ END_TEST
 START_TEST (test_bucket) {
     S3Request *req = create_request();
     fail_unless(s3_equals(s3request_bucket(req), S3STR("bucket")));
-    s3_release(req);
 }
 END_TEST
 
 START_TEST (test_object) {
     S3Request *req = create_request();
     fail_unless(s3_equals(s3request_object(req), S3STR("object")));
-    s3_release(req);
 }
 END_TEST
 
 START_TEST (test_method) {
     S3Request *req = create_request();
     fail_unless(s3request_method(req) == S3_HTTP_PUT);
-    s3_release(req);
 }
 END_TEST
 
@@ -81,7 +79,6 @@ START_TEST (test_headers) {
     S3String *value = s3dict_get(headers, S3STR("test"));
     
     fail_unless(s3_equals(S3STR("value"), value));
-    s3_release(req);
 }
 END_TEST
 

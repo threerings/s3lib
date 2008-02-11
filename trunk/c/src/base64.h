@@ -36,9 +36,11 @@
 #ifndef _BASE64_H_
 #define _BASE64_H_
 
-#include "S3Lib.h"
+#ifdef S3LIB_PRIVATE_API
 
 S3_PRIVATE S3String *s3_base64_encode(const void *data, int size);
 S3_PRIVATE int s3_base64_decode(const char *str, void *data);
 
-#endif
+#endif /* S3LIB_PRIVATE_API */
+
+#endif /* _BASE64_h */
