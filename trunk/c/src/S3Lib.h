@@ -104,9 +104,9 @@ typedef void * S3TypeRef;
 #include "S3List.h"
 #include "S3Dict.h"
 #include "S3Error.h"
-#include "S3Connection.h"
 #include "S3Request.h"
 #include "S3Account.h"
+#include "S3Connection.h"
 #include "S3AutoreleasePool.h"
 #include "base64.h"
 
