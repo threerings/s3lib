@@ -101,6 +101,26 @@ START_TEST (test_put_get) {
 }
 END_TEST
 
+START_TEST (test_remove) {
+    S3Dict *dict = s3_autorelease(s3dict_new());
+    S3String *key = S3STR("key");
+
+    /* Add the testing key */
+    s3dict_put(dict, key, S3STR("value"));
+    fail_if(s3dict_get(dict, key) == NULL);
+
+    /* Remove the key, should return true (success) */
+    fail_unless(s3dict_remove(dict, key) == true);
+
+    /* Verify that the key is really gone */
+    fail_unless(s3dict_get(dict, key) == NULL);
+
+    /* Try removing it again, should return false (key has already been
+       removed) */
+    fail_if(s3dict_remove(dict, key) == true);
+}
+END_TEST
+
 START_TEST (test_iterate) {
     S3Dict *dict = s3_autorelease(s3dict_new());
     S3DictIterator *iterator;
@@ -152,6 +172,7 @@ Suite *S3Dict_suite(void) {
     tcase_add_test(tc_dict, test_copy);
     tcase_add_test(tc_dict, test_equals_hash);
     tcase_add_test(tc_dict, test_put_get);
+    tcase_add_test(tc_dict, test_remove);
     tcase_add_test(tc_dict, test_iterate);    
 
     return s;

@@ -58,6 +58,7 @@ S3_EXTERN S3Dict *s3dict_copy (S3Dict *dict);
 
 S3_EXTERN bool s3dict_put (S3Dict *dict, S3TypeRef key, S3TypeRef value);
 S3_EXTERN S3TypeRef s3dict_get (S3Dict *dict, S3TypeRef key);
+S3_EXTERN bool s3dict_remove (S3Dict *dict, S3TypeRef key);
 
 S3_EXTERN S3DictIterator *s3dict_iterator_new (S3Dict *dictionary);
 S3_EXTERN S3TypeRef s3dict_iterator_next (S3DictIterator *iterator);

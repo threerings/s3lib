@@ -281,6 +281,27 @@ S3_DECLARE S3TypeRef s3dict_get (S3Dict *dict, S3TypeRef key) {
 }
 
 /**
+ * Remove the given key from the provided S3Dict, and return true on success.
+ * If the key does not exist in @a dict, this function will return false.
+ *
+ * @param dict Dictionary to modify.
+ * @param key The key to remove.
+ * @return True on success, or false on failure.
+ */
+S3_DECLARE bool s3dict_remove (S3Dict *dict, S3TypeRef key) {
+    hnode_t *node;
+
+    /* Look up the key */
+    node = hash_lookup(dict->hash, key);
+    if (node == NULL)
+        return false;
+
+    /* Delete the node */
+    hash_delete_free(dict->hash, node);
+    return true;
+}
+
+/**
  * @internal
  *
  * S3Dict hash callback.
