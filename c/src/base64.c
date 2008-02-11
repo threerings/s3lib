@@ -36,7 +36,8 @@
 #endif
 #include <stdlib.h>
 #include <string.h>
-#include "base64.h"
+
+#include "S3Lib.h"
 
 static char base64_chars[] = 
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
