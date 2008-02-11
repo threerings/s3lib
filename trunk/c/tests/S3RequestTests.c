@@ -85,22 +85,31 @@ START_TEST (test_headers) {
 }
 END_TEST
 
-START_TEST (test_sign) {
-    S3Request *request;
-    S3Dict *headers;
-    S3String *authorization;
+START_TEST (test_policy) {
+    S3Request   *request;
+    S3Dict      *headers;
+    S3String    *policy;
+    S3String    *expected;
 
     /* Create the request */
     headers = s3_autorelease( s3dict_new() );
+    s3dict_put(headers, S3STR("Content-Type"), S3STR("text/html"));
+    s3dict_put(headers, S3STR("Content-MD5"), S3STR("CAFE"));
     s3dict_put(headers, S3STR("Date"), S3STR("Sat 09 Feb 2008 10:54:31 GMT"));
     s3dict_put(headers, S3STR("x-amz-meta-test"), S3STR("metadata"));
     request = s3_autorelease( s3request_new(S3_HTTP_DELETE, S3STR("bucket"), S3STR("object"), headers) );
 
-    /* Sign the request */
-    s3request_sign(request, S3STR("accessId"), S3STR("accessKey"));
-    authorization = s3dict_get(s3request_headers(request), S3STR("Authorization"));
-    fail_if(authorization == NULL);
-    fail_unless(s3_equals(authorization, S3STR("AWS accessId:AeKXBWEUhOG1KMzTPMRZrS6NndU=")));
+    policy = s3request_policy(request);
+    expected = S3STR(
+        "DELETE\n"
+        "CAFE\n"
+        "text/html\n"
+        "Sat 09 Feb 2008 10:54:31 GMT\n"
+        "x-amz-meta-test:metadata\n"
+        "/bucket/object\n"
+    );
+
+    fail_unless(s3_equals(policy, expected), "Returned policy invalid\nReturned:\n'%s'\nExpected:\n'%s'\n", s3string_cstring(policy), s3string_cstring(expected));
 }
 END_TEST
 
@@ -114,7 +123,7 @@ Suite *S3Request_suite(void) {
     tcase_add_test(tc_general, test_object);
     tcase_add_test(tc_general, test_method);
     tcase_add_test(tc_general, test_headers);
-    tcase_add_test(tc_general, test_sign);
+    tcase_add_test(tc_general, test_policy);
 
     return s;
 }
