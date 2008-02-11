@@ -69,12 +69,8 @@ struct S3Connection {
     S3RuntimeBase base;
 
     /** @internal
-     * AWS access key id. */
-    S3String *aws_id;
-
-    /** @internal
-     * AWS private key. */
-    S3String *aws_key;
+     * AWS Account */
+    S3Account *account;
 
     /** @internal
      * S3 server url. */
@@ -99,11 +95,10 @@ static S3RuntimeClass S3ConnectionClass = {
  * @attention Instances of #S3Connection are not re-entrant, and should not be
  * shared between multiple threads.
  *
- * @param aws_id Your Amazon AWS Id.
- * @param aws_key Your Amazon AWS Secret Key.
+ * @param account Amazon AWS Account.
  * @return A new #S3Connection instance, or NULL on failure.
  */
-S3_DECLARE S3Connection *s3connection_new (S3String *aws_id, S3String *aws_key) {
+S3_DECLARE S3Connection *s3connection_new (S3Account *account) {
     S3Connection *conn;
 
     /* Allocate a new S3 Connection. */
@@ -111,11 +106,8 @@ S3_DECLARE S3Connection *s3connection_new (S3String *aws_id, S3String *aws_key) 
     if (conn == NULL)
         return NULL;
 
-    /* Access id */
-    conn->aws_id = s3_retain(aws_id);
-
-    /* Access key */
-    conn->aws_key = s3_retain(aws_key);
+    /* AWS Account */
+    conn->account = s3_retain(account);
 
     /* Default S3 URL */
     conn->s3_url = s3string_new(S3_DEFAULT_URL);
@@ -200,11 +192,8 @@ S3_DECLARE void *s3connection_create_bucket (S3Connection *conn, S3String *bucke
 static void s3connection_dealloc (S3TypeRef obj) {
     S3Connection *conn = (S3Connection *) obj;
 
-    if (conn->aws_id != NULL)
-        s3_release(conn->aws_id);
-
-    if (conn->aws_key != NULL)
-        s3_release(conn->aws_key);
+    if (conn->account != NULL)
+        s3_release(conn->account);
 
     if (conn->s3_url != NULL)
         s3_release(conn->s3_url);
