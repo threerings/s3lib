@@ -75,6 +75,11 @@ START_TEST (test_equals_hash) {
 
     fail_if(s3_equals(dict, copy));
     fail_if(s3_hash(dict) == s3_hash(copy));
+
+    /* Remove the key from the copy, should still be unequal */
+    s3dict_remove(copy, S3STR("key2"));
+    fail_if(s3_equals(dict, copy));
+    fail_if(s3_hash(dict) == s3_hash(copy));
 }
 END_TEST
 
