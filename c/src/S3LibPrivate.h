@@ -135,6 +135,9 @@ typedef struct S3RuntimeBase {
 
     /** Object class */
     S3RuntimeClass *class;
+
+    /** Reserved for future growth */
+    void *reserved[4];
 } S3RuntimeBase;
 
 
