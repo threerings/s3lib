@@ -8,8 +8,8 @@ include ${top_builddir}/Mk/compile.mk
 
 
 TEST_OBJS= \
-        tests.o \
-        S3AccountTests.o \
+		tests.o \
+		S3AccountTests.o \
 		S3AutoreleasePoolTests.o \
 		S3ConnectionTests.o \
 		S3DictTests.o \
