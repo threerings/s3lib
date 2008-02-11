@@ -101,18 +101,64 @@ static S3RuntimeClass S3RequestClass = {
 };
 
 /**
+ * @internal
+ * Returns the provided time as an RFC 822 formatted string, or NULL if a failure occurs.
+ *
+ * @param reqtime Time to format. If NULL, the current time will be used.
+ */
+static S3String *rfc822_time (const time_t *reqtime) {
+    /* RFC 822 format; '%a %d %b %Y %T GMT' -- Maximum size of 29 bytes */
+    char buf[29];
+    time_t now;
+    struct tm gmt;
+
+    /* Expiration */
+    if (reqtime == NULL) {
+        /* Get the current time */
+        if (time(&now) == (time_t)-1) {
+            DEBUG("time() failed, returned %jd", (intmax_t) now);
+            return NULL;
+        }
+    } else {
+        now = *reqtime;
+    }        
+
+    if (gmtime_r(&now, &gmt) == NULL) {
+        DEBUG("gmtime() failed");
+        return NULL;
+    }
+
+    /* Write out the date string */
+    if (strftime(buf, sizeof(buf), "%a %d %b %Y %T GMT", &gmt) == 0) {
+        DEBUG("strftime() failed, returned 0");
+        return NULL;
+    }
+
+    return s3_autorelease( s3string_new(buf) );
+}
+
+/**
  * Instantiate a new S3Request instance.
  *
  * @param method The request HTTP method.
  * @param bucket The S3 bucket
  * @param object An S3 object key
- * @param headers A dictionary of S3String header names and values.
+ * @param headers A dictionary of S3String HTTP header names and values.
+ * @param expire The date at which the request will expire, as seconds since the epoch. If set to NULL, the current time will be used.
+ *
  * @return A new S3Request instance, or NULL on failure.
  *
- * @attention 
+ * @attention The @a expire argument will be used to set the HTTP Date header.
+ *
+ * @note Amazon S3 handles the expiration date differently depending on the authentication method. In the case of
+ * header authentication, the request must be made within 15 minutes of the @a expire time. In the case of query
+ * string authentication, the request must be made BEFORE the @a expire time has been reached. For more information,
+ * see http://docs.amazonwebservices.com/AmazonS3/2006-03-01/
  */
-S3_DECLARE S3Request *s3request_new (S3HTTPMethod method, S3String *bucket, S3String *object, S3Dict *headers) {
+S3_DECLARE S3Request *s3request_new (S3HTTPMethod method, S3String *bucket, S3String *object, S3Dict *headers, const time_t *expire) {
+    S3AutoreleasePool *pool = s3autorelease_pool_new();
     S3Request *req;
+    S3String *date;
 
     /* Allocate a new S3 Request. */
     req = s3_object_alloc(&S3RequestClass, sizeof(S3Request));
@@ -129,9 +175,25 @@ S3_DECLARE S3Request *s3request_new (S3HTTPMethod method, S3String *bucket, S3St
     req->object = s3_retain(object);
     
     /* Headers */
-    req->headers = s3_retain(headers);
+    req->headers = s3dict_copy(headers);
+    if (req->headers == NULL)
+        goto cleanup;
 
+    /* Expiration */
+    date = rfc822_time(expire);
+    if (date == NULL)
+        goto cleanup;
+
+    s3dict_put(req->headers, S3STR("Date"), date);
+
+    s3_release(pool);
     return (req);
+
+cleanup:
+    s3_release(req);
+    s3_release(pool);
+
+    return NULL;
 }
 
 /**
@@ -169,39 +231,6 @@ S3_DECLARE S3String *s3request_object (S3Request *request) {
 S3_DECLARE S3Dict *s3request_headers (S3Request *request) {
     return request->headers;
 }
-
-#if 0
-/**
- * @internal
- * Returns the current time as an RFC 822 formatted string,
- * or NULL if a failure occurs.
- */
-static S3String *rfc822_now () {
-    /* RFC 822 format; '%a %d %b %Y %T GMT' -- Maximum size of 29 bytes */
-    char buf[29];
-    time_t now;
-    struct tm gmt;
-        
-    /* Get the current time */
-    if (time(&now) == (time_t)-1) {
-        DEBUG("time() failed, returned %jd", (intmax_t) now);
-        return NULL;   
-    }
-
-    if (gmtime_r(&now, &gmt) == NULL) {
-        DEBUG("gmtime() failed");
-        return NULL;
-    }
-
-    /* Write out the date string */
-    if (strftime(buf, sizeof(buf), "%a %d %b %Y %T GMT", &gmt) == 0) {
-        DEBUG("strftime() failed, returned 0");
-        return NULL;
-    }
-
-    return s3_autorelease( s3string_new(buf) );
-}
-#endif
 
 /**
  * @internal
