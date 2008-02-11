@@ -75,6 +75,7 @@ struct S3String {
 
 /** @internal S3String Class Definition */
 static S3RuntimeClass S3StringClass = {
+    .version = S3_CURRENT_RUNTIME_CLASS_VERSION,
     .hash = s3string_hash,
     .equals = s3string_equals,
     .dealloc = s3string_dealloc

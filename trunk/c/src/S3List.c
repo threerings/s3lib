@@ -73,6 +73,7 @@ struct S3List {
 
 /** @internal S3List Class Definition */
 static S3RuntimeClass S3ListClass = {
+    .version = S3_CURRENT_RUNTIME_CLASS_VERSION,
     .dealloc = s3list_dealloc
 };
 
@@ -94,6 +95,7 @@ struct S3ListIterator {
 
 /** @internal S3ListIterator Class Definition */
 static S3RuntimeClass S3ListIteratorClass = {
+    .version = S3_CURRENT_RUNTIME_CLASS_VERSION,
     .dealloc = s3list_iterator_dealloc
 };
 

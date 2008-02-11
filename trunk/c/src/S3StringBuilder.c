@@ -73,6 +73,7 @@ struct S3StringBuilder {
 
 /** @internal S3StringBuilder Class Definition */
 static S3RuntimeClass S3StringBuilderClass = {
+    .version = S3_CURRENT_RUNTIME_CLASS_VERSION,
     .hash = s3stringbuilder_hash,
     .equals = s3stringbuilder_equals,
     .dealloc = s3stringbuilder_dealloc

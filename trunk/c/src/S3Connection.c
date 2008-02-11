@@ -90,6 +90,7 @@ struct S3Connection {
  * S3Connection Class Definition
  */
 static S3RuntimeClass S3ConnectionClass = {
+    .version = S3_CURRENT_RUNTIME_CLASS_VERSION,
     .dealloc = s3connection_dealloc
 };
 
