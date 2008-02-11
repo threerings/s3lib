@@ -49,6 +49,7 @@ typedef struct S3Test {
 static void s3test_class_dealloc (S3TypeRef obj);
 
 static S3RuntimeClass S3TestClass = {
+    .version = S3_CURRENT_RUNTIME_CLASS_VERSION,
     .dealloc = &s3test_class_dealloc
 };
 

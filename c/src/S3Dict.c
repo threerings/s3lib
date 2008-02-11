@@ -73,6 +73,7 @@ struct S3Dict {
 
 /** @internal S3Dict Class Definition */
 static S3RuntimeClass S3DictClass = {
+    .version = S3_CURRENT_RUNTIME_CLASS_VERSION,
     .dealloc = s3dict_dealloc
 };
 
@@ -96,6 +97,7 @@ struct S3DictIterator {
 
 /** @internal S3DictIterator Class Definition */
 static S3RuntimeClass S3DictIteratorClass = {
+    .version = S3_CURRENT_RUNTIME_CLASS_VERSION,
     .dealloc = s3dict_iterator_dealloc
 };
 

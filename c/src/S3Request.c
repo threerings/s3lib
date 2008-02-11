@@ -96,6 +96,7 @@ struct S3Request {
  * S3Request Class Definition
  */
 static S3RuntimeClass S3RequestClass = {
+    .version = S3_CURRENT_RUNTIME_CLASS_VERSION,
     .dealloc = s3request_dealloc
 };
 

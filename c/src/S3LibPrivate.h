@@ -55,6 +55,26 @@
 
 /**
  * @internal
+ * S3RuntimeClass Version. Used to ensure ABI compatibility
+ * as new fields are added to the S3RuntimeClass structure.
+ */
+typedef enum {
+    /** Invalid (eg, unset) class structure version. */
+    s3runtime_class_v_invalid = 0,
+
+    /** First version of the class structure. */
+    s3runtime_class_v1 = 1
+} S3RuntimeClassVersion;
+
+/**
+ * @internal
+ * Current S3RuntimeClassVersion version. This must be set
+ * in all S3RuntimeClass declarations.
+ */
+#define S3_CURRENT_RUNTIME_CLASS_VERSION s3runtime_class_v1
+
+/**
+ * @internal
  * Object instance deallocator.
  */
 typedef void (*s3_dealloc_function) (S3TypeRef object);
@@ -86,6 +106,9 @@ typedef bool (*s3_equals_function) (S3TypeRef self, S3TypeRef other);
  * operations on S3 objects.
  */
 typedef struct S3RuntimeClass {
+    /** Class version declaration. */
+    S3RuntimeClassVersion version;
+    
     /** Deallocation function. */
     s3_dealloc_function dealloc;
 

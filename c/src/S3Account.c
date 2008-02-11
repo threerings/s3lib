@@ -81,6 +81,7 @@ struct S3Account {
  * S3Account Class Definition
  */
 static S3RuntimeClass S3AccountClass = {
+    .version = S3_CURRENT_RUNTIME_CLASS_VERSION,
     .dealloc = s3account_dealloc
 };
 

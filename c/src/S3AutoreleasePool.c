@@ -130,6 +130,7 @@ struct S3AutoreleasePool {
  * S3AutoreleasePool Class Definition.
  */
 static S3RuntimeClass S3AutoreleasePoolClass = {
+    .version = S3_CURRENT_RUNTIME_CLASS_VERSION,
     .dealloc = s3autorelease_pool_dealloc
 };
 

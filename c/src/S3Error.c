@@ -94,6 +94,7 @@ struct S3ServerError {
  * S3ServerError Class Definition
  */
 static S3RuntimeClass S3ServerErrorClass = {
+    .version = S3_CURRENT_RUNTIME_CLASS_VERSION,
     .dealloc = s3server_error_dealloc
 };
 

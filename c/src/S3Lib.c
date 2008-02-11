@@ -177,6 +177,10 @@ S3_PRIVATE S3TypeRef s3_object_alloc (S3RuntimeClass *class, size_t objectSize) 
     objdata->refCount = 1;
     objdata->class = class;
 
+    /* Verify that all required fields are correctly set */
+    assert(class->dealloc != NULL);
+    assert(class->version != s3runtime_class_v_invalid);
+
     return object;
 }
 
