@@ -157,8 +157,7 @@ S3_DECLARE void s3stringbuilder_append (S3StringBuilder *builder, S3String *appe
 }
 
 /**
- * Return the string buffer's length in bytes, not
- * including a terminating NULL.
+ * Return the string buffer's length in bytes, not including a terminating NULL.
  *
  * @param builder The #S3StringBuilder instance.
  */

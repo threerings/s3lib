@@ -36,7 +36,6 @@
 #ifndef S3LIBPRIVATE_H
 #define S3LIBPRIVATE_H
 
-#include <safestr.h>
 #include <curl/curl.h>
 
 #include "hash.h"
@@ -141,28 +140,10 @@ typedef struct S3RuntimeBase {
 } S3RuntimeBase;
 
 
-/**
- * @internal
- * Create a new safestr from a const char * string. The safestr_create function
- * does not modify the string argument, so we do the cast once here.
- */
-static inline safestr_t s3_safestr_create (const char *string, u_int32_t flags) {
-    return safestr_create((char *)string, flags);
-}
-
-
-/**
- * @internal
- * Returns a borrowed reference to the safestr's backing character array.
- */
-static inline const char *s3_safestr_char (safestr_t string) {
-    /* Safe strings are C strings, with meta-data stored above the char * pointer */
-    return (const char *)string;
-}
-
 /* Library-private functions */
 S3_PRIVATE bool s3lib_debugging ();
 S3_PRIVATE bool s3_instanceof (S3TypeRef object, S3RuntimeClass *class);
+
 
 #define DEBUG(msg, args...) \
     if (s3lib_debugging()) \
