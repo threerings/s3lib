@@ -63,7 +63,6 @@ AM_PATH_XML2([2.6.16], [], [
 	AC_MSG_ERROR([s3lib requires libxml2 (http://www.xmlsoft.org).])
 ])
 TR_OPENSSL
-TR_SAFESTR
 OD_LIBCHECK
 
 # Output
