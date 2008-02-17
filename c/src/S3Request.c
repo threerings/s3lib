@@ -358,7 +358,7 @@ S3_DECLARE S3String *s3request_policy (S3Request *req) {
         s3stringbuilder_append(builder, fixed_header_string);
 
         /* Canonicalized AMZ Headers */
-        S3ListIterator *i = s3list_iterator_new(amz_headers);
+        S3ListIterator *i = s3_autorelease( s3list_iterator_new(amz_headers) );
         while (s3list_iterator_hasnext(i)) {
             S3String *key = s3string_lowercase( s3list_iterator_next(i) );
             S3String *value = s3dict_get(signed_headers, key);
@@ -384,7 +384,7 @@ S3_DECLARE S3String *s3request_policy (S3Request *req) {
 
     /* Print a debugging message if our estimate is invalid */
     if (policy_size < s3string_length(result)) {
-        DEBUG("Estimated result size was too low (estimated %lu, actual %lu)", policy_size, s3string_length(result));
+        DEBUG("Estimated result size was too low (estimated %zu, actual %zu)", policy_size, s3string_length(result));
     }
 
     return (result);
