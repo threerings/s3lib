@@ -174,6 +174,7 @@ S3_PRIVATE S3TypeRef s3_object_alloc (S3RuntimeClass *class, size_t objectSize) 
     /* Initialize the object */
     objdata = (S3RuntimeBase *) object;
     objdata->magic = 0xCAFE;
+    pthread_mutex_init(&objdata->refCountLock, NULL);
     objdata->refCount = 1;
     objdata->class = class;
 
@@ -191,10 +192,15 @@ S3_PRIVATE S3TypeRef s3_object_alloc (S3RuntimeClass *class, size_t objectSize) 
  * @result Returns a reference to @a object.
  */
 S3_DECLARE S3TypeRef s3_retain (S3TypeRef object) {
+    S3RuntimeBase *base = object;
+    
     ASSERT_VALID_OBJ(object);
     assert(s3_reference_count(object) != UINT32_MAX);
 
-    ((S3RuntimeBase *) object)->refCount++;
+    pthread_mutex_lock(&base->refCountLock);
+    base->refCount++;
+    pthread_mutex_unlock(&base->refCountLock);
+    
     return object;
 } 
 
@@ -206,8 +212,16 @@ S3_DECLARE S3TypeRef s3_retain (S3TypeRef object) {
  * @result The provided @a instance's reference count.
  */
 S3_DECLARE uint32_t s3_reference_count (S3TypeRef object) {
-    ASSERT_VALID_OBJ(object);
-    return ((S3RuntimeBase *) object)->refCount;
+    S3RuntimeBase *base = object;
+    uint32_t refCount;
+    
+    ASSERT_VALID_OBJ(base);
+    
+    pthread_mutex_lock(&base->refCountLock);
+    refCount = base->refCount;
+    pthread_mutex_unlock(&base->refCountLock);
+    
+    return refCount;
 }
 
 
@@ -218,16 +232,17 @@ S3_DECLARE uint32_t s3_reference_count (S3TypeRef object) {
  * @param object Object instance to deallocate.
  */
 S3_DECLARE void s3_release (S3TypeRef object) {
-    S3RuntimeBase *objdata;
+    S3RuntimeBase *base = object;
 
     ASSERT_VALID_OBJ(object);
     assert(s3_reference_count(object) > 0);
 
-    objdata = (S3RuntimeBase *) object;
-    objdata->refCount--;
+    pthread_mutex_lock(&base->refCountLock);
+    base->refCount--;
+    pthread_mutex_unlock(&base->refCountLock);
 
-    if (objdata->refCount == 0) {
-        objdata->class->dealloc(object);
+    if (base->refCount == 0) {
+        base->class->dealloc(object);
         free(object);
     }
 }
