@@ -145,6 +145,7 @@ S3_DECLARE bool s3connection_set_url (S3Connection *conn, S3String *s3_url) {
     return true;
 }
 
+#if DEAD_CODE // DEAD CODE
 /**
  * @internal
  * Reset the S3Connection's CURL handle for a new request.
@@ -158,6 +159,7 @@ static void s3connection_reset_curl (S3Connection *conn) {
     if (s3lib_debugging())
         curl_easy_setopt(conn->handle, CURLOPT_VERBOSE, 1);
 }
+#endif
 
 /**
  * Create a new S3 bucket
@@ -166,11 +168,13 @@ static void s3connection_reset_curl (S3Connection *conn) {
  * @param bucketName The name of the bucket to create.
  * @return A #s3error_t result.
  */
-S3_DECLARE void *s3connection_create_bucket (S3Connection *conn, S3String *bucketName) {
+S3_DECLARE void *s3connection_create_bucket (S3Connection *conn, S3_UNUSED S3String *bucketName) {
     CURLcode error;
-    
+
+#if DEAD_CODE
     if (s3curl_create_bucket(conn, bucketName, &error) == NULL)
         return NULL;
+#endif
 
     error = curl_easy_perform(conn->handle);
     if (error != CURLE_OK) {
@@ -202,6 +206,7 @@ static void s3connection_dealloc (S3TypeRef obj) {
         curl_easy_cleanup(conn->handle);
 }
 
+#if DEAD_CODE
 /**
  * @defgroup S3Curl S3 libcurl API
  *
@@ -270,6 +275,7 @@ S3_DECLARE CURL *s3curl_create_bucket (S3Connection *conn, S3String *bucketName,
     *error = CURLE_OK;
     return conn->handle;
 }
+#endif
 
 /**
  * @} S3Curl

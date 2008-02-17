@@ -40,6 +40,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <stdarg.h>
+#include <ctype.h>
 
 #include "S3Lib.h"
 
@@ -68,8 +70,11 @@ static bool s3string_equals (S3TypeRef self, S3TypeRef other);
 struct S3String {
     S3RuntimeBase base;
 
-    /** @internal Wrapped safestr */
-    safestr_t data;
+    /** @internal Size of string, in bytes, including trailing '\0' */
+    size_t length;
+
+    /** @internal NULL-terminated string buffer. */
+    char *data;
 };
 
 
@@ -96,10 +101,20 @@ S3_DECLARE S3String *s3string_new (const char *cstring) {
         return NULL;
 
     /* Initialize */
-    string->data = s3_safestr_create(cstring, SAFESTR_IMMUTABLE);
+    string->length = strlen(cstring) + 1;
+    string->data = malloc(string->length);
+    if (string->data == NULL)
+        goto error;
+
+    strlcpy(string->data, cstring, string->length);
 
     return string;
+
+error:
+    s3_release(string);
+    return NULL;
 }
+
 
 /**
  * Create a new S3String instance, using the provided printf-style format string and arguments.
@@ -109,6 +124,7 @@ S3_DECLARE S3String *s3string_new (const char *cstring) {
  * @return An auto-released S3String instance.
  */
 S3_DECLARE S3String *s3string_withformat (const char *format, ...) {
+    // TODO: Implement s3string_withdata to make this more effecient.
     va_list ap;
     char *output;
     S3String *ret;
@@ -133,7 +149,10 @@ S3_DECLARE S3String *s3string_withformat (const char *format, ...) {
  * @return True if the string starts with substring, false others.
  */
 S3_DECLARE bool s3string_startswith (S3String *string, S3String *substring) {
-    return safestr_startswith(s3string_safestr(string), s3string_safestr(substring));
+    if (strstr(string->data, substring->data) == string->data)
+        return true;
+    else
+        return false;
 }
 
 /**
@@ -141,20 +160,26 @@ S3_DECLARE bool s3string_startswith (S3String *string, S3String *substring) {
  *
  * @param string The source string to be converted.
  * @return A lowercase conversion of the provided string.
+ * @warning Only ASCII is currently supported.
  */
 S3_DECLARE S3String *s3string_lowercase (S3String *string) {
-    safestr_t lower;
+    // TODO: s3string_withdata
+    char *output;
+    char *p;
 
     /* Convert the string to lowercase */
-    lower = safestr_clone(s3string_safestr(string), 0);
-    safestr_convert(lower, SAFESTR_CONVERT_LOWERCASE);
-
+    output = strdup(s3string_cstring(string));
+    for (p = output; *p != '\0'; p++) {
+        if (isupper(*p))
+            *p = tolower(*p);
+    }
+    
     /* Create the return value */
-    S3String *result = s3string_new(s3_safestr_char(lower));
+    S3String *result = s3string_new(output);
 
     /* Clean up and return */
-    safestr_release(lower);
-    return (s3_autorelease(result));
+    free(output);
+    return s3_autorelease(result);
 }
 
 /**
@@ -164,19 +189,16 @@ S3_DECLARE S3String *s3string_lowercase (S3String *string) {
  * @param string The string from which the buffer will be returned.
  */
 S3_DECLARE const char *s3string_cstring (S3String *string) {
-    return s3_safestr_char(s3string_safestr(string));
+    return string->data;
 }
 
 /**
- * Return the string's length in bytes.
+ * Return the string's length in bytes, not including a terminating NULL.
  *
  * @param string The string instance.
  */
 S3_DECLARE size_t s3string_length (S3String *string) {
-    /* safestr returns a uint32_t, but we don't want to limit our public API to less than the platform's size_t. */
-    assert(sizeof(uint32_t) >= sizeof(size_t));
-
-    return safestr_length(s3string_safestr(string));
+    return string->length - 1;
 }
 
 /**
@@ -193,7 +215,8 @@ static void s3string_dealloc (S3TypeRef obj) {
     string = (S3String *) obj;
     
     /* Free any data */
-    safestr_release(string->data);
+    if (string->data != NULL)
+        free(string->data);
 }
 
 
@@ -276,14 +299,6 @@ S3_PRIVATE long s3cstring_hash (const char *string) {
     }
 
     return acc;
-}
-
-/**
- * @internal
- * Return the @a string's backing safestr.
- */
-S3_PRIVATE safestr_t s3string_safestr (S3String *string) {
-    return string->data;
 }
 
 /*!

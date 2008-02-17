@@ -37,6 +37,7 @@
 #define S3LIB_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 /**
  * @file
