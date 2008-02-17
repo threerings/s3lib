@@ -168,6 +168,14 @@ S3_PRIVATE bool s3_instanceof (S3TypeRef object, S3RuntimeClass *class);
     if (s3lib_debugging()) \
         fprintf(stderr, "[%s in %s:%d] " msg "\n", __func__, __FILE__, __LINE__, ## args)
 
+/* Max & Min */
+#ifndef MAX
+#define MAX(a,b) (((a) > (b)) ? (a) : (b))
+#endif
+
+#ifndef MIN
+#define MIN(a,b) (((a) < (b)) ? (a) : (b))
+#endif
 
 /*!
  * @} S3Library
