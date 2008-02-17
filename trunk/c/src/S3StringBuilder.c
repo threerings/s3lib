@@ -4,7 +4,7 @@
  *
  * Author: Landon Fuller <landonf@threerings.net>
  *
- * Copyright (c) 2007 Landon Fuller <landonf@bikemonkey.org>
+ * Copyright (c) 2007-2008 Landon Fuller <landonf@bikemonkey.org>
  * Copyright (c) 2007 Three Rings Design, Inc.
  * All rights reserved.
  *
@@ -66,8 +66,14 @@ static bool s3stringbuilder_equals (S3TypeRef self, S3TypeRef other);
 struct S3StringBuilder {
     S3RuntimeBase base;
 
-    /** @internal Wrapped safestr */
-    safestr_t data;
+    /** @internal Length of string, in bytes. */
+    size_t length;
+
+    /** @internal Total capacity of buffer, in bytes. */
+    size_t capacity;
+
+    /** @internal NULL-terminated string buffer. */
+    char *data;
 };
 
 
@@ -93,10 +99,18 @@ S3_DECLARE S3StringBuilder *s3stringbuilder_new (uint32_t capacity) {
     if (builder == NULL)
         return NULL;
 
-    /* Initialize */
-    builder->data = safestr_alloc(capacity, 0);
+    /* Initialize with a minimum size of 1 */
+    builder->capacity = MAX(capacity, 1);
+    builder->data = malloc(builder->capacity);
+    *builder->data = '\0';
+    builder->length = 1;
+    if (builder->data == NULL)
+        goto error;
 
     return builder;
+error:
+    s3_release(builder);
+    return NULL;
 }
 
 /**
@@ -106,7 +120,26 @@ S3_DECLARE S3StringBuilder *s3stringbuilder_new (uint32_t capacity) {
  * @return A S3String instance containing the data in this string buffer.
  */
 S3_DECLARE S3String *s3stringbuilder_string (S3StringBuilder *builder) {
-    return S3STR(s3_safestr_char(builder->data));
+    return S3STR(builder->data);
+}
+
+/**
+ * @internal
+ *
+ * Increase the StringBuilder's capacity.
+ * @param builder String builder instance.
+ * @param capacity New capacity.
+ */
+static void s3stringbuilder_grow_capacity (S3StringBuilder *builder, size_t capacity) {
+    /* If there's sufficient room, nothing to do */
+    if (capacity <= builder->capacity)
+        return;
+
+    char *new = realloc(builder->data, capacity);
+    assert(new != NULL);
+    
+    builder->data = new;
+    builder->capacity = capacity;
 }
 
 /**
@@ -116,19 +149,21 @@ S3_DECLARE S3String *s3stringbuilder_string (S3StringBuilder *builder) {
  * @param append String to append.
  */
 S3_DECLARE void s3stringbuilder_append (S3StringBuilder *builder, S3String *append) {
-    safestr_append(&builder->data, s3string_safestr(append));
+    size_t len = s3string_length(append);
+
+    builder->length += len;
+    s3stringbuilder_grow_capacity(builder, builder->length);
+    strncat(builder->data, s3string_cstring(append), len);
 }
 
 /**
- * Return the string buffer's length in bytes.
+ * Return the string buffer's length in bytes, not
+ * including a terminating NULL.
  *
  * @param builder The #S3StringBuilder instance.
  */
 S3_DECLARE size_t s3stringbuilder_length (S3StringBuilder *builder) {
-    /* safestr returns a uint32_t, but we don't want to limit our public API to less than the platform's size_t. */
-    assert(sizeof(uint32_t) >= sizeof(size_t));
-
-    return safestr_length(builder->data);
+    return builder->length - 1;
 }
 
 /**
@@ -145,7 +180,8 @@ static void s3stringbuilder_dealloc (S3TypeRef obj) {
     builder = (S3StringBuilder *) obj;
 
     /* Free any data */
-    safestr_release(builder->data);
+    if (builder->data != NULL)
+        free(builder->data);
 }
 
 
@@ -161,7 +197,7 @@ static void s3stringbuilder_dealloc (S3TypeRef obj) {
  */
 static long s3stringbuilder_hash (S3TypeRef obj) {
     S3StringBuilder *builder = (S3StringBuilder *) obj;
-    return s3cstring_hash(s3_safestr_char(builder->data));
+    return s3cstring_hash(builder->data);
 }
 
 /**
@@ -184,10 +220,10 @@ static bool s3stringbuilder_equals (S3TypeRef self, S3TypeRef other) {
     S3StringBuilder *str2 = (S3StringBuilder *) other;
 
     /* Do the comparison */
-    if (safestr_compare(str1->data, str2->data, 0) != 0)
-        return false;
-    else
+    if (strcmp(str1->data, str2->data) == 0)
         return true;
+    else
+        return false;
 }
 
 /*!
