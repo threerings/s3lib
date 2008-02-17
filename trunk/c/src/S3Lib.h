@@ -81,6 +81,17 @@
 #endif /* !__WIN32__ */
 
 /*
+ * GCC-specific format string compiler checking. Verifies validity of format
+ * string and its type arguments.
+ */
+#ifdef GCC_FORMAT_SUPPORT
+#   define S3_CHECK_PRINTF(fmt, args)    __attribute__ ((__format__ (__printf__, fmt, args)))
+#else
+#   define S3_CHECK_PRINTF(fmt, args)
+#endif
+
+
+/*
  * S3Lib Types
  */
 
