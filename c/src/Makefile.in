@@ -10,6 +10,7 @@ include ${top_builddir}/Mk/subdir.mk
 LIBRARY_NAME=	libs3
 LIBRARY_OBJS= \
 		S3Account.o \
+		S3Atomic.o \
 		S3AutoreleasePool.o \
 		S3Connection.o \
 		S3Dict.o \

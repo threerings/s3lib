@@ -1,11 +1,11 @@
 /*
- * S3AtomicTests.c vi:ts=4:sw=4:expandtab:
- * Amazon S3 Library Unit Tests
+ * S3Atomic.c vi:ts=4:sw=4:expandtab:
+ * Amazon S3 Library
  *
  * Author: Landon Fuller <landonf@threerings.net>
  *
- * Copyright (c) 2006 - 2007 Landon Fuller <landonf@bikemonkey.org>
- * Copyright (c) 2006 - 2007 Three Rings Design, Inc.
+ * Copyright (c) 2005 - 2008 Landon Fuller <landonf@bikemonkey.org>
+ * Copyright (c) 2007 Three Rings Design, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,59 +37,74 @@
 #include <config.h>
 #endif
 
-#include "tests.h"
+#include "S3Lib.h"
 
-START_TEST (test_increment) {
-    uint32_t test;
-    
-    test = 4;
-    fail_unless(s3_atomic_uint32_incr(&test) == 5);
-    fail_unless(test == 5);
-    
-    test = INT32_MAX;
-    fail_unless(s3_atomic_uint32_incr(&test) == ((uint32_t) INT32_MAX) + 1);
-    fail_unless(test == ((uint32_t) INT32_MAX) + 1);
-    
-    test = UINT32_MAX - 1;
-    fail_unless(s3_atomic_uint32_incr(&test) == UINT32_MAX);
-    fail_unless(test == UINT32_MAX);
-    
-    test = UINT32_MAX;
-    fail_unless(s3_atomic_uint32_incr(&test) == 0);
-    fail_unless(test == 0);
+#include <pthread.h>
+
+
+/**
+ * @file
+ * @brief Atomic Integer Operations
+ * @author Landon Fuller <landonf@bikemonkey.org>
+ */
+
+
+/**
+ * @defgroup S3Atomic Atomic Integer Operations
+ * @ingroup S3Library
+ * @internal
+ * @{
+ */
+
+#ifdef S3_SLOW_ATOMIC_OPS
+
+/** @internal Single mutex for all atomic operations. */
+pthread_mutex_t atomic_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+/**
+ * @internal
+ * Perform an atomic increment of val by one, and return the new value.
+ */
+S3_PRIVATE uint32_t s3_atomic_uint32_incr (volatile uint32_t *val) {
+    uint32_t ret;
+
+    pthread_mutex_lock(&atomic_mutex);
+    ret = ++(*val);
+    pthread_mutex_unlock(&atomic_mutex);
+
+    return ret;
 }
-END_TEST
 
-START_TEST (test_decrement) {
-    uint32_t test;
+/**
+ * @internal
+ * Perform an atomic decrement of val by one, and return the new value.
+ */
+S3_PRIVATE uint32_t s3_atomic_uint32_decr (volatile uint32_t *val) {
+    uint32_t ret;
 
-    test = 4;
-    fail_unless(s3_atomic_uint32_decr(&test) == 3);
-    fail_unless(test == 3);
-    
-    test = 0;
-    fail_unless(s3_atomic_uint32_decr(&test) == UINT32_MAX);
-    fail_unless(test == UINT32_MAX);
+    pthread_mutex_lock(&atomic_mutex);
+    ret = --(*val);
+    pthread_mutex_unlock(&atomic_mutex);
+
+    return ret;
 }
-END_TEST
 
-START_TEST (test_get) {
-    uint32_t test;
-    
-    test = 4;
-    s3_atomic_uint32_decr(&test);
-    fail_unless(s3_atomic_uint32_get(&test) == 3);
+/**
+ * @internal
+ * Atomically retrieve the value of the given integer.
+ */
+S3_PRIVATE uint32_t s3_atomic_uint32_get (volatile uint32_t *val) {
+    uint32_t ret;
+
+    pthread_mutex_lock(&atomic_mutex);
+    ret = *val;
+    pthread_mutex_unlock(&atomic_mutex);
+
+    return ret;
 }
-END_TEST
 
-Suite *S3Atomic_suite(void) {
-    Suite *s = suite_create("S3Atomic");
+#endif /* S3_SLOW_ATOMIC_OPS */
 
-    TCase *tc_general = tcase_create("General");
-    suite_add_tcase(s, tc_general);
-    tcase_add_test(tc_general, test_increment);
-    tcase_add_test(tc_general, test_decrement);
-    tcase_add_test(tc_general, test_get);
-
-    return s;
-}
+/*!
+ * @} S3Atomic
+ */

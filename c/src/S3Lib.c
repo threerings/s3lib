@@ -174,7 +174,6 @@ S3_PRIVATE S3TypeRef s3_object_alloc (S3RuntimeClass *class, size_t objectSize) 
     /* Initialize the object */
     objdata = (S3RuntimeBase *) object;
     objdata->magic = 0xCAFE;
-    pthread_mutex_init(&objdata->refCountLock, NULL);
     objdata->refCount = 1;
     objdata->class = class;
 
@@ -195,11 +194,9 @@ S3_DECLARE S3TypeRef s3_retain (S3TypeRef object) {
     S3RuntimeBase *base = object;
     
     ASSERT_VALID_OBJ(object);
-    assert(s3_reference_count(object) != UINT32_MAX);
 
-    pthread_mutex_lock(&base->refCountLock);
-    base->refCount++;
-    pthread_mutex_unlock(&base->refCountLock);
+    uint32_t refcount = s3_atomic_uint32_incr(&base->refCount);
+    assert(refcount != UINT32_MAX);
     
     return object;
 } 
@@ -207,21 +204,16 @@ S3_DECLARE S3TypeRef s3_retain (S3TypeRef object) {
 
 /**
  * Return @a object's reference count.
- * This is generally only useful for debugging purposes.
+ * This should only be used for debugging purposes.
  *
  * @result The provided @a instance's reference count.
  */
 S3_DECLARE uint32_t s3_reference_count (S3TypeRef object) {
     S3RuntimeBase *base = object;
-    uint32_t refCount;
     
     ASSERT_VALID_OBJ(base);
-    
-    pthread_mutex_lock(&base->refCountLock);
-    refCount = base->refCount;
-    pthread_mutex_unlock(&base->refCountLock);
-    
-    return refCount;
+
+    return s3_atomic_uint32_get(&base->refCount);
 }
 
 
@@ -237,11 +229,9 @@ S3_DECLARE void s3_release (S3TypeRef object) {
     ASSERT_VALID_OBJ(object);
     assert(s3_reference_count(object) > 0);
 
-    pthread_mutex_lock(&base->refCountLock);
-    base->refCount--;
-    pthread_mutex_unlock(&base->refCountLock);
+    uint32_t refcount = s3_atomic_uint32_decr(&base->refCount);
 
-    if (base->refCount == 0) {
+    if (refcount == 0) {
         base->class->dealloc(object);
         free(object);
     }
