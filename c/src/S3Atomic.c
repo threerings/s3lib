@@ -56,8 +56,6 @@
  * @{
  */
 
-#ifdef S3_SLOW_ATOMIC_OPS
-
 /** @internal Single mutex for all atomic operations. */
 pthread_mutex_t atomic_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -65,7 +63,7 @@ pthread_mutex_t atomic_mutex = PTHREAD_MUTEX_INITIALIZER;
  * @internal
  * Perform an atomic increment of val by one, and return the new value.
  */
-S3_PRIVATE uint32_t s3_atomic_uint32_incr (volatile uint32_t *val) {
+S3_PRIVATE uint32_t s3_slow_atomic_uint32_incr (volatile uint32_t *val) {
     uint32_t ret;
 
     pthread_mutex_lock(&atomic_mutex);
@@ -79,7 +77,7 @@ S3_PRIVATE uint32_t s3_atomic_uint32_incr (volatile uint32_t *val) {
  * @internal
  * Perform an atomic decrement of val by one, and return the new value.
  */
-S3_PRIVATE uint32_t s3_atomic_uint32_decr (volatile uint32_t *val) {
+S3_PRIVATE uint32_t s3_slow_atomic_uint32_decr (volatile uint32_t *val) {
     uint32_t ret;
 
     pthread_mutex_lock(&atomic_mutex);
@@ -93,7 +91,7 @@ S3_PRIVATE uint32_t s3_atomic_uint32_decr (volatile uint32_t *val) {
  * @internal
  * Atomically retrieve the value of the given integer.
  */
-S3_PRIVATE uint32_t s3_atomic_uint32_get (volatile uint32_t *val) {
+S3_PRIVATE uint32_t s3_slow_atomic_uint32_get (volatile uint32_t *val) {
     uint32_t ret;
 
     pthread_mutex_lock(&atomic_mutex);
@@ -102,8 +100,6 @@ S3_PRIVATE uint32_t s3_atomic_uint32_get (volatile uint32_t *val) {
 
     return ret;
 }
-
-#endif /* S3_SLOW_ATOMIC_OPS */
 
 /*!
  * @} S3Atomic
