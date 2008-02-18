@@ -129,9 +129,6 @@ typedef struct S3RuntimeBase {
         pointer is a valid s3 object instance. */
     uint16_t magic;
     
-    /** Object lock. Only used for guarding the refcount. */
-    pthread_mutex_t refCountLock;
-    
     /** Object reference count */
     uint32_t refCount;
 

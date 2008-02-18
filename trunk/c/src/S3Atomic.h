@@ -43,9 +43,7 @@
 
 
 /**
- * @defgroup S3Atomic Atomic Integer Operations
- * @ingroup S3Library
- * @internal
+ * @addtogroup S3Atomic
  * @{
  */
 
@@ -56,6 +54,11 @@
 
 #define s3_atomic_uint32_incr(val) __sync_add_and_fetch(val, 1)
 #define s3_atomic_uint32_decr(val) __sync_sub_and_fetch(val, 1)
+
+static inline uint32_t s3_atomic_uint32_get (volatile uint32_t *val) {
+    __sync_synchronize();
+    return *val;
+}
 
 /*
  * Generic x86_64 implementation
@@ -86,6 +89,10 @@ static inline uint32_t s3_atomic_uint32_decr (volatile uint32_t *val) {
     return tmp - 1;
 }
 
+static inline uint32_t s3_atomic_uint32_get (volatile uint32_t *val) {
+    asm volatile("mfence":::"memory");
+    return *val;
+}
 
 /*
  * Generic x86_32 (i486+) implementation
@@ -116,6 +123,10 @@ static inline uint32_t s3_atomic_uint32_decr (volatile uint32_t *val) {
     return tmp - 1;
 }
 
+static inline uint32_t s3_atomic_uint32_get (volatile uint32_t *val) {
+    asm volatile("mfence":::"memory");
+    return *val;
+}
 
 /*
  * Mac-specific implementation
@@ -127,9 +138,19 @@ static inline uint32_t s3_atomic_uint32_decr (volatile uint32_t *val) {
 #define s3_atomic_uint32_incr(val) ((uint32_t) OSAtomicIncrement32Barrier((int32_t *) val))
 #define s3_atomic_uint32_decr(val) ((uint32_t) OSAtomicDecrement32Barrier((int32_t *) val))
 
+static inline uint32_t s3_atomic_uint32_get (volatile uint32_t *val) {
+    OSMemoryBarrier();
+    return *val;
+}
+
 #else
 
-#error Atomic operations not supported on your platform.
+S3_PRIVATE uint32_t s3_atomic_uint32_incr (volatile uint32_t *val);
+S3_PRIVATE uint32_t s3_atomic_uint32_decr (volatile uint32_t *val);
+S3_PRIVATE uint32_t s3_atomic_uint32_get (volatile uint32_t *val);
+
+/** @internal Defined if the atomic operations are not available. Slow C substitutes will be provided */
+#define S3_SLOW_ATOMIC_OPS 1
 
 #endif /* HAVE_INTEL_ATOMIC_OPS */
 
