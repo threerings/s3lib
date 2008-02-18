@@ -58,7 +58,37 @@
 #define s3_atomic_uint32_decr(val) __sync_sub_and_fetch(val, 1)
 
 /*
- * i486+ x86_32 implementation
+ * Generic x86_64 implementation
+ */
+#elif defined(__x86_64__)
+
+static inline uint32_t s3_atomic_uint32_incr (volatile uint32_t *val) {
+    uint32_t tmp;
+
+    asm volatile (
+        "   lock; xaddl     %0, %1;"
+        : "=r" (tmp), "=m" (*val)
+        : "0" (1), "m" (*val)
+    );
+
+    return tmp + 1;
+}
+
+static inline uint32_t s3_atomic_uint32_decr (volatile uint32_t *val) {
+    uint32_t tmp;
+
+    asm volatile (
+        "   lock; xaddl     %0, %1;"
+        : "=r" (tmp), "=m" (*val)
+        : "0" (-1), "m" (*val)
+    );
+
+    return tmp - 1;
+}
+
+
+/*
+ * Generic x86_32 (i486+) implementation
  */
 #elif defined(__i386__)
 
@@ -74,9 +104,6 @@ static inline uint32_t s3_atomic_uint32_incr (volatile uint32_t *val) {
     return tmp + 1;
 }
 
-/**
- * Atomically decrement a 32-bit integer and return the new value.
- */
 static inline uint32_t s3_atomic_uint32_decr (volatile uint32_t *val) {
     uint32_t tmp;
 
@@ -88,6 +115,17 @@ static inline uint32_t s3_atomic_uint32_decr (volatile uint32_t *val) {
 
     return tmp - 1;
 }
+
+
+/*
+ * Mac-specific implementation
+ */
+#elif defined(__APPLE__)
+
+#include <libkern/OSAtomic.h>
+
+#define s3_atomic_uint32_incr(val) ((uint32_t) OSAtomicIncrement32Barrier((int32_t *) val))
+#define s3_atomic_uint32_decr(val) ((uint32_t) OSAtomicDecrement32Barrier((int32_t *) val))
 
 #else
 
