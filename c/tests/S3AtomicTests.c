@@ -49,6 +49,14 @@ START_TEST (test_increment) {
     test = INT32_MAX;
     fail_unless(s3_atomic_uint32_incr(&test) == ((uint32_t) INT32_MAX) + 1);
     fail_unless(test == ((uint32_t) INT32_MAX) + 1);
+    
+    test = UINT32_MAX - 1;
+    fail_unless(s3_atomic_uint32_incr(&test) == UINT32_MAX);
+    fail_unless(test == UINT32_MAX);
+    
+    test = UINT32_MAX;
+    fail_unless(s3_atomic_uint32_incr(&test) == 0);
+    fail_unless(test == 0);
 }
 END_TEST
 
@@ -58,6 +66,10 @@ START_TEST (test_decrement) {
     test = 4;
     fail_unless(s3_atomic_uint32_decr(&test) == 3);
     fail_unless(test == 3);
+    
+    test = 0;
+    fail_unless(s3_atomic_uint32_decr(&test) == UINT32_MAX);
+    fail_unless(test == UINT32_MAX);
 }
 END_TEST
 
