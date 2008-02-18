@@ -82,6 +82,49 @@ START_TEST (test_get) {
 }
 END_TEST
 
+START_TEST (test_slow_increment) {
+    uint32_t test;
+    
+    test = 4;
+    fail_unless(s3_slow_atomic_uint32_incr(&test) == 5);
+    fail_unless(test == 5);
+    
+    test = INT32_MAX;
+    fail_unless(s3_slow_atomic_uint32_incr(&test) == ((uint32_t) INT32_MAX) + 1);
+    fail_unless(test == ((uint32_t) INT32_MAX) + 1);
+    
+    test = UINT32_MAX - 1;
+    fail_unless(s3_slow_atomic_uint32_incr(&test) == UINT32_MAX);
+    fail_unless(test == UINT32_MAX);
+    
+    test = UINT32_MAX;
+    fail_unless(s3_slow_atomic_uint32_incr(&test) == 0);
+    fail_unless(test == 0);
+}
+END_TEST
+
+START_TEST (test_slow_decrement) {
+    uint32_t test;
+
+    test = 4;
+    fail_unless(s3_slow_atomic_uint32_decr(&test) == 3);
+    fail_unless(test == 3);
+    
+    test = 0;
+    fail_unless(s3_slow_atomic_uint32_decr(&test) == UINT32_MAX);
+    fail_unless(test == UINT32_MAX);
+}
+END_TEST
+
+START_TEST (test_slow_get) {
+    uint32_t test;
+    
+    test = 4;
+    s3_slow_atomic_uint32_decr(&test);
+    fail_unless(s3_slow_atomic_uint32_get(&test) == 3);
+}
+END_TEST
+
 Suite *S3Atomic_suite(void) {
     Suite *s = suite_create("S3Atomic");
 
@@ -90,6 +133,10 @@ Suite *S3Atomic_suite(void) {
     tcase_add_test(tc_general, test_increment);
     tcase_add_test(tc_general, test_decrement);
     tcase_add_test(tc_general, test_get);
+    
+    tcase_add_test(tc_general, test_slow_increment);
+    tcase_add_test(tc_general, test_slow_decrement);
+    tcase_add_test(tc_general, test_slow_get);
 
     return s;
 }
