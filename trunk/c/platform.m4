@@ -125,10 +125,9 @@ AC_DEFUN(TR_CONFIG_LIBRARY, [
 ])
 
 #------------------------------------------------------------------------
-# TR_COMPILER_ATTRIBUTE_VISIBILITY
+# TR_COMPILER_FVISIBILITY
 #
-#       Determines whether the compiler supports the symbol
-#       'visibility("...")' attribute
+#       Determines whether the compiler supports the -fvisiblity flag.
 #
 # Arguments:
 #       None.
@@ -148,7 +147,7 @@ AC_DEFUN(TR_CONFIG_LIBRARY, [
 #
 #------------------------------------------------------------------------
 
-AC_DEFUN([TR_COMPILER_ATTRIBUTE_VISIBILITY], [
+AC_DEFUN([TR_COMPILER_FVISIBILITY], [
         AC_MSG_CHECKING([for gcc symbol visibility attribute])
         AC_CACHE_VAL(od_cv_attribute_tr_visibility, [
 		CFLAGS_SAVED="$CFLAGS"
@@ -180,93 +179,4 @@ AC_DEFUN([TR_COMPILER_ATTRIBUTE_VISIBILITY], [
         fi
 
 	AC_SUBST(CFLAGS_VISIBILITY)
-])
-
-#------------------------------------------------------------------------
-# TR_COMPILER_ATTRIBUTE_UNUSED
-#
-#       Determines whether the compiler supports the 'unused' attribute
-#
-# Arguments:
-#       None.
-#
-# Requires:
-#       none
-#
-# Depends:
-#       none
-#
-# Results:
-#
-#       Defines the following macros:
-#               S3_UNUSED
-#
-#------------------------------------------------------------------------
-
-AC_DEFUN([TR_COMPILER_ATTRIBUTE_UNUSED], [
-        AC_MSG_CHECKING([for gcc unused attribute])
-        AC_CACHE_VAL(od_cv_attribute_lf_unused, [
-                AC_COMPILE_IFELSE([
-                        AC_LANG_SOURCE([
-                                int __attribute__ ((unused)) a;
-                        ])
-                ],[
-                        od_cv_attribute_lf_unused="__attribute__((unused))"
-                ],[
-                        od_cv_attribute_lf_unused="no"
-                ])
-        ])
-
-        AC_MSG_RESULT([$od_cv_attribute_lf_unused])
-        
-        if test x"$od_cv_attribute_lf_unused" = "xno"; then
-                S3_UNUSED=""
-        else
-                S3_UNUSED="$od_cv_attribute_lf_unused"
-        fi
-
-        AC_DEFINE_UNQUOTED(S3_UNUSED, $S3_UNUSED, [Mark unused variables])
-])
-
-
-#------------------------------------------------------------------------
-# TR_COMPILER_ATTRIBUTE_FORMAT
-#
-#       Determines whether the compiler supports the 'format' attribute
-#
-# Arguments:
-#       None.
-#
-# Requires:
-#       none
-#
-# Depends:
-#       none
-#
-# Results:
-#
-#       Defines the following macros:
-#               GCC_FORMAT_SUPPORT
-#
-#------------------------------------------------------------------------
-
-AC_DEFUN([TR_COMPILER_ATTRIBUTE_FORMAT], [
-        AC_MSG_CHECKING([for gcc format attribute])
-        AC_CACHE_VAL(od_cv_attribute_lf_attribute, [
-                AC_COMPILE_IFELSE([
-                        AC_LANG_SOURCE([
-                                void print_something (char *fmt, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
-                        ])
-                ],[
-                        od_cv_attribute_lf_attribute="yes"
-                ],[
-                        od_cv_attribute_lf_attribute="no"
-                ])
-        ])
-
-        AC_MSG_RESULT([$od_cv_attribute_lf_attribute])
-        
-        if test x"$od_cv_attribute_lf_attribute" = "xyes"; then
-        	AC_DEFINE_UNQUOTED(GCC_FORMAT_SUPPORT, 1, [Defined if format __attribute__ is supported.])
-        fi
 ])
