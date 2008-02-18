@@ -145,15 +145,16 @@ static inline uint32_t s3_atomic_uint32_get (volatile uint32_t *val) {
 
 #else
 
-S3_PRIVATE uint32_t s3_atomic_uint32_incr (volatile uint32_t *val);
-S3_PRIVATE uint32_t s3_atomic_uint32_decr (volatile uint32_t *val);
-S3_PRIVATE uint32_t s3_atomic_uint32_get (volatile uint32_t *val);
-
-/** @internal Defined if the atomic operations are not available. Slow C substitutes will be provided */
-#define S3_SLOW_ATOMIC_OPS 1
+/* Use the slow global-lock based versions */
+#define s3_atomic_uint32_incr(val) s3_slow_atomic_uint32_incr(val)
+#define s3_atomic_uint32_decr(val) s3_slow_atomic_uint32_decr(val)
+#define s3_atomic_uint32_get(val) s3_slow_atomic_uint32_get(val)
 
 #endif /* HAVE_INTEL_ATOMIC_OPS */
 
+S3_PRIVATE uint32_t s3_slow_atomic_uint32_incr (volatile uint32_t *val);
+S3_PRIVATE uint32_t s3_slow_atomic_uint32_decr (volatile uint32_t *val);
+S3_PRIVATE uint32_t s3_slow_atomic_uint32_get (volatile uint32_t *val);
 
 /*!
  * @} S3Atomic
