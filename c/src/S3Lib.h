@@ -120,7 +120,11 @@ typedef void * S3TypeRef;
 #include "S3Account.h"
 #include "S3Connection.h"
 #include "S3AutoreleasePool.h"
+
+#ifdef S3LIB_PRIVATE_API
+#include "S3Atomic.h"
 #include "base64.h"
+#endif
 
 /*
  * S3lib functions

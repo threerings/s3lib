@@ -1,11 +1,10 @@
 /*
- * tests.h vi:ts=4:sw=4:expandtab:
- * Amazon S3 Library Unit Tests
+ * S3Account.h vi:ts=4:sw=4:expandtab:
+ * Amazon S3 Library
  *
  * Author: Landon Fuller <landonf@threerings.net>
  *
- * Copyright (c) 2006 - 2007 Landon Fuller <landonf@bikemonkey.org>
- * Copyright (c) 2006 - 2007 Three Rings Design, Inc.
+ * Copyright (c) 2008 Landon Fuller <landonf@bikemonkey.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,25 +32,57 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TESTS_H
-#define TESTS_H
+#ifndef S3ATOMIC_H
+#define S3ATOMIC_H
 
-#include <config.h>
-#include <check.h>
-#include <src/S3Lib.h>
+/**
+ * @file
+ * @brief Atomic Integer Operations
+ * @author Landon Fuller <landonf@bikemonkey.org>
+ */
 
-Suite *S3Account_suite(void);
-Suite *S3Atomic_suite(void);
-Suite *S3AutoreleasePool_suite(void);
-Suite *S3Connection_suite(void);
-Suite *S3Dict_suite(void);
-Suite *S3Error_suite(void);
-Suite *S3Header_suite(void);
-Suite *S3Lib_suite(void);
-Suite *S3List_suite(void);
-Suite *S3Request_suite(void);
-Suite *S3String_suite(void);
-Suite *S3StringBuilder_suite(void);
-Suite *base64_suite(void);
+/*!
+ * @addtogroup S3Atomic
+ * @{
+ */
 
-#endif /* TESTS_H */
+#ifdef __i386__
+
+/**
+ * Atomically increment a 32-bit integer and return the new value.
+ */
+static inline uint32_t s3_atomic_uint32_incr (volatile uint32_t *val) {
+    uint32_t tmp;
+
+    asm volatile (
+        "   lock; xaddl     %0, %1;"
+        : "=r" (tmp), "=m" (*val)
+        : "0" (1), "m" (*val)
+    );
+
+    return tmp + 1;
+}
+
+/**
+ * Atomically decrement a 32-bit integer and return the new value.
+ */
+static inline uint32_t s3_atomic_uint32_decr (volatile uint32_t *val) {
+    uint32_t tmp;
+
+    asm volatile (
+        "   lock; xaddl     %0, %1;"
+        : "=r" (tmp), "=m" (*val)
+        : "0" (-1), "m" (*val)
+    );
+
+    return tmp - 1;
+}
+
+#endif
+
+
+/*!
+ * @} S3Atomic
+ */
+
+#endif /* S3ATOMIC_H */
