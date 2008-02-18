@@ -227,9 +227,10 @@ S3_DECLARE void s3_release (S3TypeRef object) {
     S3RuntimeBase *base = object;
 
     ASSERT_VALID_OBJ(object);
-    assert(s3_reference_count(object) > 0);
 
     uint32_t refcount = s3_atomic_uint32_decr(&base->refCount);
+    // assert that it didn't just roll-over
+    assert(refcount != UINT32_MAX);
 
     if (refcount == 0) {
         base->class->dealloc(object);
