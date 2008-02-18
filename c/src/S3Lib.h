@@ -54,6 +54,30 @@
  * @defgroup S3DataStructures Data Structures
  */
 
+/* Compiler feature detection for GCC */
+#ifdef __GNUC__
+    /* All versions support the format __atribute__ */
+    #define S3_CC_HAVE_FORMAT_ATTR
+    
+    /* All versions support the unused __attribute__ (?) */
+    #define S3_CC_HAVE_UNUSED_ATTR
+
+    /* On Darwin and MinGW, only GCC 4.0 and later support the visibility attribute */
+    #if (defined(__APPLE__) || defined(WIN32))
+        #if (__GNUC__ >= 4)
+            #define S3_CC_HAVE_VISIBLITY_ATTR
+        #endif
+    /* On other platforms, GCC 3.4 and later support the visibility __attribute__ */
+    #elif (__GNUC__ >= 3 && __GNUC_MINOR__ >= 4)
+        #define S3_CC_HAVE_VISIBLITY_ATTR
+    #endif
+    
+    /* GCC 4.1 and later support the Intel-style atomic operation built-ins (but not if -march=i386) */
+    #if (__GNUC__ >= 4 && __GNUC_MINOR__ >= 1 && !defined(__tune_i386__))
+        #define S3_CC_HAVE_INTEL_ATOMIC_OPS
+    #endif
+#endif /* __GNUC__ */
+
 /*
  * Declaration visibility scoping
  */
@@ -68,12 +92,12 @@
         #define S3_DECLARE __declspec(dllimport) extern
     #endif /* TR_BUILDING_s3lib_LIB */
 #else /* __WIN32__ */
-    #if defined(TR_BUILDING_s3lib_LIB) && defined(GCC_VISIBILITY_SUPPORT)
+    #if defined(TR_BUILDING_s3lib_LIB) && defined(S3_CC_HAVE_VISIBLITY_ATTR)    
         #define S3_EXTERN extern __attribute__ ((visibility("default")))
         #define S3_DECLARE __attribute__ ((visibility("default")))
         // We default to hidden, but it doesn't hurt to be explicit
         #define S3_PRIVATE __attribute__ ((visibility("hidden")))
-    #else
+    #else    
         #define S3_EXTERN extern
         #define S3_DECLARE
         #define S3_PRIVATE
@@ -81,15 +105,21 @@
 #endif /* !__WIN32__ */
 
 /*
- * GCC-specific format string compiler checking. Verifies validity of format
- * string and its type arguments.
+ * Format string compiler checking function attribute.
+ * Verifies validity of format string and its type arguments.
  */
-#ifdef GCC_FORMAT_SUPPORT
-#   define S3_CHECK_PRINTF(fmt, args)    __attribute__ ((__format__ (__printf__, fmt, args)))
+#ifdef S3_CC_HAVE_FORMAT_ATTR
+    #define S3_CHECK_PRINTF(fmt, args)    __attribute__ ((__format__ (__printf__, fmt, args)))
 #else
-#   define S3_CHECK_PRINTF(fmt, args)
+    #define S3_CHECK_PRINTF(fmt, args)
 #endif
 
+/*
+ * Attribute used to mark unused variables and functions.
+ */
+#ifdef S3_CC_HAVE_UNUSED_ATTR
+    #define S3_UNUSED __attribute__((unused))
+#endif
 
 /*
  * S3Lib Types

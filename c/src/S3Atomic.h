@@ -41,16 +41,27 @@
  * @author Landon Fuller <landonf@bikemonkey.org>
  */
 
-/*!
- * @addtogroup S3Atomic
+
+/**
+ * @defgroup S3Atomic Atomic Integer Operations
+ * @ingroup S3Library
+ * @internal
  * @{
  */
 
-#ifdef __i386__
-
-/**
- * Atomically increment a 32-bit integer and return the new value.
+/*
+ * Atomic compiler built-ins
  */
+#ifdef S3_CC_HAVE_INTEL_ATOMIC_OPS
+
+#define s3_atomic_uint32_incr(val) __sync_add_and_fetch(val, 1)
+#define s3_atomic_uint32_decr(val) __sync_sub_and_fetch(val, 1)
+
+/*
+ * i486+ x86_32 implementation
+ */
+#elif defined(__i386__)
+
 static inline uint32_t s3_atomic_uint32_incr (volatile uint32_t *val) {
     uint32_t tmp;
 
@@ -78,7 +89,11 @@ static inline uint32_t s3_atomic_uint32_decr (volatile uint32_t *val) {
     return tmp - 1;
 }
 
-#endif
+#else
+
+#error Atomic operations not supported on your platform.
+
+#endif /* HAVE_INTEL_ATOMIC_OPS */
 
 
 /*!
