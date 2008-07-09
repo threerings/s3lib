@@ -292,6 +292,20 @@ public class S3Connection {
         AccessControlList.StandardPolicy accessPolicy)
         throws S3Exception
     {
+        putObject(bucketName, object, accessPolicy, new HashMap<String,String>());
+    }
+
+    /**
+     * Upload an S3 Object.
+     * @param bucketName Destination bucket.
+     * @param object S3 Object.
+     * @param accessPolicy S3 Object's access policy. 
+	 * @param headers http headers to be served with the object.
+     */
+    public void putObject (String bucketName, S3Object object,
+        AccessControlList.StandardPolicy accessPolicy, Map<String,String> headers)
+        throws S3Exception
+    {
         PutMethod method;
         byte[] checksum;
 
@@ -310,6 +324,11 @@ public class S3Connection {
 
         // Set the access policy
         method.setRequestHeader(S3Utils.ACL_HEADER, accessPolicy.toString());
+
+        // add any headers that were supplied
+        for (Map.Entry<String,String> header : headers.entrySet()) {
+            method.setRequestHeader(header.getKey(), header.getValue());
+        }
 
         // Compute and set the content-md5 value (base64 of 128bit digest)
         // http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.15
