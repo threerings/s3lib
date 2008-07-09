@@ -42,8 +42,13 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 import org.apache.commons.codec.binary.Hex;
+
+import org.apache.commons.httpclient.*;
+import org.apache.commons.httpclient.methods.GetMethod;
 
 import org.junit.*;
 import static org.junit.Assert.*;
@@ -244,6 +249,39 @@ public class S3ConnectionTest {
         _conn.putObject(_testBucketName, _fileObj, AccessControlList.StandardPolicy.PRIVATE);
     }
 
+    @Test
+    public void testPutObjectHeaders () 
+        throws Exception
+    {
+        // magical future expiry time
+        String name = "Expires", date = "Sun, 17 Jan 2038 19:14:07 GMT";
+        Map<String,String> headers = new HashMap<String,String>();
+        headers.put(name, date);
+
+        // Send it to the mother ship
+        _conn.putObject(_testBucketName, _fileObj, AccessControlList.StandardPolicy.PUBLIC_READ, headers);
+
+        // Fetch it back out again
+        S3Object obj = _conn.getObject(_testBucketName, _fileObj.getKey());
+
+        // Ensure that it is equal to the object we uploaded
+        S3ObjectTest.testEquals(_fileObj, obj);
+
+        // Get the data via HTTP
+        String url = "http://" + S3Utils.DEFAULT_HOST + "/" + _testBucketName + "/" + _fileObj.getKey();
+        HttpClient client = new HttpClient();
+        GetMethod method = new GetMethod(url);
+        client.executeMethod(method);
+		
+        // Get the expires header
+        Header header = method.getResponseHeader(name);
+        String headerValue = header.toExternalForm().trim();
+
+        // Check that it has the right date.
+        assertTrue(headerValue.startsWith(name));
+        assertTrue(headerValue.endsWith(date));
+    }
+	
     @Test
     public void testGetObject ()
         throws Exception
