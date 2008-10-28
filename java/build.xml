@@ -147,7 +147,7 @@
                 <include name="**/*.class"/>
                 <exclude name="**/*Test.class"/>
                 <exclude name="**/*TestS3Config.class"/>
-                <exclude name="${s3pipe.classdir}"/>
+                <exclude name="${s3pipe.classdir}/**"/>
             </fileset>
             
             <!-- Pack in the dependencies -->
@@ -155,7 +155,6 @@
             <zipfileset src="lib/commons-httpclient.jar"/>
             <zipfileset src="lib/commons-io.jar"/>
             <zipfileset src="lib/commons-logging.jar"/>
-            <rule pattern="org.apache.**" result="com.threerings.s3lib.extlibs.@0"/>
         </jarjar>
 
         <!-- Build the s3pipe application jar -->
