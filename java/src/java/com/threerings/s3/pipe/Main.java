@@ -85,7 +85,7 @@ final public class Main {
                 throws S3Exception, RemoteStreamException
             {
                 RemoteStream stream = new RemoteStream(app.connection, app.bucketName, app.streamName);
-                stream.delete();
+                stream.delete(app.maxRetry);
             }
         },
 

@@ -223,27 +223,42 @@ public class RemoteStream {
     }
 
     /**
-     * Delete the remote stream data.
-     * May be called multiple times if a failure occurs.
+     * Delete the remote stream data, retrying if failures are encountered.
+     * @param maxRetry: Maximum number of times to retry deleting.
      */
-    public void delete ()
-        throws S3Exception, RemoteStreamException
+    public void delete (int maxRetry)
+        throws S3Exception
     {
         S3ObjectListing listing;
         String marker = null;
+        S3RetryHandler retry = new S3RetryHandler(maxRetry);
+        S3Exception retryError = null;
 
         do {
-            /* List and delete all stream keys. */
-            listing = _connection.listObjects(_bucketName, streamPrefix(), marker, 1000, null);
-
-            for (S3ObjectEntry entry : listing.getEntries()) {
-                _connection.deleteObject(_bucketName, entry.getKey());
+            /* Log the last error. */
+            if (retryError != null) {
+                System.err.println("S3 failure deleting stream '" + _streamName + "', retrying: " + retryError);                   
             }
 
-            marker = listing.getNextMarker();
-        } while (listing.truncated());
-    }
+            try {
+                do {
+                    /* List and delete all stream keys. */
+                    listing = _connection.listObjects(_bucketName, streamPrefix(), marker, 1000, null);
 
+                    for (S3ObjectEntry entry : listing.getEntries()) {
+                        _connection.deleteObject(_bucketName, entry.getKey());
+                    }
+
+                    marker = listing.getNextMarker();
+                } while (listing.truncated());
+            } catch (S3Exception e) {
+                /* Let the retry handler check the exception */
+                retryError = e;
+                continue;
+            }
+            break;
+        } while (retry.shouldRetry(retryError));
+    }
 
     /**
      * Return the complete S3 prefix for this stream.
