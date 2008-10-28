@@ -124,7 +124,7 @@ public class RemoteStreamTest {
     
         RemoteStream stream = new RemoteStream(_conn, _bucket, STREAM_NAME);
         stream.putStreamInfo();
-        stream.delete();
+        stream.delete(5);
         S3ObjectListing listing = _conn.listObjects(_bucket);
         assertEquals(0, listing.getEntries().size());
     }
