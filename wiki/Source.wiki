@@ -1,5 +1,7 @@
-!S3Lib-Java's repository is now hosted on github:
+== S3Lib Java ==
+The java library is now hosted on github:
   http://github.com/landonf/s3lib-java/tree/master
 
-!S3Lib-C is hosted on Google Code:
+== S3Lib C ==
+The C library is hosted on Google Code:
   http://code.google.com/p/s3lib/source/checkout
