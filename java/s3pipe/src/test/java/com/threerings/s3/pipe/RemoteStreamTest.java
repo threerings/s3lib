@@ -33,7 +33,6 @@ package com.threerings.s3.pipe;
 
 import com.threerings.s3.client.S3Connection;
 import com.threerings.s3.client.S3ObjectListing;
-import com.threerings.s3.client.S3TestConfig;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
