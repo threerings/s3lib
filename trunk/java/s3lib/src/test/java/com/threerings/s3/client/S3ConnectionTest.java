@@ -60,8 +60,8 @@ public class S3ConnectionTest {
     {
         FileOutputStream fileOutput;
 
-        _conn = TestS3Config.createConnection();
-        _testBucketName = TestS3Config.generateTestBucketName();
+        _conn = S3TestConfig.createConnection();
+        _testBucketName = S3TestConfig.generateTestBucketName();
         _testFile = File.createTempFile("S3FileObjectTest", null);
 
         // Create a file object
@@ -78,7 +78,7 @@ public class S3ConnectionTest {
     public void tearDown ()
         throws Exception
     {
-        TestS3Config.deleteBucket(_conn, _testBucketName);
+        S3TestConfig.deleteBucket(_conn, _testBucketName);
         _testFile.delete();
     }
 
@@ -373,7 +373,7 @@ public class S3ConnectionTest {
     public void testErrorHandling ()
         throws Exception
     {
-        S3Connection badConn = new S3Connection(TestS3Config.getId(), "bad key");
+        S3Connection badConn = new S3Connection(S3TestConfig.getId(), "bad key");
         try {
             badConn.createBucket(_testBucketName);
             fail("Did not throw S3SignatureDoesNotMatchException");            
