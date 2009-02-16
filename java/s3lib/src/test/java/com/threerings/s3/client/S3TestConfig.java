@@ -2,23 +2,42 @@ package com.threerings.s3.client;
 
 import java.io.IOException;
 import java.security.SecureRandom;
+import java.util.Properties;
+
+import java.io.InputStream;
+import java.io.IOException;
 
 /**
  * S3 unit test configuration and utilities.
  */
-public class TestS3Config {
+public class S3TestConfig {
+    private static final Properties props;
+    static {
+        props = new Properties();
+        
+        try {
+            InputStream stream = S3TestConfig.class.getResourceAsStream("/test.properties");
+            if (stream == null)
+                throw new RuntimeException("Missing test preferences: test.properties");
+
+            props.load(stream);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load properties", e);
+        }
+    }
+    
     /**
      * Return the test-supplied AWS id
      */
     public static String getId () {
-        return System.getProperty("aws.id");
+        return props.getProperty("aws.id");
     }
     
     /**
      * Return the test-supplied AWS key
      */
     public static String getKey () {
-        return System.getProperty("aws.key");
+        return props.getProperty("aws.key");
     }
 
     /**

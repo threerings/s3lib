@@ -32,7 +32,7 @@
 package com.threerings.s3.pipe;
 
 import com.threerings.s3.client.S3Connection;
-import com.threerings.s3.client.TestS3Config;
+import com.threerings.s3.client.S3TestConfig;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -50,8 +50,8 @@ public class DownloadStreamerTest {
     public void setUp ()
         throws Exception
     {
-        _conn = TestS3Config.createConnection();
-        _bucket = TestS3Config.generateTestBucketName();
+        _conn = S3TestConfig.createConnection();
+        _bucket = S3TestConfig.generateTestBucketName();
         _testFile = File.createTempFile("s3pipe", "upload");
         _outputFile = File.createTempFile("s3pipe", "download");
 
@@ -69,7 +69,7 @@ public class DownloadStreamerTest {
     public void tearDown ()
         throws Exception
     {
-        TestS3Config.deleteBucket(_conn, _bucket);
+        S3TestConfig.deleteBucket(_conn, _bucket);
         _testFile.delete();
         _outputFile.delete();
     }

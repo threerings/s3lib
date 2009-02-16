@@ -43,7 +43,7 @@ public class S3DefaultConnectionFactoryTest {
 
     @Test
     public void testCreate () throws S3Exception {
-        S3ConnectionFactory factory = new S3DefaultConnectionFactory(TestS3Config.getId(), TestS3Config.getKey());
+        S3ConnectionFactory factory = new S3DefaultConnectionFactory(S3TestConfig.getId(), S3TestConfig.getKey());
         S3Connection conn = factory.createConnection();
         try {
             conn.listObjects("a bucket that will absolutely not exist such that we can verify that we receive a server-side S3 exception: " + new SecureRandom().nextInt());
