@@ -1,0 +1,5 @@
+S3Lib-Java's primary repository is now maintained via github:
+  http://github.com/landonf/s3lib-java/tree/master
+
+S3Lib-C has not yet been migrated:
+  http://code.google.com/p/s3lib/source/checkout
