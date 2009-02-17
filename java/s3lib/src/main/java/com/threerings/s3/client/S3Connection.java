@@ -53,6 +53,9 @@ import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethodBase;
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
+
+import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpMethod;
@@ -73,11 +76,7 @@ import org.xml.sax.SAXException;
  * authentication and connection parameters and exposes methods to access and
  * manipulate S3 data.
  *
- * @todo Implement a re-entrant HttpConnectionManager so that we can support
- *  multiple "in-flight" S3 objects on the same thread. Until this is written,
- *  a new S3Connection request will invalidate the previous request. This is
- *  only particularly important when using getObject(), as the request remains
- *  open to provide access to the data stream.
+ * S3Connection instances are thread-safe.
  */
 public class S3Connection {
     /**
@@ -109,6 +108,15 @@ public class S3Connection {
         this.secretKey = secretKey;
         this.httpClient = new HttpClient();
         this.httpClient.setHostConfiguration(hostConfig);
+
+        /* Configure the multi-threaded connection manager. Default to MAX_INT (eg, unlimited) connections, as
+         * S3 is intended to support such use */
+        HttpConnectionManagerParams managerParam = new HttpConnectionManagerParams();
+        MultiThreadedHttpConnectionManager manager = new MultiThreadedHttpConnectionManager();
+        managerParam.setDefaultMaxConnectionsPerHost(Integer.MAX_VALUE);
+        managerParam.setMaxTotalConnections(Integer.MAX_VALUE);
+        manager.setParams(managerParam);;
+        this.httpClient.setHttpConnectionManager(manager);
     }
 
     /**
@@ -368,79 +376,93 @@ public class S3Connection {
         final String mimeType;
         final byte digest[];
         final long length;
+        boolean success = false;
         long lastModified = 0L;
 
-        // Execute the get request and retrieve all metadata from the response
-        executeS3Method(method);
-
-        // Mime type
-        mimeType = getResponseHeader(method, CONTENT_TYPE_HEADER, true);
-        
-        // Last modified
-        final String dateString = getResponseHeader(method, LAST_MODIFIED_HEADER, false);
+        /* Attempt the GET, and release the held method connection on failure */
         try {
-            if (dateString != null)
-                lastModified = DateUtil.parseDate(dateString).getTime();
-        } catch (DateParseException e) {
-            lastModified = 0L;
-        }
+            // Execute the get request and retrieve all metadata from the response
+            executeS3Method(method);
+
+            // Mime type
+            mimeType = getResponseHeader(method, CONTENT_TYPE_HEADER, true);
         
-        // Data length
-        length = method.getResponseContentLength();
-        if (length == -1) {
-            throw new S3Exception("S3 failed to supply the Content-Length header");            
-        }
-
-        // MD5 Checksum. S3 returns this as the standard 128bit hex string, enclosed
-        // in quotes.
-        try {
-            String hex;
-            
-            hex = getResponseHeader(method, S3_MD5_HEADER, true);
-            // Strip the surrounding quotes
-            hex = hex.substring(1, hex.length() - 1);
-            digest = new Hex().decode(hex.getBytes("utf8"));
-        } catch (DecoderException de) {
-            throw new S3Exception("S3 returned an invalid " + S3_MD5_HEADER + " header: " +
-                de);
-        } catch (UnsupportedEncodingException uee) {
-            // UTF8 must always be supported.
-            throw new RuntimeException("Missing UTF8 encoding");
-        }
-
-        // Retrieve metadata
-        metadata = new HashMap<String,String>();
-        for (Header header : method.getResponseHeaders()) {
-            String name;
-
-            name = header.getName();
-            if (name.startsWith(S3_METADATA_PREFIX)) {
-                // Strip the S3 prefix
-                String key = name.substring(S3_METADATA_PREFIX.length());
-                metadata.put(key, header.getValue());
-            }
-        }
-
-        if (hasBody) {
-            // Get the response body. This is an "auto closing" stream --
-            // it will close the HTTP connection when the stream is closed.
+            // Last modified
+            final String dateString = getResponseHeader(method, LAST_MODIFIED_HEADER, false);
             try {
-                response = method.getResponseBodyAsStream();            
-            } catch (IOException ioe) {
-                throw new S3ClientException.NetworkException("Error receiving object " + method.getName() +
-                	"response: " + ioe.getMessage(), ioe);
+                if (dateString != null)
+                    lastModified = DateUtil.parseDate(dateString).getTime();
+            } catch (DateParseException e) {
+                lastModified = 0L;
+            }
+        
+            // Data length
+            length = method.getResponseContentLength();
+            if (length == -1) {
+                throw new S3Exception("S3 failed to supply the Content-Length header");            
             }
 
-            if (response == null) {
-                // A body was expected
-                throw new S3Exception("S3 failed to return any document body");
+            // MD5 Checksum. S3 returns this as the standard 128bit hex string, enclosed
+            // in quotes.
+            try {
+                String hex;
+            
+                hex = getResponseHeader(method, S3_MD5_HEADER, true);
+                // Strip the surrounding quotes
+                hex = hex.substring(1, hex.length() - 1);
+                digest = new Hex().decode(hex.getBytes("utf8"));
+            } catch (DecoderException de) {
+                throw new S3Exception("S3 returned an invalid " + S3_MD5_HEADER + " header: " +
+                    de);
+            } catch (UnsupportedEncodingException uee) {
+                // UTF8 must always be supported.
+                throw new RuntimeException("Missing UTF8 encoding");
             }
 
-            return new S3StreamObject(objectKey, mimeType, length, digest, metadata, response, lastModified);        
-        } else {
-        	return new S3EmptyObject(objectKey, mimeType, length, digest, metadata, lastModified);
+            // Retrieve metadata
+            metadata = new HashMap<String,String>();
+            for (Header header : method.getResponseHeaders()) {
+                String name;
+
+                name = header.getName();
+                if (name.startsWith(S3_METADATA_PREFIX)) {
+                    // Strip the S3 prefix
+                    String key = name.substring(S3_METADATA_PREFIX.length());
+                    metadata.put(key, header.getValue());
+                }
+            }
+
+            if (hasBody) {
+                // Get the response body as an "auto closing" stream -- it will close the HTTP connection
+                // when the stream is closed, the end of the stream is reached, or finalization occurs.
+                try {
+                    InputStream s = method.getResponseBodyAsStream();
+                    response = new HttpInputStream(s, method);
+                } catch (IOException ioe) {
+                    throw new S3ClientException.NetworkException("Error receiving object " + method.getName() +
+                    	"response: " + ioe.getMessage(), ioe);
+                }
+
+                if (response == null) {
+                    // A body was expected
+                    throw new S3Exception("S3 failed to return any document body");
+                }
+
+                /* Finished successfully */
+                success = true;
+                return new S3StreamObject(objectKey, mimeType, length, digest, metadata, response, lastModified);        
+            } else {
+            	return new S3EmptyObject(objectKey, mimeType, length, digest, metadata, lastModified);
+            }
+        } finally {
+            /* If a body was requested and the request was successful, cleanup will be handled by
+             * the HttpInputStream. Otherwise, return the method now. */
+            if (hasBody && success) {
+                // Concluded successfully
+            } else {
+                method.releaseConnection();
+            }
         }
-
     }
 
     /**
