@@ -16,7 +16,7 @@
 
     <url>http://code.google.com/p/s3lib/</url>
 
-    <dependencies>        
+    <dependencies>
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
