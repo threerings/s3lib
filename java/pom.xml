@@ -32,17 +32,9 @@
 				<artifactId>maven-scala-plugin</artifactId>
 				<executions>
 					<execution>
-						<id>scala-compile-first</id>
-						<phase>process-resources</phase>
+						<phase>compile</phase>
 						<goals>
-						    <goal>add-source</goal>
 							<goal>compile</goal>
-						</goals>
-					</execution>									
-					<execution>
-						<id>scala-test-compile</id>
-						<phase>process-test-resources</phase>
-						<goals>
 							<goal>testCompile</goal>
 						</goals>
 					</execution>
@@ -56,6 +48,7 @@
 						<phase>compile</phase>
 						<goals>
 							<goal>compile</goal>
+							<goal>testCompile</goal>
 						</goals>
 					</execution>
 				</executions>
@@ -87,6 +80,15 @@
         </dependency>
     </dependencies>
  
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </reporting>
+ 
     <repositories>
         <repository>
             <id>scala-tools.org</id>
@@ -101,5 +103,5 @@
             <name>Scala-tools Maven2 Repository</name>
             <url>http://scala-tools.org/repo-releases</url>
         </pluginRepository>
-    </pluginRepositories> 
+    </pluginRepositories>
 </project>
