@@ -18,12 +18,55 @@ import com.threerings.s3.client.acl.AccessControlList.StandardPolicy
 import scala.collection.jcl.Conversions._
 
 /**
+ * Generic S3 storage.
+ *
+ * A specific storage instance (such as Path) may permute the keyspace or
+ * otherwise provide additional functionality on top of the base
+ * Bucket storage class.
+ */
+trait S3Storage {
+  /**
+   * Fetch an S3 object with the provided key.
+   *
+   * @param key Object key.
+   */
+  def get (key:String): S3Object
+
+  /**
+   * Upload an S3 object using a StandardPolicy.PRIVATE access
+   * policy.
+   *
+   * @param obj Object to upload. Note that the final key name
+   * will be relative to any path prefix or permutation used by
+   * this storage item.
+   */
+  def put (obj:S3Object): Unit = {
+    this.put(obj, StandardPolicy.PRIVATE)
+  }
+
+  /**
+   * Upload an S3 object.
+   *
+   * @param obj Object to upload. Note that the final key name
+   * will be relative to any path prefix or permutation used by this storage item.
+   * @param policy Access policy to use for the uploaded item.
+   */
+  def put (obj:S3Object, policy:StandardPolicy): Unit
+
+  /**
+   * Delete a remote S3 Object.
+   * @param key S3 object key.
+   */
+  def delete (key:String)
+}
+
+/**
  * Represents a remote S3 bucket.
  *
  * @param name Bucket name.
  * @param account S3 account.
  */
-class Bucket (val name:String, account:S3Account) {
+class Bucket (val name:String, account:S3Account) extends S3Storage {
   /** Backing S3 connection */
   private val conn = account.conn
 
@@ -33,50 +76,28 @@ class Bucket (val name:String, account:S3Account) {
   @throws(classOf[S3Exception])
   def create = account.retry(conn.createBucket(name))
 
+
   /**
    * Delete the S3 bucket.
    */
   @throws(classOf[S3Exception])
   def delete = account.retry(conn.deleteBucket(name))
 
-    /**
-   * Fetch an S3 object with the provided key.
-   *
-   * @param key Object key.
-   */
-  def get (key:String): S3Object = {
+
+  // from S3Storage trait
+  def get (key:String): S3Object =
     account.retry(conn.getObject(name, key))
-  }
 
-  /**
-   * Upload an S3 object using a StandardPolicy.PRIVATE access
-   * policy.
-   *
-   * @param obj Object to upload. Note that the final key name
-   * will be relative to any path prefix used by this storage item.
-   */
-  def put (obj:S3Object): Unit = {
-    this.put(obj, StandardPolicy.PRIVATE)
-  }
 
-  /**
-   * Upload an S3 object
-   *
-   * @param obj Object to upload. Note that the final key name
-   * will be relative to any path prefix used by this storage item.
-   * @param policy Access policy to use for the uploaded item.
-   */
-  def put (obj:S3Object, policy:StandardPolicy): Unit = {
+  // from S3Storage trait
+  def put (obj:S3Object, policy:StandardPolicy): Unit =
     account.retry(conn.putObject(name, obj, policy))
-  }
 
-  /**
-   * Delete a remote S3 Object.
-   * @param key S3 object key.
-   */
-  def delete (key:String) = {
+
+  // from S3Storage trait
+  def delete (key:String) =
     account.retry(conn.deleteObject(name, key))
-  }
+
 
   /**
    * Return a stream of all bucket objects.
@@ -85,6 +106,7 @@ class Bucket (val name:String, account:S3Account) {
   def objects: Stream[S3ObjectEntry] = {
     objects(null, null, null)
   }
+
 
   /**
    * Return a stream of all bucket objects
@@ -97,6 +119,7 @@ class Bucket (val name:String, account:S3Account) {
   def objects (prefix:String, delimiter:String): Stream[S3ObjectEntry] = {
     objects(prefix, delimiter, null)
   }
+
 
   /**
    * Return a stream of all bucket objects.
@@ -111,6 +134,7 @@ class Bucket (val name:String, account:S3Account) {
   def objects (prefix:String, delimiter:String, marker:String): Stream[S3ObjectEntry] = {
     objects(prefix, delimiter, marker, 0)
   }
+
 
   /**
    * Return a stream of all bucket objects
