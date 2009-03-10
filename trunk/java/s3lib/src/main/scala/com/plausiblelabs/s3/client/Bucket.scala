@@ -39,13 +39,41 @@ class Bucket (val name:String, account:S3Account) {
   @throws(classOf[S3Exception])
   def delete = account.retry(conn.deleteBucket(name))
 
+    /**
+   * Fetch an S3 object with the provided key.
+   *
+   * @param key Object key.
+   */
+  def get (key:String): S3Object = {
+    account.retry(conn.getObject(name, key))
+  }
 
-  // TODO: Replace with non-S3Object implementation.
+  /**
+   * Upload an S3 object using a StandardPolicy.PRIVATE access
+   * policy.
+   *
+   * @param obj Object to upload. Note that the final key name
+   * will be relative to any path prefix used by this storage item.
+   */
+  def put (obj:S3Object): Unit = {
+    this.put(obj, StandardPolicy.PRIVATE)
+  }
+
+  /**
+   * Upload an S3 object
+   *
+   * @param obj Object to upload. Note that the final key name
+   * will be relative to any path prefix used by this storage item.
+   * @param policy Access policy to use for the uploaded item.
+   */
   def put (obj:S3Object, policy:StandardPolicy): Unit = {
     account.retry(conn.putObject(name, obj, policy))
   }
 
-  // TODO: Replace with non-S3Object implementation.
+  /**
+   * Delete a remote S3 Object.
+   * @param key S3 object key.
+   */
   def delete (key:String) = {
     account.retry(conn.deleteObject(name, key))
   }
