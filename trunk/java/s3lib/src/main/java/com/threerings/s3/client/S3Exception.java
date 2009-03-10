@@ -37,10 +37,31 @@ package com.threerings.s3.client;
 public class S3Exception extends Exception
 {
     public S3Exception (String message) {
-        super(message);
+        this(message, false);
+    }
+
+    public S3Exception (String message, boolean isTransient) {
+        this(message, null, isTransient);
     }
 
     public S3Exception (String message, Throwable cause) {
-        super(message, cause);
+        this(message, cause, false);
     }
+
+    public S3Exception (String message, Throwable cause, boolean isTransient) {
+        super(message, cause);
+        _transient = isTransient;
+    }
+
+    /**
+     * Return true if this exception represents a transient
+     * error (ie, the same request may succeed on retry.
+     *
+     * By default, this superclass implementation returns false.
+     */
+    public boolean isTransient () {
+      return _transient;
+    }
+
+    private final boolean _transient;
 }

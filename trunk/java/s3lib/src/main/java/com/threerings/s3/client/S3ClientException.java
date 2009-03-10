@@ -44,6 +44,10 @@ public class S3ClientException extends S3Exception
         super(message, cause);
     }
 
+    public S3ClientException (String message, Throwable cause, boolean isTransient) {
+        super(message, cause, isTransient);
+    }
+
     /** Couldn't parse the specified URI.  */
     public static class InvalidURIException extends S3ClientException {
         public InvalidURIException (String message) {
@@ -59,7 +63,7 @@ public class S3ClientException extends S3Exception
       * NetworkException.getCause() will generally return an IOException. */
     public static class NetworkException extends S3ClientException {
         public NetworkException (String message, Throwable cause) {
-            super(message, cause);
+            super(message, cause, true);
         }
     }
 }
