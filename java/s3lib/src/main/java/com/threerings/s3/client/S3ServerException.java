@@ -64,6 +64,11 @@ public class S3ServerException extends S3Exception
         this(message, null, null);
     }
 
+    // Documentation inherited
+    public S3ServerException (String message, boolean isTransient) {
+        this(message, null, null, isTransient);
+    }
+
     /**
      * Initialize an AWS exception with the associated message, AWS S3 requestId,
      * and AWS S3 hostId.
@@ -76,6 +81,21 @@ public class S3ServerException extends S3Exception
         _requestId = requestId;
         _hostId = hostId;
     }
+
+        /**
+     * Initialize an AWS exception with the associated message, AWS S3 requestId,
+     * and AWS S3 hostId.
+     * @param message Error message provided by S3.
+     * @param requestId Request ID provided by S3.
+     * @param hostId Host ID provided by S3;
+     * @param isTransient If true, this exception represents a transient error
+     */
+    public S3ServerException (String message, String requestId, String hostId, boolean isTransient) {
+        super(message, null, isTransient);
+        _requestId = requestId;
+        _hostId = hostId;
+    }
+
 
     /**
      * Extract the child node's text.
@@ -240,22 +260,22 @@ public class S3ServerException extends S3Exception
     /** A conflicting conditional operation is currently in progress against this resource. Please try again.  */
     public static class OperationAbortedException extends S3ServerException {
         public OperationAbortedException (String message) {
-            this(message, null, null);
+            super(message, true);
         }
 
         public OperationAbortedException (String message, String requestId, String hostId) {
-            super(message, requestId, hostId);
+            super(message, requestId, hostId, true);
         }
     }
 
     /** The Content-MD5 you specified did not match what we received.  */
     public static class BadDigestException extends S3ServerException {
         public BadDigestException (String message) {
-            this(message, null, null);
+            super(message, true);
         }
 
         public BadDigestException (String message, String requestId, String hostId) {
-            super(message, requestId, hostId);
+            super(message, requestId, hostId, true);
         }
     }
 
@@ -317,11 +337,11 @@ public class S3ServerException extends S3Exception
     /** We encountered an internal error. Please try again.  */
     public static class InternalErrorException extends S3ServerException {
         public InternalErrorException (String message) {
-            this(message, null, null);
+            super(message, true);
         }
 
         public InternalErrorException (String message, String requestId, String hostId) {
-            super(message, requestId, hostId);
+            super(message, requestId, hostId, true);
         }
     }
 
@@ -372,11 +392,11 @@ public class S3ServerException extends S3Exception
     /** The Content-MD5 you specified was an invalid.  */
     public static class InvalidDigestException extends S3ServerException {
         public InvalidDigestException (String message) {
-            this(message, null, null);
+            super(message, true);
         }
 
         public InvalidDigestException (String message, String requestId, String hostId) {
-            super(message, requestId, hostId);
+            super(message, requestId, hostId, true);
         }
     }
 
@@ -625,11 +645,11 @@ public class S3ServerException extends S3Exception
     /** Your socket connection to the server was not read from or written to within the timeout period.  */
     public static class RequestTimeoutException extends S3ServerException {
         public RequestTimeoutException (String message) {
-            this(message, null, null);
+            super(message, true);
         }
 
         public RequestTimeoutException (String message, String requestId, String hostId) {
-            super(message, requestId, hostId);
+            super(message, requestId, hostId, true);
         }
     }
 
