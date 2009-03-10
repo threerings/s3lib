@@ -98,7 +98,6 @@ class Bucket (val name:String, account:S3Account) {
   private[client] def objects (prefix:String, delimiter:String, marker:String, maxObjects:Int): Stream[S3ObjectEntry] = {
     /* Generate an entry stream */
     def generate (marker:String) = {
-      System.out.println("Issuing a list objects request")
       val listing = conn.listObjects(name, prefix, marker, maxObjects, delimiter)
       val entries = listing.getEntries
       if (entries.isEmpty) {
@@ -113,7 +112,6 @@ class Bucket (val name:String, account:S3Account) {
     def next (prev:S3ObjectListing, stream:Stream[S3ObjectEntry]): Stream[S3ObjectEntry] = {
       if (stream.isEmpty) {
         if (prev.truncated) {
-          System.out.println("Request was truncated")
           generate(prev.getNextMarker)
         } else {
           Stream.empty
