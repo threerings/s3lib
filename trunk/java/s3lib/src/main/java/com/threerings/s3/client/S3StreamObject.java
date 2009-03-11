@@ -49,41 +49,54 @@ public class S3StreamObject extends S3Object {
      * @param digest MD5 digest.
      * @param input Data stream.
      */
-    public S3StreamObject (String key, long length,
-        byte[] digest, InputStream input)
+    public S3StreamObject (String key, long length, byte[] digest, InputStream input)
     {
         this(key, S3Object.DEFAULT_MIME_TYPE, length, digest, input);
     }
 
     /**
-     * Instantiate an S3 stream object from an existing open stream.
-     * 
-     * @param key S3 object key.
-     * @param mimeType S3 object mime-type.
-     * @param length Stream data length.
-     * @param digest MD5 digest.
-     * @param input Data stream.
+     * @deprecated Replaced by {@link S3StreamObject#S3StreamObject(String, MediaType, long, byte[], InputStream)}
      */
-    public S3StreamObject (String key, String mimeType, long length,
-        byte[] digest, InputStream input)
+    @Deprecated
+    public S3StreamObject (String key, String mimeType, long length, byte[] digest, InputStream input)
     {
         this(key, mimeType, length, digest, input, 0L);
     }
 
     /**
      * Instantiate an S3 stream object from an existing open stream.
-     * 
+     *
      * @param key S3 object key.
      * @param mimeType S3 object mime-type.
      * @param length Stream data length.
      * @param digest MD5 digest.
      * @param input Data stream.
-     * @param lastModified Last modification timestamp.
      */
-    public S3StreamObject (String key, String mimeType, long length,
-        byte[] digest, InputStream input, long lastModified)
+    public S3StreamObject (String key, MediaType mediaType, long length, byte[] digest, InputStream input)
+    {
+        this(key, mediaType, length, digest, input, 0L);
+    }
+
+    /** @deprecated Replaced by {@link S3StreamObject#S3StreamObject(String, MediaType, long, byte[], InputStream, long)} */
+    @Deprecated
+    public S3StreamObject (String key, String mimeType, long length, byte[] digest, InputStream input, long lastModified)
     {
         this(key, mimeType, length, digest, new HashMap<String,String>(), input, lastModified);
+    }
+
+    /**
+     * Instantiate an S3 stream object from an existing open stream.
+     *
+     * @param key S3 object key.
+     * @param mediaType S3 object media-type.
+     * @param length Stream data length.
+     * @param digest MD5 digest.
+     * @param input Data stream.
+     * @param lastModified Last modification timestamp.
+     */
+    public S3StreamObject (String key, MediaType mediaType, long length, byte[] digest, InputStream input, long lastModified)
+    {
+        this(key, mediaType, length, digest, new HashMap<String,String>(), input, lastModified);
     }
     
     /**
@@ -96,11 +109,30 @@ public class S3StreamObject extends S3Object {
      * @param metadata Object metadata.
      * @param input Data stream.
      * @param lastModified Last modification timestamp.
+     *
+     * @deprecated Replaced by {@link S3StreamObject#S3StreamObject(String, MediaType, long, byte[], Map, InputStream, long)}
      */
     public S3StreamObject (String key, String mimeType, long length,
         byte[] digest, Map<String,String> metadata, InputStream input, long lastModified)
     {
-        super(key, mimeType, metadata);
+      this(key, new MediaType(mimeType), length, digest, metadata, input, lastModified);
+    }
+
+        /**
+     * Instantiate an S3 stream object from an existing open stream.
+     *
+     * @param key S3 object key.
+     * @param mediaType S3 object media-type.
+     * @param length Stream data length.
+     * @param digest MD5 digest.
+     * @param metadata Object metadata.
+     * @param input Data stream.
+     * @param lastModified Last modification timestamp.
+     */
+    public S3StreamObject (String key, MediaType mediaType, long length,
+        byte[] digest, Map<String,String> metadata, InputStream input, long lastModified)
+    {
+        super(key, mediaType, metadata);
         this.length = length;
         this.digest = digest;
         this.input = input;
