@@ -35,21 +35,15 @@ class Path (bucket:Bucket, name:String) extends S3Storage {
   /** Normalized path */
   private val path = Normalize.path(name)
 
-  /**
-   * Return a new sub-path. The requested path will be normalized, appended to this
-   * path and returned.
-   *
-   * @param name The path name to append.
-   */
-  def subpath (name:String) = new Path(bucket, Normalize.subpath(path, name))
+  override def subpath (name:String) = new Path(bucket, Normalize.subpath(path, name))
 
   // from S3Storage trait
-  def put (key:String, obj:S3Object, policy:StandardPolicy) =
+  override def put (key:String, obj:S3Object, policy:StandardPolicy) =
     bucket.put(Normalize.subpath(path, key), obj, policy)
 
   // from S3Storage trait
-  def delete (key:String) = bucket.delete(Normalize.subpath(path, key))
+  override def delete (key:String) = bucket.delete(Normalize.subpath(path, key))
 
   // from S3Storage trait
-  def get (key:String) = bucket.get(Normalize.subpath(path, key))
+  override def get (key:String) = bucket.get(Normalize.subpath(path, key))
 }
