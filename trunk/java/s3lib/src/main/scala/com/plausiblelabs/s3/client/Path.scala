@@ -7,22 +7,7 @@
 
 package com.plausiblelabs.s3.client
 
-import com.threerings.s3.client.S3Object
 import com.threerings.s3.client.acl.AccessControlList.StandardPolicy
-
-/**
- * An S3Object wrapper that handles correctly setting the object's
- * relative key name.
- */
-private[s3] class PathWrapperObject (key:String, obj:S3Object)
-  extends S3Object (key, obj.getMimeType, obj.getMetadata)
-{
-  override def lastModified = obj.lastModified
-  override def getInputStream = obj.getInputStream
-  override def getMD5 = obj.getMD5
-  override def setMetadata(metadata: java.util.Map[String,String]) = obj.setMetadata(metadata)
-  override def length:Long = obj.length
-}
 
 
 /**
@@ -59,8 +44,8 @@ class Path (bucket:Bucket, name:String) extends S3Storage {
   def subpath (name:String) = new Path(bucket, Normalize.subpath(path, name))
 
   // from S3Storage trait
-  def put (obj:S3Object, policy:StandardPolicy) =
-    bucket.put(new PathWrapperObject(Normalize.subpath(path, obj.getKey), obj), policy)
+  def put (key:String, obj:S3Object, policy:StandardPolicy) =
+    bucket.put(Normalize.subpath(path, key), obj, policy)
 
   // from S3Storage trait
   def delete (key:String) = bucket.delete(Normalize.subpath(path, key))

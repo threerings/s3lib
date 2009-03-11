@@ -12,7 +12,6 @@ import org.junit.Assert._
 
 import java.util.UUID
 
-import com.threerings.s3.client.S3ByteArrayObject
 import com.threerings.s3.client.acl.AccessControlList.StandardPolicy
 
 class BucketTest extends TestConfig {
@@ -37,18 +36,18 @@ class BucketTest extends TestConfig {
   
   /** Test PUT support */
   @Test def testPut = {
-    bucket.put(new S3ByteArrayObject("obj", Array()))
+    bucket.put("obj", S3Object.bytes(Array()))
     assertEquals("obj", bucket.objects.first.getKey)
   }
   
   @Test def testGet = {
     /* Upload an object containing a single '5' byte */
-    bucket.put(new S3ByteArrayObject("obj", Array(5)))
+    bucket.put("obj", S3Object.bytes(Array(5)))
     
     /* Fetch the object and read its data */
     val obj = bucket.get("obj")
     val bytes = new Array[Byte](1)
-    obj.getInputStream.read(bytes)
+    obj.inputStream.read(bytes)
     
     /* Verify the byte array matches */
     assertEquals(1, bytes.length)
@@ -57,7 +56,7 @@ class BucketTest extends TestConfig {
   
   @Test def testDelete = {
     /* Upload one object and verify that the bucket is populated */
-    bucket.put(new S3ByteArrayObject("obj", Array(1)))
+    bucket.put("obj", S3Object.bytes(Array(1)))
     assertEquals(1, bucket.objects.toList.length)
     
     /* Delete the object and verify that the bucket is now empty */
@@ -69,8 +68,7 @@ class BucketTest extends TestConfig {
   @Test def testList = {
     /* Upload five string objects */
     for (i <- 1 to 5) {
-      val obj = new S3ByteArrayObject("obj_" + i, Array(42))
-      bucket.put(obj, StandardPolicy.PRIVATE)
+      bucket.put("obj_" + i, S3Object.bytes(Array(42)), StandardPolicy.PRIVATE)
     }
 
     /* Fetch the objects using the internal listing method to 

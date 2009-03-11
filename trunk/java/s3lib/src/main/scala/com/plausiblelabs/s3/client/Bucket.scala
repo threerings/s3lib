@@ -12,10 +12,53 @@ import com.threerings.s3.client.S3Exception
 import com.threerings.s3.client.S3ObjectListing
 import com.threerings.s3.client.S3ObjectEntry
 
-import com.threerings.s3.client.S3Object
+import com.threerings.s3.client.{S3Object => JavaS3Object}
 import com.threerings.s3.client.acl.AccessControlList.StandardPolicy
 
 import scala.collection.jcl.Conversions._
+
+
+/**
+ * Wraps java and scala S3Object instances.
+ */
+private[client] object S3ObjectWrapper {
+  /**
+   * Wraps Scala S3 objects, providing a java client API-compatible
+   * interface
+   */
+  private[client] class Scala (key:String, obj:S3Object) extends JavaS3Object (key, obj.mimeType) {
+    override def lastModified = obj.lastModified match {
+      case None => 0
+      case Some(d) => d.getTime
+    }
+
+    override def getInputStream = obj.inputStream
+    override def getMD5 = obj.md5.getOrElse(null)
+    override def length:Long = obj.length
+  }
+
+  /**
+   * Wraps Scala S3 objects, providing a java client API-compatible
+   * interface
+   */
+  private[client] class Java (key:String, obj:JavaS3Object) extends S3Object {
+    import java.util.Date
+    import java.io.InputStream
+
+    def mimeType:String = obj.getMimeType
+    def lastModified:Option[Date] = obj.lastModified match {
+      case 0 => None
+      case d:Long => Some(new Date(d))
+    }
+
+    def inputStream:InputStream = obj.getInputStream
+    def md5:Option[Array[Byte]] = obj.getMD5 match {
+      case null => None
+      case value => Some(value)
+    }
+    def length:Long = obj.length
+  }
+}
 
 /**
  * Generic S3 storage.
@@ -36,22 +79,25 @@ trait S3Storage {
    * Upload an S3 object using a StandardPolicy.PRIVATE access
    * policy.
    *
-   * @param obj Object to upload. Note that the final key name
+   * @param key S3 object key. Note that the final key name
    * will be relative to any path prefix or permutation used by
    * this storage item.
+   * @param obj Object to upload.
    */
-  def put (obj:S3Object): Unit = {
-    this.put(obj, StandardPolicy.PRIVATE)
+  def put (key:String, obj:S3Object): Unit = {
+    this.put(key, obj, StandardPolicy.PRIVATE)
   }
 
   /**
    * Upload an S3 object.
    *
-   * @param obj Object to upload. Note that the final key name
-   * will be relative to any path prefix or permutation used by this storage item.
+   * @param key S3 object key. Note that the final key name
+   * will be relative to any path prefix or permutation used by
+   * this storage item.
+   * @param obj Object to upload.
    * @param policy Access policy to use for the uploaded item.
    */
-  def put (obj:S3Object, policy:StandardPolicy): Unit
+  def put (key:String, obj:S3Object, policy:StandardPolicy): Unit
 
   /**
    * Delete a remote S3 Object.
@@ -86,12 +132,12 @@ class Bucket (val name:String, account:S3Account) extends S3Storage {
 
   // from S3Storage trait
   def get (key:String): S3Object =
-    account.retry(conn.getObject(name, key))
+    new S3ObjectWrapper.Java(key, account.retry(conn.getObject(name, key)))
 
 
   // from S3Storage trait
-  def put (obj:S3Object, policy:StandardPolicy): Unit =
-    account.retry(conn.putObject(name, obj, policy))
+  def put (key:String, obj:S3Object, policy:StandardPolicy): Unit =
+    account.retry(conn.putObject(name, new S3ObjectWrapper.Scala(key, obj), policy))
 
 
   // from S3Storage trait
