@@ -69,6 +69,14 @@ private[client] object S3ObjectWrapper {
  */
 trait S3Storage {
   /**
+   * Return a new sub-path. The requested path will be normalized, appended to the
+   * curren path (if any) and returned.
+   *
+   * @param name The path name to append.
+   */
+  def subpath (name:String)
+
+  /**
    * Fetch an S3 object with the provided key.
    *
    * @param key Object key.
@@ -128,6 +136,10 @@ class Bucket (val name:String, account:S3Account) extends S3Storage {
    */
   @throws(classOf[S3Exception])
   def delete = account.retry(conn.deleteBucket(name))
+
+
+  // from S3Storage trait
+  def subpath (path:String) = new Path(this, path)
 
 
   // from S3Storage trait
