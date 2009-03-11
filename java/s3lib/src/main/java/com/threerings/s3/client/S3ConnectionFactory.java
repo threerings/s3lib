@@ -34,6 +34,7 @@ package com.threerings.s3.client;
 /**
  * A {@link S3Connection} instance factory.
  */
+@Deprecated
 public interface S3ConnectionFactory {
     /**
      * Create and return a new S3Connection.

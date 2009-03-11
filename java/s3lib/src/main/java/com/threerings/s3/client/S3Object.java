@@ -53,27 +53,45 @@ public abstract class S3Object {
     }
 
     /**
-     * Instantiate an S3 Object with the given key and mime type.
-     * @param key S3 object key.
-     * @param mimeType Object's MIME type.
+     * @deprecated Replaced by {@link S3Object#S3Object(String, MediaType)}
      */
+    @Deprecated
     public S3Object (String key, String mimeType)
     {
-        this(key, mimeType, new HashMap<String,String>());
+        this(key, new MediaType(mimeType));
     }
 
     /**
-     * Instantiate an S3 Object with the given key, mime type, and metadata.
+     * Instantiate an S3 Object with the given key and media type.
      * @param key S3 object key.
-     * @param mimeType Object's MIME type.
-     * @param metadata Object's metadata. Metadata keys must be a single, ASCII
-     *     string, and may not contain spaces. Metadata values must also be ASCII,
-     *     and any leading or trailing spaces may be stripped. 
+     * @param mediaType Object's media type.
      */
+    public S3Object (String key, MediaType mediaType)
+    {
+        this(key, mediaType, new HashMap<String,String>());
+    }
+
+    /**
+     * @deprecated Replaced by {@link S3Object#S3Object(String, MediaType, Map)}
+     */
+    @Deprecated
     public S3Object (String key, String mimeType, Map<String,String> metadata)
     {
+        this(key, new MediaType(mimeType), metadata);
+    }
+
+    /**
+     * Instantiate an S3 Object with the given key, media type, and metadata.
+     * @param key S3 object key.
+     * @param mediaType Object's media type.
+     * @param metadata Object's metadata. Metadata keys must be a single, ASCII
+     *     string, and may not contain spaces. Metadata values must also be ASCII,
+     *     and any leading or trailing spaces may be stripped.
+     */
+    public S3Object (String key, MediaType mediaType, Map<String,String> metadata)
+    {
         _key = key;
-        _mimeType = mimeType;
+        _mediaType = mediaType;
         _metadata = metadata;
     }
 
@@ -87,10 +105,19 @@ public abstract class S3Object {
 
     /**
      * Returns the S3 Object's MIME type.
+     *
+     * @deprecated Deprecated, replaced by {@link #getMediaType()}
      */
-    public String getMimeType ()
-    {
-        return _mimeType;
+    @Deprecated
+    public String getMimeType () {
+        return _mediaType.getMimeType();
+    }
+
+    /**
+     * Return the S3 Object's media type
+     */
+    public MediaType getMediaType () {
+        return _mediaType;
     }
 
     /**
@@ -136,12 +163,12 @@ public abstract class S3Object {
      * S3 Object.
      */
     public abstract long length ();
+
+    /** S3 object media type. */
+    private MediaType _mediaType;
     
     /** S3 object name. */
     private String _key;
-    
-    /** S3 object mime-type. */
-    private String _mimeType;
     
     /** S3 object meta-data. */
     private Map<String,String> _metadata;

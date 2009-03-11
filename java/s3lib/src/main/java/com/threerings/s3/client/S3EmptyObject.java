@@ -55,10 +55,10 @@ class S3EmptyObject extends S3Object {
     /**
      * Instantiate an S3 object with the given key.
      */
-    public S3EmptyObject (String key, String mimeType, long length, byte[] digest,
+    public S3EmptyObject (String key, MediaType mediaType, long length, byte[] digest,
         Map<String,String> metadata, long lastModified)
     {
-        super(key, mimeType, metadata);
+        super(key, mediaType, metadata);
         _lastModified = lastModified;
         _length = length;
         _md5digest = digest;

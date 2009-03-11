@@ -250,6 +250,23 @@ public class S3ConnectionTest {
     }
 
     @Test
+    public void testMediaType ()
+        throws Exception
+    {
+        MediaType mediaType = new MediaType("mime", "encoding");
+        S3Object obj = new S3ByteArrayObject("obj", new byte[5], mediaType);
+
+        /* Upload */
+        _conn.putObject(_testBucketName, obj);
+
+        /* Download */
+        obj = _conn.getObject(_testBucketName, "obj");
+
+        /* Verify the media type */
+        assertEquals(mediaType, obj.getMediaType());
+    }
+
+    @Test
     public void testPutObjectHeaders () 
         throws Exception
     {

@@ -53,8 +53,13 @@ public class S3ByteArrayObject extends S3Object {
         this(key, data, S3Object.DEFAULT_MIME_TYPE);
     }
 
+    @Deprecated
     public S3ByteArrayObject(String key, byte[] data, String mimeType) {
-        this(key, data, 0, data.length, mimeType);
+        this(key, data, 0, data.length, new MediaType(mimeType));
+    }
+
+    public S3ByteArrayObject(String key, byte[] data, MediaType mediaType) {
+        this(key, data, 0, data.length, mediaType);
     }
 
     public S3ByteArrayObject(String key, byte[] data, int offset, int length) {
@@ -62,17 +67,25 @@ public class S3ByteArrayObject extends S3Object {
     }
 
     /**
+     * @deprecated Replaced by {@link S3ByteArrayObject#S3ByteArrayObject(String, byte[], int, int, MediaType)}
+     */
+    public S3ByteArrayObject(String key, byte[] data, int offset, int length, String mimeType)
+    {
+      this(key, data, offset, length, new MediaType(mimeType));
+    }
+    
+    /**
      * Instantiate an S3 byte object.
      * The data is not copied, and a reference is retained.
      *
      * @param key S3 object key.
      * @param data Object data;
-     * @param mimeType Object's MIME type.
+     * @param mediaType Object's media type.
      */
-    public S3ByteArrayObject(String key, byte[] data, int offset, int length, String mimeType)
+    public S3ByteArrayObject(String key, byte[] data, int offset, int length, MediaType mediaType)
     {
-        super(key, mimeType);
-        
+        super(key, mediaType);
+
         MessageDigest md;
 
         _data = data;

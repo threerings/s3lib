@@ -58,15 +58,25 @@ public class S3FileObject extends S3Object {
     }
 
     /**
-     * Instantiate an S3 file-backed object with the given key.
-     * @param key S3 object key.
-     * @param file File backing.
-     * @param mimeType Object's MIME type.
+     * @deprecated Replaced by {@link S3FileObject#S3FileObject(String, File, MediaType)}
      */
+    @Deprecated
     public S3FileObject(String key, File file, String mimeType)
         throws FileNotFoundException
     {
-        super(key, mimeType);
+        this(key, file, new MediaType(mimeType));
+    }
+
+    /**
+     * Instantiate an S3 file-backed object with the given key.
+     * @param key S3 object key.
+     * @param file File backing.
+     * @param mediaType Object's media type.
+     */
+    public S3FileObject(String key, File file, MediaType mediaType)
+        throws FileNotFoundException
+    {
+        super(key, mediaType);
         _file = file;
     }
 

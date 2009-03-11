@@ -327,8 +327,15 @@ public class S3Connection {
         }
 
         // Set the request entity
+        MediaType mediaType = object.getMediaType();
         method.setRequestEntity(new InputStreamRequestEntity(
-            object.getInputStream(), object.length(), object.getMimeType()));
+            object.getInputStream(), object.length(), mediaType.getMimeType()));
+
+
+        // Set the content encoding
+        if (mediaType.getContentEncoding() != null) {
+          method.setRequestHeader(CONTENT_ENCODING_HEADER, mediaType.getContentEncoding());
+        }
 
         // Set the access policy
         method.setRequestHeader(S3Utils.ACL_HEADER, accessPolicy.toString());
@@ -376,7 +383,7 @@ public class S3Connection {
     {
         final InputStream response;
         final HashMap<String,String> metadata;
-        final String mimeType;
+        final MediaType mediaType;
         final byte digest[];
         final long length;
         boolean success = false;
@@ -388,7 +395,13 @@ public class S3Connection {
             executeS3Method(method);
 
             // Mime type
-            mimeType = getResponseHeader(method, CONTENT_TYPE_HEADER, true);
+            final String mimeType = getResponseHeader(method, CONTENT_TYPE_HEADER, true);
+            final String contentEncoding = getResponseHeader(method, CONTENT_ENCODING_HEADER, false);
+            if (contentEncoding != null) {
+                mediaType = new MediaType(mimeType, contentEncoding);
+            } else {
+                mediaType = new MediaType(mimeType);
+            }
         
             // Last modified
             final String dateString = getResponseHeader(method, LAST_MODIFIED_HEADER, false);
@@ -453,9 +466,9 @@ public class S3Connection {
 
                 /* Finished successfully */
                 success = true;
-                return new S3StreamObject(objectKey, mimeType, length, digest, metadata, response, lastModified);        
+                return new S3StreamObject(objectKey, mediaType, length, digest, metadata, response, lastModified);
             } else {
-            	return new S3EmptyObject(objectKey, mimeType, length, digest, metadata, lastModified);
+            	return new S3EmptyObject(objectKey, mediaType, length, digest, metadata, lastModified);
             }
         } finally {
             /* If a body was requested and the request was successful, cleanup will be handled by
@@ -642,6 +655,9 @@ public class S3Connection {
 
     /** Mime Type Header. */
     private static final String CONTENT_TYPE_HEADER = "Content-Type";
+
+    /** Content Encoding Header. */
+    private static final String CONTENT_ENCODING_HEADER = "Content-Encoding";
 
     /** Header for the MD5 digest in S3 GET responses. Not to be confused
      * with the Content-MD5 header that we use in PUT requests. */
