@@ -37,15 +37,15 @@ class PathTest extends TestConfig {
   }
 
   @Test def testPut {
-    path.put(new S3ByteArrayObject("obj", Array(5)))
+    path.put("obj", S3Object.bytes(Array(5)))
 
     val entry = bucket.objects.first
     assertEquals(entry.getKey, "/test/obj")
   }
 
   @Test def testGet {
-    bucket.put(new S3ByteArrayObject("/test/obj", Array(5)))
+    bucket.put("/test/obj", S3Object.bytes(Array(5)))
     val obj = path.get("obj")
-    assertEquals("/test/obj", obj.getKey)
+    assertNotNull(obj)
   }
 }

@@ -126,7 +126,8 @@ public abstract class S3Object {
     public abstract InputStream getInputStream () throws S3ClientException;
 
     /**
-     * Get the object's MD5 checksum.
+     * Get the object's MD5 checksum. If the checksum is unavailable,
+     * this method may return null.
      */
     public abstract byte[] getMD5 () throws S3ClientException;
 
