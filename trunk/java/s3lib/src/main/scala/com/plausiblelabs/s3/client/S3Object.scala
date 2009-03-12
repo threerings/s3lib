@@ -46,8 +46,8 @@ import java.security.MessageDigest
  * Companion object
  */
 object S3Object {
-  /** Default mime-type. Used if no mime-type is specified. */
-  private val DEFAULT_MIME_TYPE = "binary/octet-stream"
+  /** Default media type. Used if no media type is specified. */
+  private val DEFAULT_MEDIA_TYPE = new MediaType("binary/octet-stream")
 
   /** Compute and return the MD5 value for the given input stream */
   private def md5input (input:InputStream): Array[Byte] = {
@@ -71,16 +71,16 @@ object S3Object {
    * Create a new file-backed S3Object instance.
    *
    * @param file File containing the object data.
-   * @param mimeType File mime type
+   * @param mediaType File media type
    */
-  def file (file:File, mimeType:String): S3Object = {
+  def file (file:File, mediaType:MediaType): S3Object = {
     val md5 = Some(md5input(new FileInputStream(file)))
     val lastModified = file.lastModified match {
       case 0 => None
       case n:Long => Some(new Date(n))
     }
 
-    new S3SimpleObject(mimeType, lastModified, new FileInputStream(file), md5, file.length)
+    new S3SimpleObject(mediaType, lastModified, new FileInputStream(file), md5, file.length)
   }
 
   /**
@@ -88,18 +88,18 @@ object S3Object {
    *
    * @param file File containing the object data.
    */
-  def file (file:File): S3Object = this.file(file, DEFAULT_MIME_TYPE)
+  def file (file:File): S3Object = this.file(file, DEFAULT_MEDIA_TYPE)
 
 
   /**
    * Create a new byte array backed S3Object instance.
    *
    * @param bytes Bytes to use as file data.
-   * @param mimeType Object mime type
+   * @param MediaType Object media type
    */
-  def bytes (bytes:Array[Byte], mimeType:String): S3Object = {
+  def bytes (bytes:Array[Byte], mediaType:MediaType): S3Object = {
      val md5 = Some(md5input(new ByteArrayInputStream(bytes)))
-     new S3SimpleObject(mimeType, None, new ByteArrayInputStream(bytes), md5, bytes.length)
+     new S3SimpleObject(mediaType, None, new ByteArrayInputStream(bytes), md5, bytes.length)
   }
 
   /**
@@ -108,12 +108,12 @@ object S3Object {
    * @param bytes Bytes to use as file data.
    * @param mimeType Object mime type
    */
-  def bytes (bytes:Array[Byte]): S3Object = this.bytes(bytes, DEFAULT_MIME_TYPE)
+  def bytes (bytes:Array[Byte]): S3Object = this.bytes(bytes, DEFAULT_MEDIA_TYPE)
 }
 
 
 /** Default concrete S3Object implementation */
-private[client] class S3SimpleObject (val mimeType:String,
+private[client] class S3SimpleObject (val mediaType:MediaType,
                                       val lastModified:Option[Date],
                                       val inputStream:InputStream,
                                       val md5:Option[Array[Byte]],
@@ -123,8 +123,8 @@ private[client] class S3SimpleObject (val mimeType:String,
  * Represents a local or remote S3 object, and its associated metadata.
  */
 trait S3Object {
-  /** The object's mime type. */
-  def mimeType:String
+  /** The object's media type. */
+  def mediaType:MediaType
 
   /** Last modified date. */
   def lastModified:Option[Date]

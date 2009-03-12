@@ -35,7 +35,7 @@ import com.threerings.s3.client.S3Exception
 
 import com.threerings.s3.client.S3ObjectEntry
 
-import com.threerings.s3.client.{S3Object => JavaS3Object}
+import com.threerings.s3.client.{S3Object => JS3Object, MediaType => JMediaType}
 import com.threerings.s3.client.S3ObjectListing
 import com.threerings.s3.client.acl.AccessControlList.StandardPolicy
 
@@ -46,11 +46,19 @@ import scala.collection.jcl.Conversions._
  * Wraps java and scala S3Object instances.
  */
 private[client] object S3ObjectWrapper {
+
+  private def nullable[T] (value:T) = value match {
+    case null => None
+    case value => Some(value)
+  }
+
   /**
    * Wraps Scala S3 objects, providing a java client API-compatible
    * interface
    */
-  private[client] class Scala (key:String, obj:S3Object) extends JavaS3Object (key, obj.mimeType) {
+  private[client] class Scala (key:String, obj:S3Object)
+    extends JS3Object (key, new JMediaType(obj.mediaType.mimeType, obj.mediaType.contentEncoding.getOrElse(null)))
+  {
     override def lastModified = obj.lastModified match {
       case None => 0
       case Some(d) => d.getTime
@@ -65,22 +73,23 @@ private[client] object S3ObjectWrapper {
    * Wraps Scala S3 objects, providing a java client API-compatible
    * interface
    */
-  private[client] class Java (key:String, obj:JavaS3Object) extends S3Object {
+  private[client] class Java (key:String, obj:JS3Object) extends S3Object {
     import java.util.Date
     import java.io.InputStream
 
-    def mimeType:String = obj.getMimeType
-    def lastModified:Option[Date] = obj.lastModified match {
+    override def mediaType:MediaType = {
+      val jmedia = obj.getMediaType
+      new MediaType(jmedia.getMimeType, nullable(jmedia.getContentEncoding))
+    }
+
+    override def lastModified:Option[Date] = obj.lastModified match {
       case 0 => None
       case d:Long => Some(new Date(d))
     }
 
-    def inputStream:InputStream = obj.getInputStream
-    def md5:Option[Array[Byte]] = obj.getMD5 match {
-      case null => None
-      case value => Some(value)
-    }
-    def length:Long = obj.length
+    override def inputStream:InputStream = obj.getInputStream
+    override def md5:Option[Array[Byte]] = nullable(obj.getMD5)
+    override def length:Long = obj.length
   }
 }
 
