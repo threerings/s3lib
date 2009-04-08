@@ -59,7 +59,8 @@ class Path (bucket:Bucket, name:String) extends S3Storage {
   /** Normalized path */
   private val path = Normalize.path(name)
 
-  override def subpath (name:String) = new Path(bucket, Normalize.subpath(path, name))
+  // from S3Storage trait
+  override def subpath (name:String): S3Storage = new Path(bucket, Normalize.subpath(path, name))
 
   // from S3Storage trait
   override def put (key:String, obj:S3Object, policy:StandardPolicy) =

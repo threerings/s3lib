@@ -172,7 +172,7 @@ class Bucket (val name:String, account:S3Account) extends S3Storage {
 
 
   // from S3Storage trait
-  def subpath (path:String) = new Path(this, path)
+  def subpath (path:String): S3Storage = new Path(this, path)
 
 
   // from S3Storage trait
