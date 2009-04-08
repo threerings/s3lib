@@ -107,7 +107,7 @@ trait S3Storage {
    *
    * @param name The path name to append.
    */
-  def subpath (name:String)
+  def subpath (name:String): S3Storage
 
   /**
    * Fetch an S3 object with the provided key.
