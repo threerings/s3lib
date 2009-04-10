@@ -38,6 +38,8 @@ import java.util.UUID
 
 import com.threerings.s3.client.acl.AccessControlList.StandardPolicy
 
+import org.apache.commons.io.IOUtils
+
 class BucketTest extends TestConfig {
   val conn = new S3Account(awsId, awsKey)
   var bucket:Bucket = _
@@ -62,6 +64,14 @@ class BucketTest extends TestConfig {
   @Test def testPut = {
     bucket.put("obj", S3Object.bytes(Array()))
     assertEquals("obj", bucket.objects.first.getKey)
+  }
+
+  /** Test GET/PUT of unknown length, encoded data */
+  @Test def testEncodedPut = {
+    val data:Array[Byte] = Array(1, 2, 3)
+    bucket.put("obj", S3Object.filter.gzip(S3Object.bytes(data)))
+    val obj = S3Object.filter.gunzip(bucket.get("obj"))
+    assertTrue(data.deepEquals(IOUtils.toByteArray(obj.inputStream)))
   }
   
   @Test def testGet = {

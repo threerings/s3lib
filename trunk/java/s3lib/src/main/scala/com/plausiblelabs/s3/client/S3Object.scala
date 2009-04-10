@@ -31,14 +31,14 @@
 
 package com.plausiblelabs.s3.client
 
-import com.threerings.s3.client.{S3Object => JavaS3Object}
+import com.threerings.s3.client.{S3Object => JavaS3Object, S3ClientException}
 
 import java.io.InputStream
 import java.io.File
 
 import java.util.Date
-import java.io.FileInputStream
-import java.io.ByteArrayInputStream
+import java.io.{ByteArrayInputStream, BufferedInputStream, FileInputStream}
+import java.util.zip.GZIPInputStream
 
 import java.security.MessageDigest
 
@@ -48,6 +48,9 @@ import java.security.MessageDigest
 object S3Object {
   /** Default media type. Used if no media type is specified. */
   private val DEFAULT_MEDIA_TYPE = new MediaType("binary/octet-stream")
+
+  /** IANA-registered content coding for GZIP compression */
+  private val GZIP_CONTENT_CODING = "gzip"
 
   /** Compute and return the MD5 value for the given input stream */
   private def md5input (input:InputStream): Array[Byte] = {
@@ -80,7 +83,7 @@ object S3Object {
       case n:Long => Some(new Date(n))
     }
 
-    new S3SimpleObject(mediaType, lastModified, new FileInputStream(file), md5, file.length)
+    new S3SimpleObject(mediaType, lastModified, new FileInputStream(file), md5, Some(file.length))
   }
 
   /**
@@ -99,7 +102,7 @@ object S3Object {
    */
   def bytes (bytes:Array[Byte], mediaType:MediaType): S3Object = {
      val md5 = Some(md5input(new ByteArrayInputStream(bytes)))
-     new S3SimpleObject(mediaType, None, new ByteArrayInputStream(bytes), md5, bytes.length)
+     new S3SimpleObject(mediaType, None, new ByteArrayInputStream(bytes), md5, Some(bytes.length))
   }
 
   /**
@@ -109,6 +112,47 @@ object S3Object {
    * @param mimeType Object mime type
    */
   def bytes (bytes:Array[Byte]): S3Object = this.bytes(bytes, DEFAULT_MEDIA_TYPE)
+
+
+  /**
+   * Content coding filters automatically handle wrapping an S3Object and performing
+   * data encoding/decoding.
+   */
+  object filter {
+    /**
+     * Apply a GZIP content encoding to the provided S3Object, returning a new wrapping
+     * object that will automatically gzip the contents. If a content coding has already been set,
+     * this method will throw an exception.
+     *
+     * @throws S3ClientException Thrown if a cotent coding has already been supplied
+     * for the given object.
+     */
+    def gzip (obj:S3Object): S3Object = {
+      /* Verify that no coding is already set */
+      if (obj.mediaType.contentEncoding.isDefined)
+        throw new S3ClientException("Content encoding has already been set for this object")
+
+      /* Create the new media type and wrapping S3Object */
+      val mtype = new MediaType(obj.mediaType.mimeType, Some(GZIP_CONTENT_CODING))
+      new S3SimpleObject(mtype, obj.lastModified, new GZIPCompressInputStream(new BufferedInputStream(obj.inputStream)), None, None)
+    }
+
+    /**
+     * Wrap the provided object, automatically decompressing the input data. If the coding is
+     * not set, or is set incorrectly, no decoding will be performed.
+     *
+     * @param obj Object to wrap.
+     */
+    def gunzip (obj:S3Object): S3Object = {
+      /* If no coding was supplied return the unmodified object */
+      if (obj.mediaType.contentEncoding.isEmpty || !obj.mediaType.contentEncoding.get.equals(GZIP_CONTENT_CODING))
+        return obj
+
+      /* Create the new media type and wrapping S3Object */
+      val mtype = new MediaType(obj.mediaType.mimeType, None)
+      new S3SimpleObject(mtype, obj.lastModified, new GZIPInputStream(obj.inputStream), None, None)
+    }
+  }
 }
 
 
@@ -117,7 +161,7 @@ private[client] class S3SimpleObject (val mediaType:MediaType,
                                       val lastModified:Option[Date],
                                       val inputStream:InputStream,
                                       val md5:Option[Array[Byte]],
-                                      val length:Long) extends S3Object;
+                                      val length:Option[Long]) extends S3Object;
 
 /**
  * Represents a local or remote S3 object, and its associated metadata.
@@ -135,6 +179,6 @@ trait S3Object {
   /** Object's MD5 checksum */
   def md5:Option[Array[Byte]]
 
-  /** Length in bytes. */
-  def length:Long
+  /** Length in bytes */
+  def length:Option[Long]
 }

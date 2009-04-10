@@ -160,7 +160,7 @@ public abstract class S3Object {
 
     /**
      * Returns the number of bytes required to store the
-     * S3 Object.
+     * S3 Object, or -1 if the object length is unknown.
      */
     public abstract long length ();
 
