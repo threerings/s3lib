@@ -66,7 +66,7 @@ private[client] object S3ObjectWrapper {
 
     override def getInputStream = obj.inputStream
     override def getMD5 = obj.md5.getOrElse(null)
-    override def length:Long = obj.length
+    override def length:Long = obj.length.getOrElse(-1)
   }
 
   /**
@@ -89,7 +89,10 @@ private[client] object S3ObjectWrapper {
 
     override def inputStream:InputStream = obj.getInputStream
     override def md5:Option[Array[Byte]] = nullable(obj.getMD5)
-    override def length:Long = obj.length
+    override def length:Option[Long] = obj.length match {
+      case -1 => None
+      case len => Some(len)
+    }
   }
 }
 

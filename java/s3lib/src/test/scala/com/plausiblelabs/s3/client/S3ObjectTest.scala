@@ -37,6 +37,8 @@ import org.junit.Assert._
 import java.io.File
 import java.io.FileOutputStream
 
+import org.apache.commons.io.IOUtils
+
 import org.apache.commons.codec.binary.Hex;
 
 /**
@@ -71,7 +73,7 @@ class S3ObjectTest {
       new FileOutputStream(file).write(TEST_DATA);
       val obj = S3Object.file(file)
 
-      assertEquals(TEST_DATA.length.toLong, obj.length)
+      assertEquals(TEST_DATA.length.toLong, obj.length.get)
       assertEquals(TEST_DATA_MD5, hex(obj.md5.get))
     }
   }
@@ -80,7 +82,23 @@ class S3ObjectTest {
   @Test
   def testBytes = {
     val obj = S3Object.bytes(TEST_DATA)
-    assertEquals(TEST_DATA.length.toLong, obj.length)
+    assertEquals(TEST_DATA.length.toLong, obj.length.get)
     assertEquals(TEST_DATA_MD5, hex(obj.md5.get))
+  }
+
+  /** Test GZIP conversion */
+  @Test
+  def testGZIP = {
+    /* Create a GZIP'd object, and a GUNZIPing wrapper */
+    val obj = S3Object.filter.gzip(S3Object.bytes(TEST_DATA))
+    val gunzip = S3Object.filter.gunzip(obj)
+
+    /* Test the content encoding settings */
+    assertEquals("gzip", obj.mediaType.contentEncoding.get)
+    assertTrue(gunzip.mediaType.contentEncoding.isEmpty)
+
+    /* Verify the data conversion */
+    val extracted = IOUtils.toByteArray(gunzip.inputStream)
+    assertTrue(extracted.deepEquals(TEST_DATA))
   }
 }

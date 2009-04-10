@@ -326,11 +326,14 @@ public class S3Connection {
                 object.getKey() + ": " + e);
         }
 
-        // Set the request entity
-        MediaType mediaType = object.getMediaType();
+        // Set the request entity, handling unknown content lengths
+        final MediaType mediaType = object.getMediaType();
+        long length = object.length();
+        if (length < 0)
+          length = InputStreamRequestEntity.CONTENT_LENGTH_AUTO;
+                  
         method.setRequestEntity(new InputStreamRequestEntity(
-            object.getInputStream(), object.length(), mediaType.getMimeType()));
-
+            object.getInputStream(), length, mediaType.getMimeType()));
 
         // Set the content encoding
         if (mediaType.getContentEncoding() != null) {
