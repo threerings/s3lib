@@ -95,15 +95,14 @@ public class S3Connection {
     }
 
     /**
-     * Create a new S3 client connection, with the given credentials and connection
-     * host parameters.
+     * Create a new S3 client connection, with the given credentials and connection host
+     * parameters.
      *
      * @param keyId The your user key into AWS
      * @param secretKey The secret string used to generate signatures for authentication.
      * @param hostConfig HttpClient HostConfig.
      */
-    public S3Connection (String keyId, String secretKey,
-        HostConfiguration hostConfig)
+    public S3Connection (String keyId, String secretKey, HostConfiguration hostConfig)
     {
         this.keyId = keyId;
         this.secretKey = secretKey;
@@ -116,7 +115,7 @@ public class S3Connection {
         MultiThreadedHttpConnectionManager manager = new MultiThreadedHttpConnectionManager();
         managerParam.setDefaultMaxConnectionsPerHost(Integer.MAX_VALUE);
         managerParam.setMaxTotalConnections(Integer.MAX_VALUE);
-        manager.setParams(managerParam);;
+        manager.setParams(managerParam);
         this.httpClient.setHttpConnectionManager(manager);
     }
 
@@ -230,7 +229,8 @@ public class S3Connection {
             executeS3Method(method);
             return new S3ObjectListing(method.getResponseBodyAsStream());
         } catch (SAXException se) {
-            throw new S3ClientException("Error parsing bucket GET response: " + se.getMessage(), se);
+            throw new S3ClientException("Error parsing bucket GET response: " + se.getMessage(),
+                se);
         } catch (IOException ioe) {
             throw new S3ClientException.NetworkException("Error receiving bucket GET response: " +
                 ioe.getMessage(), ioe);
@@ -247,13 +247,7 @@ public class S3Connection {
     public void deleteBucket (String bucketName)
         throws S3Exception
     {
-        DeleteMethod method = new DeleteMethod(encodePath(bucketName));
-
-        try {
-            executeS3Method(method);
-        } finally {
-            method.releaseConnection();
-        }
+        executeS3MethodAndRelease(new DeleteMethod(encodePath(bucketName)));
     }
 
     /**
@@ -338,11 +332,7 @@ public class S3Connection {
             method.setRequestHeader(header, entry.getValue());
         }
 
-        try {
-            executeS3Method(method);
-        } finally {
-            method.releaseConnection();
-        }
+        executeS3MethodAndRelease(method);
     }
 
     /**
@@ -493,8 +483,85 @@ public class S3Connection {
     public void deleteObject (String bucketName, String objectKey)
         throws S3Exception
     {
-        DeleteMethod method = new DeleteMethod(encodePath(bucketName, objectKey));
+        executeS3MethodAndRelease(new DeleteMethod(encodePath(bucketName, objectKey)));
+    }
 
+    /**
+     * Copies the object at <code>srcObjectKey</code> in <code>bucket</code> to
+     * <code>destObjectKey</code> in the same bucket preserving its metadata and setting its
+     * access to private.
+     */
+    public void copyObject (String srcObjectKey, String destObjectKey, String bucket)
+        throws S3Exception
+    {
+        copyObject(srcObjectKey, destObjectKey, bucket, bucket);
+    }
+
+    /**
+     * Copies the object at <code>srcObjectKey</code> in <code>srcBucket</code> to
+     * <code>destObjectKey</code> in <code>destBucket</code>. The metadata on the destination are
+     * the same as on the source and its access is set to private.
+     */
+    public void copyObject (String srcObjectKey, String destObjectKey, String srcBucket,
+        String destBucket)
+        throws S3Exception
+    {
+
+        copyObject(srcObjectKey, destObjectKey, srcBucket, destBucket,
+            AccessControlList.StandardPolicy.PRIVATE);
+    }
+
+    /**
+     * Copies the object at <code>srcObjectKey</code> in <code>srcBucket</code> to
+     * <code>destObjectKey</code> in <code>destBucket</code>. The metadata on the destination are
+     * the same as on the source and its access is set to the given policy.
+     */
+    public void copyObject (String srcObjectKey, String destObjectKey, String srcBucket,
+        String destBucket, AccessControlList.StandardPolicy accessPolicy)
+        throws S3Exception
+    {
+        copyObject(srcObjectKey, destObjectKey, srcBucket, destBucket, accessPolicy,
+            null);
+    }
+
+    /**
+     * Copies the object at <code>srcObjectKey</code> in <code>srcBucket</code> to
+     * <code>destObjectKey</code> in <code>destBucket</code>. The metadata on the destination are
+     * taken from the given map and its access is set to the given policy.
+     */
+    public void copyObject (String srcObjectKey, String destObjectKey, String srcBucket,
+        String destBucket, AccessControlList.StandardPolicy accessPolicy,
+        Map<String, String> metadata)
+        throws S3Exception
+    {
+
+        PutMethod method = new PutMethod(encodePath(destBucket, destObjectKey));
+
+        method.setRequestHeader(S3_COPY_SOURCE_HEADER, encodePath(srcBucket, srcObjectKey));
+
+        // Set the access policy
+        method.setRequestHeader(S3Utils.ACL_HEADER, accessPolicy.toString());
+        if (metadata != null) {
+            method.setRequestHeader(S3_COPY_METADATA_HEADER, S3_COPY_METADATA_REPLACE_VALUE);
+            // Set any metadata fields
+            for (Map.Entry<String, String> entry : metadata.entrySet()) {
+                String header = S3_METADATA_PREFIX + entry.getKey();
+                method.setRequestHeader(header, entry.getValue());
+            }
+        } else {
+            method.setRequestHeader(S3_COPY_METADATA_HEADER, S3_COPY_METADATA_COPY_VALUE);
+        }
+
+        executeS3MethodAndRelease(method);
+    }
+
+    /**
+     * Execute the provided method, translating any error response into the appropriate
+     * S3Exception, and then releases the method's connection.
+     */
+    private void executeS3MethodAndRelease (HttpMethod method)
+        throws S3Exception
+    {
         try {
             executeS3Method(method);
         } finally {
@@ -503,8 +570,8 @@ public class S3Connection {
     }
 
     /**
-     * Execute the provided method, translating any error response into the
-     * appropriate S3Exception.
+     * Execute the provided method, translating any error response into the appropriate
+     * S3Exception.
      * @param method HTTP method to execute.
      */
     private void executeS3Method (HttpMethod method)
@@ -643,4 +710,16 @@ public class S3Connection {
 
     /** Header prefix for object metadata. */
     private static final String S3_METADATA_PREFIX = "x-amz-meta-";
+
+    /** Header prefix for object metadata. */
+    private static final String S3_COPY_SOURCE_HEADER = "x-amz-copy-source";
+
+    /** Header prefix for object metadata. */
+    private static final String S3_COPY_METADATA_HEADER = "x-amz-metadata-directive";
+
+    /** Header prefix for object metadata. */
+    private static final String S3_COPY_METADATA_REPLACE_VALUE = "REPLACE";
+
+    /** Header prefix for object metadata. */
+    private static final String S3_COPY_METADATA_COPY_VALUE = "COPY";
 }

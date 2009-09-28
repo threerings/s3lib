@@ -32,6 +32,7 @@
 package com.threerings.s3.client;
 
 import com.threerings.s3.client.acl.AccessControlList;
+import com.threerings.s3.client.acl.AccessControlList.StandardPolicy;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -246,6 +247,47 @@ public class S3ConnectionTest {
     }
 
     @Test
+    public void testCopyObject ()
+        throws Exception
+    {
+        // Set some metadata on the object we put so we can make sure it's copied by default
+        Map<String, String> meta = new HashMap<String, String>();
+        meta.put("meta", "data");
+        _fileObj.setMetadata(meta);
+        _conn.putObject(_testBucketName, _fileObj, StandardPolicy.PRIVATE);
+
+        // Copy with the same metadata in the same bucket
+        _conn.copyObject(_fileObj.getKey(), "copyKey", _testBucketName);
+        S3Metadata copiedMeta = _conn.getObjectMetadata(_testBucketName, "copyKey");
+        assertArrayEquals(_fileObj.getMD5(), copiedMeta.getMD5());
+        assertEquals(meta, copiedMeta.getMetadata());
+    }
+
+    @Test
+    public void testCopyObjectWithNewMetadata ()
+        throws Exception
+    {
+        // Set some metadata on the object we put so we can make sure it's replaced
+        Map<String, String> meta = new HashMap<String, String>();
+        meta.put("meta", "data");
+        meta.put("notincopy", "notcopied");
+        _fileObj.setMetadata(meta);
+        _conn.putObject(_testBucketName, _fileObj, StandardPolicy.PRIVATE);
+
+        // Copy with completely different metadata
+        meta.clear();
+        meta.put("meta", "replaceddata");
+        meta.put("metameta", "newdata");
+        _conn.copyObject(_fileObj.getKey(), "copyKey", _testBucketName, _testBucketName,
+            StandardPolicy.PRIVATE, meta);
+
+        S3Metadata copiedMeta = _conn.getObjectMetadata(_testBucketName, "copyKey");
+        assertArrayEquals(_conn.getObjectMetadata(_testBucketName, _fileObj.getKey()).getMD5(),
+            copiedMeta.getMD5());
+        assertEquals(meta, copiedMeta.getMetadata());
+    }
+
+    @Test
     public void testMediaType ()
         throws Exception
     {
@@ -369,6 +411,9 @@ public class S3ConnectionTest {
 
         // Ensure that it is equal to the object we uploaded
         S3ObjectTest.testEquals(_fileObj, obj);
+
+        S3Metadata meta = _conn.getObjectMetadata(_testBucketName, _fileObj.getKey());
+        assertEquals(metadata, meta.getMetadata());
     }
 
     @Test(expected = S3ServerException.SignatureDoesNotMatchException.class)
