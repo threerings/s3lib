@@ -1,4 +1,4 @@
-/* 
+/*
  * S3ObjectTest vi:ts=4:sw=4:expandtab:
  *
  * Copyright (c) 2005 - 2007 Three Rings Design, Inc.
@@ -51,7 +51,12 @@ public class S3ObjectTest {
         assertEquals(obj1.getKey(), obj2.getKey());
 
         // Mime Type
-        assertEquals(obj1.getMimeType(), obj2.getMimeType());
+        @SuppressWarnings("deprecation")
+        String mime1 = obj1.getMimeType();
+        @SuppressWarnings("deprecation")
+        String mime2 = obj2.getMimeType();
+        assertEquals(mime1, mime2);
+        assertEquals(obj1.getMediaType(), obj2.getMediaType());
 
         // Checksum
         String checksum1 = new String(Hex.encodeHex(obj1.getMD5()));
@@ -64,13 +69,13 @@ public class S3ObjectTest {
         // Metadata
         assertTrue("Metadata does not match", obj1.getMetadata().equals(obj2.getMetadata()));
     }
-    
+
     /**
      * Check that the last modified date is set.
      */
     @Test
     public void testLastModified () {
-        S3Object object = new S3ByteArrayObject("test", new byte[0], "text/plain");
+        S3Object object = new S3ByteArrayObject("test", new byte[0], new MediaType("text/plain"));
         assertEquals(0L, object.lastModified());
     }
 }

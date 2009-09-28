@@ -1,4 +1,4 @@
-/* 
+/*
  * DownloadStreamerTest vi:ts=4:sw=4:expandtab:
  *
  * Copyright (c) 2005 - 2007 Three Rings Design, Inc.
@@ -81,7 +81,7 @@ public class DownloadStreamerTest {
         FileInputStream input = new FileInputStream(_testFile);
         UploadStreamer uploadStreamer = new UploadStreamer(_conn, _bucket, 2);
         uploadStreamer.upload("test stream", input, 5);
-        
+
         /* Now download the stream. */
         FileOutputStream output = new FileOutputStream(_outputFile);
         DownloadStreamer downloadStreamer = new DownloadStreamer(_conn, _bucket);

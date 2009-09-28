@@ -1,4 +1,4 @@
-/* 
+/*
  * S3StreamObjectTest.java vi:ts=4:sw=4:expandtab:
  *
  * Copyright (c) 2005 - 2007 Three Rings Design, Inc.
@@ -43,19 +43,19 @@ public class S3StreamObjectTest {
     public void setUp ()
         throws Exception
     {
-        final byte[] data = TEST_DATA.getBytes("utf8");        
-        streamObj = new S3StreamObject("aKey", "text/plain", data.length,
+        final byte[] data = TEST_DATA.getBytes("utf8");
+        streamObj = new S3StreamObject("aKey", new MediaType("text/plain"), data.length,
                 new Hex().decode(TEST_DATA_MD5.getBytes("utf8")),
                 new ByteArrayInputStream(data), 1L);
     }
-    
+
     @Test
     public void testConstruct ()
         throws Exception
     {
         byte[] bytes = new byte[1024];
 
-        int count = streamObj.getInputStream().read(bytes);        
+        int count = streamObj.getInputStream().read(bytes);
         assertEquals(TEST_DATA, new String(bytes, 0, count));
         assertEquals(1L, streamObj.lastModified());
     }
@@ -66,7 +66,7 @@ public class S3StreamObjectTest {
     {
         byte[] checksum = streamObj.getMD5();
         String hex = new String(Hex.encodeHex(checksum));
-        assertEquals(TEST_DATA_MD5, hex);   
+        assertEquals(TEST_DATA_MD5, hex);
     }
 
     /** Test object. */
@@ -74,7 +74,7 @@ public class S3StreamObjectTest {
 
     /** Test data. */
     private static final String TEST_DATA = "Hello, World!";
-    
+
     /** Pre-computed MD5 Checksum for test data. */
     private static final String TEST_DATA_MD5 = "65a8e27d8879283831b664bd8b7f0ad4";
 }

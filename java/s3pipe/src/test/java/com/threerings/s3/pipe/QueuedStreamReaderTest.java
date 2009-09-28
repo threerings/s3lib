@@ -1,4 +1,4 @@
-/* 
+/*
  * QueuedStreamReaderTest.java vi:ts=4:sw=4:expandtab:
  *
  * Copyright (c) 2005 - 2007 Three Rings Design, Inc.
@@ -50,7 +50,7 @@ public class QueuedStreamReaderTest {
         throws Exception
     {
         _testFile = File.createTempFile("s3pipe", "data");
-        
+
         /* Populate the file with 100K of data */
         FileOutputStream output = new FileOutputStream(_testFile);
         int written = 0;
@@ -109,10 +109,10 @@ public class QueuedStreamReaderTest {
 
     /** Block size. */
     static private final int BLOCK_SIZE;
-    
+
     static {
         try {
-            TEST_DATA = "S3 Test Data".getBytes("UTF8");            
+            TEST_DATA = "S3 Test Data".getBytes("UTF8");
         } catch (Exception e) {
             throw new RuntimeException("Missing utf8 encoding!");
         }

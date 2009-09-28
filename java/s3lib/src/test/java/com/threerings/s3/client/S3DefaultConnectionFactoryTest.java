@@ -1,4 +1,4 @@
-/* 
+/*
  * S3SimpleConnectionFactoryTest.java vi:ts=4:sw=4:expandtab:
  *
  * Copyright (c) 2005 - 2007 Three Rings Design, Inc.
@@ -43,11 +43,13 @@ public class S3DefaultConnectionFactoryTest {
 
     @Test
     public void testCreate () throws S3Exception {
+        @SuppressWarnings("deprecation")
         S3ConnectionFactory factory = new S3DefaultConnectionFactory(S3TestConfig.getId(), S3TestConfig.getKey());
+        @SuppressWarnings("deprecation")
         S3Connection conn = factory.createConnection();
         try {
             conn.listObjects("a bucket that will absolutely not exist such that we can verify that we receive a server-side S3 exception: " + new SecureRandom().nextInt());
-            fail("Did not throw S3ServerException");            
+            fail("Did not throw S3ServerException");
         } catch (S3ServerException e) {
             // Do nothing
         }

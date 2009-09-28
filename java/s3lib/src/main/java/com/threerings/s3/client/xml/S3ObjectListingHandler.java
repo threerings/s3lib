@@ -1,4 +1,4 @@
-/* 
+/*
  * S3ObjectListingHandler vi:ts=4:sw=4:expandtab:
  *
  * Copyright (c) 2005 - 2007 Three Rings Design, Inc.
@@ -130,7 +130,7 @@ public class S3ObjectListingHandler extends DefaultHandler {
     {
         /* Reset the element text buffer. */
         if (_text.length() != 0) {
-            _text = new StringBuffer();            
+            _text = new StringBuffer();
         }
 
         /*
@@ -146,14 +146,14 @@ public class S3ObjectListingHandler extends DefaultHandler {
                     _state.push(ParserState.LISTBUCKET);
                     break;
                 } else {
-                    throw new UnsupportedElementException(name);                
+                    throw new UnsupportedElementException(name);
                 }
             case LISTBUCKET:
                 /* State transitions. */
                 if (name.equals("Contents")) {
                     /* <Contents> section */
                     _state.push(ParserState.CONTENTS);
-                    
+
                     /* Initialize the current entry. We'll fill this out in the
                      * endElement handler. */
                     _data.entry = _data.new Entry();
@@ -192,7 +192,7 @@ public class S3ObjectListingHandler extends DefaultHandler {
                     _state.pop();
                     break;
                 }
-            
+
                 /* Handle the data elements. */
                 if (name.equals("Name")) {
                     _data.bucketName = getElementString();
@@ -207,7 +207,7 @@ public class S3ObjectListingHandler extends DefaultHandler {
                 }
 
                 else if (name.equals("MaxKeys")) {
-                    _data.maxKeys = getElementInteger();                        
+                    _data.maxKeys = getElementInteger();
                 }
 
                 else if (name.equals("IsTruncated")) {
@@ -232,7 +232,7 @@ public class S3ObjectListingHandler extends DefaultHandler {
                 /* Handle the exit state. */
                 if (name.equals("Contents")) {
                     _state.pop();
-                    
+
                     /* Validate the data and add the S3ObjectEntry to the list of entries. */
                     _data.entries.add(_data.entry.validate());
 
@@ -244,7 +244,7 @@ public class S3ObjectListingHandler extends DefaultHandler {
                 if (name.equals("Key")) {
                     _data.entry.key = getElementString();
                 }
-                
+
                 else if (name.equals("LastModified")) {
                     _data.entry.lastModified = getElementDate();
                 }
@@ -259,11 +259,11 @@ public class S3ObjectListingHandler extends DefaultHandler {
                 else if (name.equals("Size")) {
                     _data.entry.size = getElementLongInteger();
                 }
-                
+
                 else if (name.equals("StorageClass")) {
                     _data.entry.storageClass = getElementString();
                 }
-                
+
                 else {
                     throw new UnsupportedElementException(name);
                 }
@@ -281,11 +281,11 @@ public class S3ObjectListingHandler extends DefaultHandler {
                 if (name.equals("ID")) {
                     _data.entry.ownerId = getElementString();
                 }
-                
+
                 else if (name.equals("DisplayName")) {
                     _data.entry.ownerDisplayName = getElementString();
                 }
-                
+
                 else {
                     throw new UnsupportedElementException(name);
                 }
@@ -327,7 +327,6 @@ public class S3ObjectListingHandler extends DefaultHandler {
 
     /** Retrieve the current element's text value. */
     protected String getElementString ()
-        throws SAXException
     {
         return _text.toString();
     }
@@ -356,7 +355,6 @@ public class S3ObjectListingHandler extends DefaultHandler {
 
     /** Retrieve the current element's boolean value. */
     protected boolean getElementBoolean ()
-        throws SAXException
     {
         /* Will not throw an exception, simply returns false. */
         return Boolean.parseBoolean(_text.toString());
@@ -367,7 +365,7 @@ public class S3ObjectListingHandler extends DefaultHandler {
         throws SAXException
     {
         try {
-            return _timeParser.parse(_text.toString());            
+            return _timeParser.parse(_text.toString());
         } catch (ParseException pe) {
             throw new SAXException("Unable to parse date: " + _text.toString(), pe);
         }

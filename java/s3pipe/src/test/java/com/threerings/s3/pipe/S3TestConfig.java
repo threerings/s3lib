@@ -1,16 +1,15 @@
 package com.threerings.s3.pipe;
 
-import java.io.IOException;
-import java.security.SecureRandom;
 import java.util.Properties;
 
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.security.SecureRandom;
 
 import com.threerings.s3.client.S3Connection;
-import com.threerings.s3.client.S3ObjectListing;
-import com.threerings.s3.client.S3ObjectEntry;
 import com.threerings.s3.client.S3Exception;
+import com.threerings.s3.client.S3ObjectEntry;
+import com.threerings.s3.client.S3ObjectListing;
 
 /**
  * S3 unit test configuration and utilities.
@@ -19,7 +18,7 @@ public class S3TestConfig {
     private static final Properties props;
     static {
         props = new Properties();
-        
+
         try {
             InputStream stream = S3TestConfig.class.getResourceAsStream("/test.properties");
             if (stream == null)
@@ -30,14 +29,14 @@ public class S3TestConfig {
             throw new RuntimeException("Failed to load properties", e);
         }
     }
-    
+
     /**
      * Return the test-supplied AWS id
      */
     public static String getId () {
         return props.getProperty("aws.id");
     }
-    
+
     /**
      * Return the test-supplied AWS key
      */
@@ -54,7 +53,7 @@ public class S3TestConfig {
     {
         String id = getId();
         String key = getKey();
-        return new S3Connection(id, key);        
+        return new S3Connection(id, key);
     }
 
     /**

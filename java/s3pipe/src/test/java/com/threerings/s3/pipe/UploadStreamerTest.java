@@ -1,4 +1,4 @@
-/* 
+/*
  * UploadStreamer vi:ts=4:sw=4:expandtab:
  *
  * Copyright (c) 2005 - 2007 Three Rings Design, Inc.
