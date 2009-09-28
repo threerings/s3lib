@@ -1,4 +1,4 @@
-/* 
+/*
  * S3EmptyObject vi:ts=4:sw=4:expandtab:
  *
  * Copyright (c) 2005 - 2007 Three Rings Design, Inc.
@@ -32,8 +32,6 @@
 
 package com.threerings.s3.client;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Map;
 
 /**
@@ -41,17 +39,7 @@ import java.util.Map;
  * (eg, retrieved via a HEAD request). The returned InputStream
  * will always throw an IOException.
  */
-class S3EmptyObject extends S3Object {
-	/**
-	 * A simple stream that always returns an IOException.
-	 */
-	private static class NullInputStream extends InputStream {
-		@Override
-		public int read() throws IOException {
-			throw new IOException("No stream available");
-		}
-	}
-    
+class S3EmptyObject extends S3Metadata {
     /**
      * Instantiate an S3 object with the given key.
      */
@@ -63,33 +51,28 @@ class S3EmptyObject extends S3Object {
         _length = length;
         _md5digest = digest;
     }
-	
-	@Override
-	public InputStream getInputStream() throws S3ClientException {
-		return new NullInputStream();
-	}
-	
+
 	@Override
 	public long lastModified () {
 	    return _lastModified;
 	}
-	
+
 	@Override
 	public byte[] getMD5() throws S3ClientException {
 		return _md5digest;
 	}
-	
+
 	@Override
 	public long length() {
 		return _length;
 	}
-	
+
 	/** Last modified timestamp. */
 	private final long _lastModified;
 
     /** Data length in bytes. */
     private final long _length;
-    
+
     /** MD5 digest. */
     private final byte[] _md5digest;
 }

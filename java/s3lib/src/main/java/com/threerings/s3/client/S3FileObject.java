@@ -57,15 +57,6 @@ public class S3FileObject extends S3Object {
     }
 
     /**
-     * @deprecated Replaced by {@link S3FileObject#S3FileObject(String, File, MediaType)}
-     */
-    @Deprecated
-    public S3FileObject(String key, File file, String mimeType)
-    {
-        this(key, file, new MediaType(mimeType));
-    }
-
-    /**
      * Instantiate an S3 file-backed object with the given key.
      * @param key S3 object key.
      * @param file File backing.

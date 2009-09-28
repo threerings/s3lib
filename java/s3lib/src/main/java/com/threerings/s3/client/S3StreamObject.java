@@ -1,4 +1,4 @@
-/* 
+/*
  * S3StreamObject vi:ts=4:sw=4:expandtab:
  *
  * Copyright (c) 2005 - 2007 Three Rings Design, Inc.
@@ -36,14 +36,14 @@ import java.util.Map;
 
 /**
  * A representation of a (locally stream-backed) object stored in S3.
- * 
+ *
  * Object instances are "one-shot" -- that is, they can not be re-used,
  * as they will irreversibly read from the provided stream.
  */
 public class S3StreamObject extends S3Object {
     /**
      * Instantiate an S3 stream object from an existing open stream.
-     * 
+     *
      * @param key S3 object key.
      * @param length Stream data length.
      * @param digest MD5 digest.
@@ -51,16 +51,7 @@ public class S3StreamObject extends S3Object {
      */
     public S3StreamObject (String key, long length, byte[] digest, InputStream input)
     {
-        this(key, S3Object.DEFAULT_MIME_TYPE, length, digest, input);
-    }
-
-    /**
-     * @deprecated Replaced by {@link S3StreamObject#S3StreamObject(String, MediaType, long, byte[], InputStream)}
-     */
-    @Deprecated
-    public S3StreamObject (String key, String mimeType, long length, byte[] digest, InputStream input)
-    {
-        this(key, mimeType, length, digest, input, 0L);
+        this(key, S3Object.DEFAULT_MEDIA_TYPE, length, digest, input);
     }
 
     /**
@@ -77,13 +68,6 @@ public class S3StreamObject extends S3Object {
         this(key, mediaType, length, digest, input, 0L);
     }
 
-    /** @deprecated Replaced by {@link S3StreamObject#S3StreamObject(String, MediaType, long, byte[], InputStream, long)} */
-    @Deprecated
-    public S3StreamObject (String key, String mimeType, long length, byte[] digest, InputStream input, long lastModified)
-    {
-        this(key, mimeType, length, digest, new HashMap<String,String>(), input, lastModified);
-    }
-
     /**
      * Instantiate an S3 stream object from an existing open stream.
      *
@@ -98,27 +82,8 @@ public class S3StreamObject extends S3Object {
     {
         this(key, mediaType, length, digest, new HashMap<String,String>(), input, lastModified);
     }
-    
-    /**
-     * Instantiate an S3 stream object from an existing open stream.
-     * 
-     * @param key S3 object key.
-     * @param mimeType S3 object mime-type.
-     * @param length Stream data length.
-     * @param digest MD5 digest.
-     * @param metadata Object metadata.
-     * @param input Data stream.
-     * @param lastModified Last modification timestamp.
-     *
-     * @deprecated Replaced by {@link S3StreamObject#S3StreamObject(String, MediaType, long, byte[], Map, InputStream, long)}
-     */
-    public S3StreamObject (String key, String mimeType, long length,
-        byte[] digest, Map<String,String> metadata, InputStream input, long lastModified)
-    {
-      this(key, new MediaType(mimeType), length, digest, metadata, input, lastModified);
-    }
 
-        /**
+    /**
      * Instantiate an S3 stream object from an existing open stream.
      *
      * @param key S3 object key.
@@ -138,7 +103,7 @@ public class S3StreamObject extends S3Object {
         this.input = input;
         this.lastModified = lastModified;
     }
-     
+
 
     @Override // From S3Object
     public InputStream getInputStream ()
@@ -153,7 +118,7 @@ public class S3StreamObject extends S3Object {
     {
         return digest;
     }
-    
+
     @Override // From S3Object
     public long lastModified () {
         return lastModified;
@@ -166,10 +131,10 @@ public class S3StreamObject extends S3Object {
 
     /** Modification timestamp. */
     private final long lastModified;
-    
+
     /** Data length in bytes. */
     private final long length;
-    
+
     /** MD5 digest. */
     private final byte[] digest;
 
