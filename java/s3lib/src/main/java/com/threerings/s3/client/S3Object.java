@@ -78,5 +78,5 @@ public abstract class S3Object extends S3Metadata{
      * from the remote S3 server. The caller is responsible for closing the
      * stream.
      */
-    public abstract InputStream getInputStream () throws S3ClientException;
+    public abstract InputStream getInputStream ();
 }

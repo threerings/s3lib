@@ -107,7 +107,6 @@ public class S3StreamObject extends S3Object {
 
     @Override // From S3Object
     public InputStream getInputStream ()
-        throws S3ClientException
     {
         return input;
     }
