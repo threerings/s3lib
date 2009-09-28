@@ -32,6 +32,7 @@
 
 package com.threerings.s3.client;
 
+import com.threerings.s3.client.S3ClientException.InvalidURIException;
 import com.threerings.s3.client.acl.AccessControlList;
 
 import java.io.InputStream;
@@ -150,13 +151,7 @@ public class S3Connection {
     public void createBucket (String bucketName)
         throws S3Exception
     {
-        PutMethod method;
-        try {
-            method = new PutMethod("/" + _urlEncoder.encode(bucketName));
-        } catch (EncoderException e) {
-            throw new S3ClientException.InvalidURIException(
-                "Encoding error for bucket " + bucketName + ": " + e);
-        }
+        PutMethod method = new PutMethod(encodePath(bucketName));
 
         try {
             executeS3Method(method);
@@ -208,15 +203,8 @@ public class S3Connection {
     public S3ObjectListing listObjects (String bucketName, String prefix, String marker, int maxKeys, String delimiter)
         throws S3Exception
     {
-        GetMethod method;
+        GetMethod method = new GetMethod(encodePath(bucketName));
         List<NameValuePair> parameters = new ArrayList<NameValuePair>(4);
-
-        try {
-            method = new GetMethod("/" + _urlEncoder.encode(bucketName));
-        } catch (EncoderException e) {
-            throw new S3ClientException.InvalidURIException(
-                "Encoding error for bucket " + bucketName + ": " + e);
-        }
 
         if (prefix != null) {
             parameters.add(new NameValuePair(LIST_PREFIX_PARAMETER, prefix));
@@ -259,14 +247,7 @@ public class S3Connection {
     public void deleteBucket (String bucketName)
         throws S3Exception
     {
-        DeleteMethod method;
-        try {
-            method = new DeleteMethod("/" +
-                _urlEncoder.encode(bucketName));
-        } catch (EncoderException e) {
-            throw new S3ClientException.InvalidURIException(
-                "Encoding error for bucket " + bucketName + ": " + e);
-        }
+        DeleteMethod method = new DeleteMethod(encodePath(bucketName));
 
         try {
             executeS3Method(method);
@@ -312,17 +293,9 @@ public class S3Connection {
         AccessControlList.StandardPolicy accessPolicy, Map<String,String> headers)
         throws S3Exception
     {
-        PutMethod method;
         byte[] checksum;
 
-        try {
-            method = new PutMethod("/" + _urlEncoder.encode(bucketName) +
-                "/" + _urlEncoder.encode(object.getKey()));
-        } catch (EncoderException e) {
-            throw new S3ClientException.InvalidURIException(
-                "Encoding error for bucket " + bucketName + " and key " +
-                object.getKey() + ": " + e);
-        }
+        PutMethod method = new PutMethod(encodePath(bucketName, object.getKey()));
 
         // Set the request entity, handling unknown content lengths
         final MediaType mediaType = object.getMediaType();
@@ -390,13 +363,7 @@ public class S3Connection {
         boolean success = false;
         long lastModified = 0L;
 
-        String path;
-        try {
-            path = "/" + _urlEncoder.encode(bucketName) + "/" + _urlEncoder.encode(objectKey);
-        } catch (EncoderException e) {
-            throw new S3ClientException.InvalidURIException("Encoding error for bucket "
-                + bucketName + " and key " + objectKey + ": " + e);
-        }
+        String path = encodePath(bucketName, objectKey);
         HttpMethodBase method;
         if (hasBody) {
             method = new GetMethod(path);
@@ -526,16 +493,7 @@ public class S3Connection {
     public void deleteObject (String bucketName, String objectKey)
         throws S3Exception
     {
-        DeleteMethod method;
-        try {
-            method = new DeleteMethod("/" +
-                _urlEncoder.encode(bucketName) + "/" +
-                _urlEncoder.encode(objectKey));
-        } catch (EncoderException e) {
-            throw new S3ClientException.InvalidURIException(
-            "Encoding error for bucket " + bucketName + " and key " +
-            objectKey + ": " + e);
-        }
+        DeleteMethod method = new DeleteMethod(encodePath(bucketName, objectKey));
 
         try {
             executeS3Method(method);
@@ -606,6 +564,35 @@ public class S3Connection {
         }
 
         return header.getValue();
+    }
+
+    /**
+     * Encodes a path to the given object in the given bucket with www-form-urlencoded.
+     */
+    private String encodePath (String bucketName, String objectKey)
+        throws InvalidURIException
+    {
+        String bucketPath = encodePath(bucketName);
+        try {
+            return bucketPath + "/" + _urlEncoder.encode(objectKey);
+        } catch (EncoderException e) {
+            throw new S3ClientException.InvalidURIException("Encoding error for bucket "
+                + bucketName + " and key " + objectKey + ": " + e);
+        }
+    }
+
+    /**
+     * Encodes a path to the given bucket with www-form-urlencoded.
+     */
+    private String encodePath (String bucketName)
+        throws InvalidURIException
+    {
+        try {
+            return "/" + _urlEncoder.encode(bucketName) ;
+        } catch (EncoderException e) {
+            throw new S3ClientException.InvalidURIException("Encoding error for bucket "
+                + bucketName + ": " + e);
+        }
     }
 
     /** AWS Access ID. */
