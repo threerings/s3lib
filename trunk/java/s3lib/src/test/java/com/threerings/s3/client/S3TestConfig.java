@@ -5,7 +5,6 @@ import java.security.SecureRandom;
 import java.util.Properties;
 
 import java.io.InputStream;
-import java.io.IOException;
 
 /**
  * S3 unit test configuration and utilities.
@@ -14,7 +13,7 @@ public class S3TestConfig {
     private static final Properties props;
     static {
         props = new Properties();
-        
+
         try {
             InputStream stream = S3TestConfig.class.getResourceAsStream("/test.properties");
             if (stream == null)
@@ -25,14 +24,14 @@ public class S3TestConfig {
             throw new RuntimeException("Failed to load properties", e);
         }
     }
-    
+
     /**
      * Return the test-supplied AWS id
      */
     public static String getId () {
         return props.getProperty("aws.id");
     }
-    
+
     /**
      * Return the test-supplied AWS key
      */
@@ -45,18 +44,17 @@ public class S3TestConfig {
      * AWS key and id.
      */
     public static S3Connection createConnection ()
-        throws S3Exception
     {
         String id = getId();
         String key = getKey();
-        return new S3Connection(id, key);        
+        return new S3Connection(id, key);
     }
 
     /**
      * Recursively delete a bucket and all of its keys.
      */
     public static void deleteBucket (S3Connection conn, String bucketName)
-        throws S3Exception, IOException
+        throws S3Exception
     {
         /* Delete all objects in the bucket. */
         S3ObjectListing listing = conn.listObjects(bucketName);

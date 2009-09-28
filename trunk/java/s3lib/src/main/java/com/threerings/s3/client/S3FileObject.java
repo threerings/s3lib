@@ -1,4 +1,4 @@
-/* 
+/*
  * S3FileObject vi:ts=4:sw=4:expandtab:
  *
  * Copyright (c) 2005 - 2007 Three Rings Design, Inc.
@@ -44,14 +44,13 @@ import java.io.IOException;
  * A representation of a (locally file-backed) object stored in S3.
  */
 public class S3FileObject extends S3Object {
-    
+
     /**
      * Instantiate an S3 file-backed object with the given key.
      * @param key S3 object key.
      * @param file File backing.
      */
     public S3FileObject(String key, File file)
-        throws FileNotFoundException
     {
         super(key);
         _file = file;
@@ -62,7 +61,6 @@ public class S3FileObject extends S3Object {
      */
     @Deprecated
     public S3FileObject(String key, File file, String mimeType)
-        throws FileNotFoundException
     {
         this(key, file, new MediaType(mimeType));
     }
@@ -74,7 +72,6 @@ public class S3FileObject extends S3Object {
      * @param mediaType Object's media type.
      */
     public S3FileObject(String key, File file, MediaType mediaType)
-        throws FileNotFoundException
     {
         super(key, mediaType);
         _file = file;
@@ -102,7 +99,7 @@ public class S3FileObject extends S3Object {
 
          // Initialize
          try {
-             md = MessageDigest.getInstance("md5");             
+             md = MessageDigest.getInstance("md5");
          } catch (NoSuchAlgorithmException nsa) {
              // If MD5 isn't available, we're in trouble.
              throw new RuntimeException(nsa);
@@ -115,7 +112,7 @@ public class S3FileObject extends S3Object {
          try {
              while ((nbytes = input.read(data)) > 0) {
                  md.update(data, 0, nbytes);
-             }             
+             }
          } catch (IOException ioe) {
              throw new S3ClientException("Failure reading input file: " + ioe, ioe);
          }

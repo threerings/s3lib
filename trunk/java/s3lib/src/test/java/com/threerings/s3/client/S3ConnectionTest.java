@@ -1,4 +1,4 @@
-/* 
+/*
  * S3ConnectionTest vi:ts=4:sw=4:expandtab:
  *
  * Copyright (c) 2005 - 2007 Three Rings Design, Inc.
@@ -43,8 +43,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
-
 import org.apache.commons.codec.binary.Hex;
 
 import org.apache.commons.httpclient.*;
@@ -137,8 +135,8 @@ public class S3ConnectionTest {
 
         /* Storage Class */
         assertEquals(STORAGE_CLASS, entry.getStorageClass());
-        
-        /* 
+
+        /*
          * Test the object's owner, too.
          * We can't really test much here, besides that it has one.
          */
@@ -267,7 +265,7 @@ public class S3ConnectionTest {
     }
 
     @Test
-    public void testPutObjectHeaders () 
+    public void testPutObjectHeaders ()
         throws Exception
     {
         // magical future expiry time
@@ -289,7 +287,7 @@ public class S3ConnectionTest {
         HttpClient client = new HttpClient();
         GetMethod method = new GetMethod(url);
         client.executeMethod(method);
-		
+
         // Get the expires header
         Header header = method.getResponseHeader(name);
         String headerValue = header.toExternalForm().trim();
@@ -298,7 +296,7 @@ public class S3ConnectionTest {
         assertTrue(headerValue.startsWith(name));
         assertTrue(headerValue.endsWith(date));
     }
-	
+
     @Test
     public void testGetObject ()
         throws Exception
@@ -311,13 +309,13 @@ public class S3ConnectionTest {
 
         // Ensure that it is equal to the object we uploaded
         S3ObjectTest.testEquals(_fileObj, obj);
-        
+
         // Time must have moved forward (provide 10 minutes of fuzz, in case you have a bad clock)
         assertTrue(
                 String.format(
                         "S3Object modified date: %d Original modified date: %d --- Is your clock correct?",
                         obj.lastModified(), _fileObj.lastModified()),
-                        
+
                 obj.lastModified() >= (_fileObj.lastModified() - (10 * 60 * 1000))
         );
 
@@ -364,13 +362,13 @@ public class S3ConnectionTest {
 
         input.close();
     }
-    
+
     @Test
     public void testObjectMetadata ()
         throws Exception
     {
         HashMap<String,String> metadata;
-        
+
         // Some test data
         metadata = new HashMap<String,String>();
         metadata.put("meta", "value whitespace");
@@ -386,28 +384,23 @@ public class S3ConnectionTest {
         S3ObjectTest.testEquals(_fileObj, obj);
     }
 
-    @Test
+    @Test(expected = S3ServerException.SignatureDoesNotMatchException.class)
     public void testErrorHandling ()
         throws Exception
     {
         S3Connection badConn = new S3Connection(S3TestConfig.getId(), "bad key");
-        try {
-            badConn.createBucket(_testBucketName);
-            fail("Did not throw S3SignatureDoesNotMatchException");            
-        } catch (S3ServerException.SignatureDoesNotMatchException e) {
-            // Do nothing
-        }
+        badConn.createBucket(_testBucketName);
     }
-    
+
     /** Amazon S3 Authenticated Connection */
     private S3Connection _conn;
-    
+
     /** Test bucket */
     protected String _testBucketName;
-    
+
     /** Test file. */
     protected File _testFile;
-    
+
     /** Test object. */
     protected S3FileObject _fileObj;
 

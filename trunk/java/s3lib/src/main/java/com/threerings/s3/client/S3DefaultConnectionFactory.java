@@ -1,4 +1,4 @@
-/* 
+/*
  * S3SimpleConnectionFactory.java vi:ts=4:sw=4:expandtab:
  *
  * Copyright (c) 2005 - 2007 Three Rings Design, Inc.
@@ -37,14 +37,15 @@ import org.apache.commons.httpclient.HostConfiguration;
  * A simple, re-usable implementation of a S3 connection factory.
  *
  */
+@SuppressWarnings("deprecation")
 public class S3DefaultConnectionFactory implements S3ConnectionFactory {
     /**
      * Create a new connection factory. Connections will
      * be instantiated with the given credentials, using the default
      * AWS S3 host parameters.
-     * 
+     *
      * Connections will be SSL encrypted.
-     * 
+     *
      * @param keyId Your unique AWS user id.
      * @param secretKey The secret string used to generate signatures
      *        for authentication.
@@ -69,7 +70,7 @@ public class S3DefaultConnectionFactory implements S3ConnectionFactory {
     }
 
     /**
-     * 
+     *
      */
     /* (non-Javadoc)
      * @see com.threerings.s3.client.S3ConnectionFactory#createConnection()
@@ -80,10 +81,10 @@ public class S3DefaultConnectionFactory implements S3ConnectionFactory {
 
     /** AWS Access ID. */
     private final String keyId;
-    
+
     /** AWS Access Key. */
     private final String secretKey;
-    
+
     /** AWS S3 HTTP client host configuration. */
     private final HostConfiguration hostConfig;
 }

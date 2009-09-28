@@ -1,4 +1,4 @@
-/* 
+/*
  * S3Connection vi:ts=4:sw=4:expandtab:
  *
  * Copyright (c) 2005 - 2007 Three Rings Design, Inc.
@@ -82,7 +82,7 @@ public class S3Connection {
     /**
      * Create a new S3 client connection, with the given credentials and connection
      * host parameters.
-     * 
+     *
      * Connections will be SSL encrypted.
      *
      * @param keyId Your unique AWS user id.
@@ -134,7 +134,7 @@ public class S3Connection {
     public S3Connection (String awsKeyId, String awsSecretKey, Protocol protocol, String host) {
         this(awsKeyId, awsSecretKey, protocol, host, protocol.getDefaultPort());
     }
-    
+
     /**
      * @deprecated Use {@link S3Connection#S3Connection(String, String, HostConfiguration)}
      */
@@ -159,7 +159,7 @@ public class S3Connection {
         }
 
         try {
-            executeS3Method(method);            
+            executeS3Method(method);
         } finally {
             method.releaseConnection();
         }
@@ -178,7 +178,7 @@ public class S3Connection {
     /**
      * List a bucket's contents, with a maximum number of
      * returned entries.
-     * 
+     *
      * @param marker Indicates where in the bucket to begin listing. The
      *  list will only include keys that occur lexiocgraphically after marker.
      *  Specify null for no marker.
@@ -215,9 +215,9 @@ public class S3Connection {
             method = new GetMethod("/" + _urlEncoder.encode(bucketName));
         } catch (EncoderException e) {
             throw new S3ClientException.InvalidURIException(
-                "Encoding error for bucket " + bucketName + ": " + e);            
+                "Encoding error for bucket " + bucketName + ": " + e);
         }
-    
+
         if (prefix != null) {
             parameters.add(new NameValuePair(LIST_PREFIX_PARAMETER, prefix));
         }
@@ -235,14 +235,12 @@ public class S3Connection {
         }
 
         if (parameters.size() > 0) {
-            method.setQueryString(
-                (NameValuePair[]) parameters.toArray(new NameValuePair[parameters.size()])
-            );
+            method.setQueryString(parameters.toArray(new NameValuePair[parameters.size()]));
         }
 
         try {
             executeS3Method(method);
-            return new S3ObjectListing(method.getResponseBodyAsStream());          
+            return new S3ObjectListing(method.getResponseBodyAsStream());
         } catch (SAXException se) {
             throw new S3ClientException("Error parsing bucket GET response: " + se.getMessage(), se);
         } catch (IOException ioe) {
@@ -271,7 +269,7 @@ public class S3Connection {
         }
 
         try {
-            executeS3Method(method);            
+            executeS3Method(method);
         } finally {
             method.releaseConnection();
         }
@@ -294,7 +292,7 @@ public class S3Connection {
      * Upload an S3 Object.
      * @param bucketName Destination bucket.
      * @param object S3 Object.
-     * @param accessPolicy S3 Object's access policy. 
+     * @param accessPolicy S3 Object's access policy.
      */
     public void putObject (String bucketName, S3Object object,
         AccessControlList.StandardPolicy accessPolicy)
@@ -307,7 +305,7 @@ public class S3Connection {
      * Upload an S3 Object.
      * @param bucketName Destination bucket.
      * @param object S3 Object.
-     * @param accessPolicy S3 Object's access policy. 
+     * @param accessPolicy S3 Object's access policy.
 	 * @param headers http headers to be served with the object.
      */
     public void putObject (String bucketName, S3Object object,
@@ -331,7 +329,7 @@ public class S3Connection {
         long length = object.length();
         if (length < 0)
           length = InputStreamRequestEntity.CONTENT_LENGTH_AUTO;
-                  
+
         method.setRequestEntity(new InputStreamRequestEntity(
             object.getInputStream(), length, mediaType.getMimeType()));
 
@@ -368,7 +366,7 @@ public class S3Connection {
         }
 
         try {
-            executeS3Method(method);            
+            executeS3Method(method);
         } finally {
             method.releaseConnection();
         }
@@ -376,12 +374,12 @@ public class S3Connection {
 
     /**
      * Retrieve an S3Object, using the provided HttpMethodBase.
-     * 
+     *
      * @param objectKey The object key request, used to instantiate the returned S3Object.
      * @param method The HTTP method to execute.
      * @param hasBody Set to true if a response body is expected (eg, for an HTTP GET request)
      */
-    private S3Object getObject (String objectKey, HttpMethodBase method, boolean hasBody)
+    private S3Object getObject (String bucketName, String objectKey, boolean hasBody)
     	throws S3Exception
     {
         final InputStream response;
@@ -391,6 +389,20 @@ public class S3Connection {
         final long length;
         boolean success = false;
         long lastModified = 0L;
+
+        String path;
+        try {
+            path = "/" + _urlEncoder.encode(bucketName) + "/" + _urlEncoder.encode(objectKey);
+        } catch (EncoderException e) {
+            throw new S3ClientException.InvalidURIException("Encoding error for bucket "
+                + bucketName + " and key " + objectKey + ": " + e);
+        }
+        HttpMethodBase method;
+        if (hasBody) {
+            method = new GetMethod(path);
+        } else {
+            method = new HeadMethod(path);
+        }
 
         /* Attempt the GET, and release the held method connection on failure */
         try {
@@ -405,7 +417,7 @@ public class S3Connection {
             } else {
                 mediaType = new MediaType(mimeType);
             }
-        
+
             // Last modified
             final String dateString = getResponseHeader(method, LAST_MODIFIED_HEADER, false);
             try {
@@ -414,18 +426,18 @@ public class S3Connection {
             } catch (DateParseException e) {
                 lastModified = 0L;
             }
-        
+
             // Data length
             length = method.getResponseContentLength();
             if (length == -1) {
-                throw new S3Exception("S3 failed to supply the Content-Length header");            
+                throw new S3Exception("S3 failed to supply the Content-Length header");
             }
 
             // MD5 Checksum. S3 returns this as the standard 128bit hex string, enclosed
             // in quotes.
             try {
                 String hex;
-            
+
                 hex = getResponseHeader(method, S3_MD5_HEADER, true);
                 // Strip the surrounding quotes
                 hex = hex.substring(1, hex.length() - 1);
@@ -462,11 +474,6 @@ public class S3Connection {
                     	"response: " + ioe.getMessage(), ioe);
                 }
 
-                if (response == null) {
-                    // A body was expected
-                    throw new S3Exception("S3 failed to return any document body");
-                }
-
                 /* Finished successfully */
                 success = true;
                 return new S3StreamObject(objectKey, mediaType, length, digest, metadata, response, lastModified);
@@ -494,18 +501,7 @@ public class S3Connection {
     public S3Object getObject (String bucketName, String objectKey)
         throws S3Exception
     {
-        GetMethod method;
-
-        try {
-            method = new GetMethod("/" + _urlEncoder.encode(bucketName) +
-                "/" + _urlEncoder.encode(objectKey));
-        } catch (EncoderException e) {
-            throw new S3ClientException.InvalidURIException(
-                "Encoding error for bucket " + bucketName + " and key " +
-                objectKey + ": " + e);
-        }
-
-        return getObject(objectKey, method, true);
+        return getObject(bucketName, objectKey, true);
     }
 
     /**
@@ -519,18 +515,7 @@ public class S3Connection {
     public S3Object getObjectMetadata (String bucketName, String objectKey)
         throws S3Exception
     {
-        HeadMethod method;
-
-        try {
-            method = new HeadMethod("/" + _urlEncoder.encode(bucketName) +
-                "/" + _urlEncoder.encode(objectKey));
-        } catch (EncoderException e) {
-            throw new S3ClientException.InvalidURIException(
-                "Encoding error for bucket " + bucketName + " and key " +
-                objectKey + ": " + e);
-        }
-
-        return getObject(objectKey, method, false);
+        return getObject(bucketName, objectKey, false);
     }
 
     /**
@@ -553,12 +538,12 @@ public class S3Connection {
         }
 
         try {
-            executeS3Method(method);            
+            executeS3Method(method);
         } finally {
             method.releaseConnection();
         }
     }
-    
+
     /**
      * Execute the provided method, translating any error response into the
      * appropriate S3Exception.
@@ -568,13 +553,13 @@ public class S3Connection {
         throws S3Exception
     {
         int statusCode;
-        
+
         // Sign the request
         S3Utils.signAWSRequest(keyId, secretKey, method, null);
-        
+
         // Execute the request
         try {
-            statusCode = httpClient.executeMethod(method);            
+            statusCode = httpClient.executeMethod(method);
         } catch (IOException ioe) {
             throw new S3ClientException.NetworkException("Network error executing S3 method: " +
                 ioe.getMessage(), ioe);
@@ -622,16 +607,16 @@ public class S3Connection {
 
         return header.getValue();
     }
-    
+
     /** AWS Access ID. */
     private final String keyId;
-    
+
     /** AWS Access Key. */
     private final String secretKey;
-    
+
     /** S3 HTTP client. */
     private final HttpClient httpClient;
-    
+
     /** URL encoder. */
     private final URLCodec _urlEncoder = new URLCodec();
 
@@ -640,7 +625,7 @@ public class S3Connection {
 
     /** Marker parameter. */
     private static final String LIST_MARKER_PARAMETER = "marker";
-    
+
     /** Max Keys parameter. */
     private static final String LIST_MAXKEYS_PARAMETER = "max-keys";
 
@@ -652,7 +637,7 @@ public class S3Connection {
 
     /** Header for MD5 checksum validation. */
     private static final String CONTENT_MD5_HEADER = "Content-MD5";
-    
+
     /** Last-Modified date header. */
     private static final String LAST_MODIFIED_HEADER = "Last-Modified";
 

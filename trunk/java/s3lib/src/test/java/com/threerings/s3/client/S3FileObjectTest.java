@@ -1,4 +1,4 @@
-/* 
+/*
  * S3FileObjectTest vi:ts=4:sw=4:expandtab:
  *
  * Copyright (c) 2005 - 2007 Three Rings Design, Inc.
@@ -45,10 +45,10 @@ public class S3FileObjectTest {
         throws Exception
     {
         _testFile = File.createTempFile("S3FileObjectTest", null);
-        _fileObj = new S3FileObject("aKey", _testFile, "text/plain");        
+        _fileObj = new S3FileObject("aKey", _testFile, new MediaType("text/plain"));
         new FileOutputStream(_testFile).write(TEST_DATA.getBytes("utf8"));
     }
-    
+
     @After
     public void tearDown ()
         throws Exception
@@ -62,7 +62,7 @@ public class S3FileObjectTest {
     {
         byte[] bytes = new byte[1024];
 
-        int count = _fileObj.getInputStream().read(bytes);        
+        int count = _fileObj.getInputStream().read(bytes);
         assertEquals(TEST_DATA, new String(bytes, 0, count));
     }
 
@@ -77,9 +77,9 @@ public class S3FileObjectTest {
     {
         byte[] checksum = _fileObj.getMD5();
         String hex = new String(Hex.encodeHex(checksum));
-        assertEquals(TEST_DATA_MD5, hex);   
+        assertEquals(TEST_DATA_MD5, hex);
     }
-    
+
     /** Test file. */
     protected File _testFile;
 
@@ -88,7 +88,7 @@ public class S3FileObjectTest {
 
     /** Test data. */
     protected static final String TEST_DATA = "Hello, World!";
-    
+
     /** Pre-computed MD5 Checksum for test data. */
     protected static final String TEST_DATA_MD5 = "65a8e27d8879283831b664bd8b7f0ad4";
 }
