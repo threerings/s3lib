@@ -44,18 +44,13 @@ public class S3ObjectTest {
      * unique, potentially representing transient state (such as an HTTP connection)
      * that can not be replicated.
      */
-    static public void testEquals (S3Object obj1, S3Object obj2)
+    static public void testEquals (S3Metadata obj1, S3Metadata obj2)
         throws Exception
     {
         // Key
         assertEquals(obj1.getKey(), obj2.getKey());
 
         // Mime Type
-        @SuppressWarnings("deprecation")
-        String mime1 = obj1.getMimeType();
-        @SuppressWarnings("deprecation")
-        String mime2 = obj2.getMimeType();
-        assertEquals(mime1, mime2);
         assertEquals(obj1.getMediaType(), obj2.getMediaType());
 
         // Checksum

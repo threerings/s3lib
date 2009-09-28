@@ -37,8 +37,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.io.IOException;
-
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -346,21 +344,10 @@ public class S3ConnectionTest {
         _conn.putObject(_testBucketName, _fileObj, AccessControlList.StandardPolicy.PRIVATE);
 
         // Fetch it back out again
-        S3Object obj = _conn.getObjectMetadata(_testBucketName, _fileObj.getKey());
+        S3Metadata obj = _conn.getObjectMetadata(_testBucketName, _fileObj.getKey());
 
         // Ensure that it is equal to the object we uploaded
         S3ObjectTest.testEquals(_fileObj, obj);
-
-        // Validate that the input stream is non-functional (this is a head request)
-        InputStream input = obj.getInputStream();
-        try {
-        	input.read();
-        	throw new Exception("input.read() did not throw an exception");
-        } catch (IOException e) {
-        	// Expected
-        }
-
-        input.close();
     }
 
     @Test

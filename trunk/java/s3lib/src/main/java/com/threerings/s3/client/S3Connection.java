@@ -379,7 +379,7 @@ public class S3Connection {
      * @param method The HTTP method to execute.
      * @param hasBody Set to true if a response body is expected (eg, for an HTTP GET request)
      */
-    private S3Object getObject (String bucketName, String objectKey, boolean hasBody)
+    private S3Metadata getObject (String bucketName, String objectKey, boolean hasBody)
     	throws S3Exception
     {
         final InputStream response;
@@ -501,7 +501,7 @@ public class S3Connection {
     public S3Object getObject (String bucketName, String objectKey)
         throws S3Exception
     {
-        return getObject(bucketName, objectKey, true);
+        return (S3Object)getObject(bucketName, objectKey, true);
     }
 
     /**
@@ -512,7 +512,7 @@ public class S3Connection {
      * @param bucketName Source bucket.
      * @param objectKey Object key.
      */
-    public S3Object getObjectMetadata (String bucketName, String objectKey)
+    public S3Metadata getObjectMetadata (String bucketName, String objectKey)
         throws S3Exception
     {
         return getObject(bucketName, objectKey, false);

@@ -1,4 +1,4 @@
-/* 
+/*
  * S3Object vi:ts=4:sw=4:expandtab:
  *
  * Copyright (c) 2005 - 2007 Three Rings Design, Inc.
@@ -39,9 +39,7 @@ import java.io.InputStream;
 /**
  * A representation of a single object stored in S3.
  */
-public abstract class S3Object {
-    /** Default binary mime type. */
-    public static final String DEFAULT_MIME_TYPE = "binary/octet-stream";
+public abstract class S3Object extends S3Metadata{
 
     /**
      * Instantiate an S3 object with the given key.
@@ -49,16 +47,7 @@ public abstract class S3Object {
      */
     public S3Object (String key)
     {
-        this(key, DEFAULT_MIME_TYPE);
-    }
-
-    /**
-     * @deprecated Replaced by {@link S3Object#S3Object(String, MediaType)}
-     */
-    @Deprecated
-    public S3Object (String key, String mimeType)
-    {
-        this(key, new MediaType(mimeType));
+        this(key, DEFAULT_MEDIA_TYPE);
     }
 
     /**
@@ -72,15 +61,6 @@ public abstract class S3Object {
     }
 
     /**
-     * @deprecated Replaced by {@link S3Object#S3Object(String, MediaType, Map)}
-     */
-    @Deprecated
-    public S3Object (String key, String mimeType, Map<String,String> metadata)
-    {
-        this(key, new MediaType(mimeType), metadata);
-    }
-
-    /**
      * Instantiate an S3 Object with the given key, media type, and metadata.
      * @param key S3 object key.
      * @param mediaType Object's media type.
@@ -90,59 +70,7 @@ public abstract class S3Object {
      */
     public S3Object (String key, MediaType mediaType, Map<String,String> metadata)
     {
-        _key = key;
-        _mediaType = mediaType;
-        _metadata = metadata;
-    }
-
-    /**
-     * Returns the S3 Object Key.
-     */
-    public String getKey ()
-    {
-        return _key;
-    }
-
-    /**
-     * Returns the S3 Object's MIME type.
-     *
-     * @deprecated Deprecated, replaced by {@link #getMediaType()}
-     */
-    @Deprecated
-    public String getMimeType () {
-        return _mediaType.getMimeType();
-    }
-
-    /**
-     * Return the S3 Object's media type
-     */
-    public MediaType getMediaType () {
-        return _mediaType;
-    }
-
-    /**
-     * Returns the S3 Object's metadata.
-     */
-    public Map<String,String> getMetadata ()
-    {
-        return _metadata;
-    }
-
-    /**
-     * Set the S3 Object's metadata.
-     * Metadata keys must be a single, ASCII string, and may not contain spaces.
-     */
-    public void setMetadata (Map<String,String> metadata)
-    {
-        _metadata = metadata;
-    }
-    
-    /**
-     * Return the object's modification timestamp, or 0L if the timestamp
-     * is unknown or can not be read.
-     */
-    public long lastModified () {
-        return 0L;
+        super(key, mediaType, metadata);
     }
 
     /**
@@ -151,25 +79,4 @@ public abstract class S3Object {
      * stream.
      */
     public abstract InputStream getInputStream () throws S3ClientException;
-
-    /**
-     * Get the object's MD5 checksum. If the checksum is unavailable,
-     * this method may return null.
-     */
-    public abstract byte[] getMD5 () throws S3ClientException;
-
-    /**
-     * Returns the number of bytes required to store the
-     * S3 Object, or -1 if the object length is unknown.
-     */
-    public abstract long length ();
-
-    /** S3 object media type. */
-    private MediaType _mediaType;
-    
-    /** S3 object name. */
-    private String _key;
-    
-    /** S3 object meta-data. */
-    private Map<String,String> _metadata;
 }

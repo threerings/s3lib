@@ -1,4 +1,4 @@
-/* 
+/*
  * RemoteStream.java vi:ts=4:sw=4:expandtab:
  *
  * Copyright (c) 2007 Three Rings Design, Inc.
@@ -174,7 +174,7 @@ public class RemoteStream {
         try {
             Base64 encoder = new Base64();
             byte[] data = _streamName.getBytes(NAME_ENCODING);
-            _encodedStreamName = new String(encoder.encode(data), "ascii");            
+            _encodedStreamName = new String(encoder.encode(data), "ascii");
         } catch (UnsupportedEncodingException uee) {
             // utf-8 and ascii must always be available.
             throw new RuntimeException("Missing a standard encoding", uee);
@@ -192,7 +192,8 @@ public class RemoteStream {
         throws S3Exception, RemoteStreamException
     {
         Map<String,String> metadata = new HashMap<String,String>();
-        S3ByteArrayObject infoObject = new S3ByteArrayObject(streamInfoKey(), new byte[0], S3Object.DEFAULT_MIME_TYPE);
+        S3ByteArrayObject infoObject = new S3ByteArrayObject(streamInfoKey(), new byte[0],
+            S3Object.DEFAULT_MEDIA_TYPE);
 
         /* Set the name. */
         metadata.put(INFO_KEY_NAME, _streamName);
@@ -237,7 +238,7 @@ public class RemoteStream {
         do {
             /* Log the last error. */
             if (retryError != null) {
-                System.err.println("S3 failure deleting stream '" + _streamName + "', retrying: " + retryError);                   
+                System.err.println("S3 failure deleting stream '" + _streamName + "', retrying: " + retryError);
             }
 
             try {
@@ -297,7 +298,7 @@ public class RemoteStream {
 
     /** S3 Connection. */
     private final S3Connection _connection;
-    
+
     /** S3 Bucket. */
     private final String _bucketName;
 

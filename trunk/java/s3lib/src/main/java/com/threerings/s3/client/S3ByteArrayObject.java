@@ -1,4 +1,4 @@
-/* 
+/*
  * S3ByteArrayObject vi:ts=4:sw=4:expandtab:
  *
  * Copyright (c) 2005 - 2007 Three Rings Design, Inc.
@@ -41,7 +41,7 @@ import java.io.InputStream;
  * A representation of a array-backed object stored in S3.
  */
 public class S3ByteArrayObject extends S3Object {
-    
+
     /**
      * Instantiate an S3 byte object with the given key and data.
      * The data is not copied, and a reference is retained.
@@ -50,12 +50,7 @@ public class S3ByteArrayObject extends S3Object {
      * @param data Object data.
      */
     public S3ByteArrayObject(String key, byte[] data) {
-        this(key, data, S3Object.DEFAULT_MIME_TYPE);
-    }
-
-    @Deprecated
-    public S3ByteArrayObject(String key, byte[] data, String mimeType) {
-        this(key, data, 0, data.length, new MediaType(mimeType));
+        this(key, data, S3Object.DEFAULT_MEDIA_TYPE);
     }
 
     public S3ByteArrayObject(String key, byte[] data, MediaType mediaType) {
@@ -63,17 +58,9 @@ public class S3ByteArrayObject extends S3Object {
     }
 
     public S3ByteArrayObject(String key, byte[] data, int offset, int length) {
-        this(key, data, offset, length, S3Object.DEFAULT_MIME_TYPE);
+        this(key, data, offset, length, S3Object.DEFAULT_MEDIA_TYPE);
     }
 
-    /**
-     * @deprecated Replaced by {@link S3ByteArrayObject#S3ByteArrayObject(String, byte[], int, int, MediaType)}
-     */
-    public S3ByteArrayObject(String key, byte[] data, int offset, int length, String mimeType)
-    {
-      this(key, data, offset, length, new MediaType(mimeType));
-    }
-    
     /**
      * Instantiate an S3 byte object.
      * The data is not copied, and a reference is retained.
@@ -123,10 +110,10 @@ public class S3ByteArrayObject extends S3Object {
 
     /** Backing byte array. */
     private byte[] _data;
-    
+
     /** Data length. */
     private int _length;
-    
+
     /** Data offset. */
     private int _offset;
 
