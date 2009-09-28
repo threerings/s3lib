@@ -523,9 +523,12 @@ public class S3Connection {
                 ioe.getMessage(), ioe);
         }
 
-        if (!(statusCode >= HttpStatus.SC_OK &&
-            statusCode < HttpStatus.SC_MULTIPLE_CHOICES)) {
-            // Request failed, throw exception
+        if (!(statusCode >= HttpStatus.SC_OK && statusCode < HttpStatus.SC_MULTIPLE_CHOICES)) {
+            // Request failed, throw exception.
+            if (statusCode == 404) {
+                // 404s don't include a response body, so they need to be handled specially.
+                throw new S3ServerException.NotFoundException(method.getPath());
+            }
             InputStream stream;
             byte[] errorDoc = new byte[S3_MAX_ERROR_SIZE];
 
