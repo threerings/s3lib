@@ -52,7 +52,8 @@ public class S3FileObject extends S3Object {
      */
     public S3FileObject(String key, File file)
     {
-        this(key, file, DEFAULT_MEDIA_TYPE);
+        super(key);
+        _file = file;
     }
 
     /**
@@ -64,25 +65,17 @@ public class S3FileObject extends S3Object {
     public S3FileObject(String key, File file, MediaType mediaType)
     {
         super(key, mediaType);
-        if (!file.exists()) {
-            throw new IllegalArgumentException("Backing files must already exist: "
-                + file.getAbsolutePath());
-        }
-        if (!file.canRead()) {
-            throw new IllegalArgumentException("Backing files must be readable: "
-                + file.getAbsolutePath());
-        }
         _file = file;
     }
 
     @Override // From S3Object
     public InputStream getInputStream ()
+        throws S3ClientException
     {
         try {
             return new FileInputStream(_file);
         } catch (FileNotFoundException fnf) {
-            throw new IllegalStateException("File existed and was readable when this object was " +
-                " constructed, but is unreadable now.", fnf);
+            throw new S3ClientException("File was not found.", fnf);
         }
     }
 
