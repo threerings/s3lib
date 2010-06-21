@@ -55,13 +55,12 @@ import org.xml.sax.SAXException;
 public class S3ServerException extends S3Exception
 {
     // Documentation inherited
-    public S3ServerException () {
-        this((String) null);
-    }
-
-    // Documentation inherited
     public S3ServerException (String message) {
         this(message, null, null);
+    }
+
+    public S3ServerException (String message, Exception cause) {
+        super(message, cause);
     }
 
     // Documentation inherited
@@ -99,7 +98,7 @@ public class S3ServerException extends S3Exception
 
     /**
      * Extract the child node's text.
-     * @param node Paren node.
+     * @param node Parent node.
      */
     private static String _extractXmlChildText(Node node)
     {
@@ -122,16 +121,16 @@ public class S3ServerException extends S3Exception
             doc = db.parse(new InputSource(new StringReader(documentString)));
         } catch (ParserConfigurationException e) {
             // This should not happen. Return a generic S3 exception
-            return new S3ServerException("Error (" + e + ") parsing S3 error " +
-                "document: '" + documentString + "'");
+            return new S3ServerException("Error parsing S3 error document: '" + documentString +
+                "'", e);
         } catch (SAXException e) {
             // Return a generic exception
-            return new S3ServerException("Error (" + e + ") parsing S3 error " +
-                "document: '" + documentString + "'");
+            return new S3ServerException("Error parsing S3 error document: '" + documentString
+                + "'", e);
         } catch (IOException e) {
             // This is not really possible
-            return new S3ServerException("I/O error (" + e + ") parsing S3 error " +
-                "document: '" + documentString + "'");
+            return new S3ServerException("I/O error parsing S3 error document: '" + documentString
+                + "'", e);
         }
 
         // Extract the error data. We ignore elements that we don't understand,
@@ -181,9 +180,9 @@ public class S3ServerException extends S3Exception
             cls = loadedClass.asSubclass(S3ServerException.class);
 
             // Grab the constructor
-            construct = cls.getConstructor(new Class[] {String.class, String.class, String.class});
+            construct = cls.getConstructor(String.class, String.class, String.class);
 
-            return construct.newInstance(new Object[] {errorMessage, requestId, hostId});
+            return construct.newInstance(errorMessage, requestId, hostId);
         } catch (Exception e) {
             return new S3ServerException("An unhandled S3 error code was returned: " + code, requestId, hostId);
         }
