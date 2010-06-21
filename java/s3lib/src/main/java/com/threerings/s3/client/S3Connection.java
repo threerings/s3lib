@@ -56,6 +56,7 @@ import org.apache.commons.httpclient.HttpMethodBase;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 
+import org.apache.commons.httpclient.params.HttpClientParams;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 
 import org.apache.commons.httpclient.Header;
@@ -109,8 +110,16 @@ public class S3Connection {
         this.httpClient = new HttpClient();
         this.httpClient.setHostConfiguration(hostConfig);
 
-        /* Configure the multi-threaded connection manager. Default to MAX_INT (eg, unlimited) connections, as
-         * S3 is intended to support such use */
+
+        /* httpclient defaults to no timeout, which is troublesome if we ever drop our network
+         * connection.  Give it a generous timeout to keep things moving. */
+        HttpClientParams clientParams = new HttpClientParams();
+        clientParams.setSoTimeout(TIMEOUT_MILLIS);
+        clientParams.setConnectionManagerTimeout(TIMEOUT_MILLIS);
+        this.httpClient.setParams(clientParams);
+
+        /* Configure the multi-threaded connection manager. Default to MAX_INT (eg, unlimited)
+         * connections, as S3 is intended to support such use */
         HttpConnectionManagerParams managerParam = new HttpConnectionManagerParams();
         MultiThreadedHttpConnectionManager manager = new MultiThreadedHttpConnectionManager();
         managerParam.setDefaultMaxConnectionsPerHost(Integer.MAX_VALUE);
@@ -722,4 +731,7 @@ public class S3Connection {
 
     /** Header prefix for object metadata. */
     private static final String S3_COPY_METADATA_COPY_VALUE = "COPY";
+
+    /** Connection and read timeout for our http connections in milliseconds. */
+    private static final int TIMEOUT_MILLIS = 2 * 60 * 1000;
 }
