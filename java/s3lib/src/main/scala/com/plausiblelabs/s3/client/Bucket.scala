@@ -39,7 +39,7 @@ import com.threerings.s3.client.{S3Object => JS3Object, MediaType => JMediaType}
 import com.threerings.s3.client.S3ObjectListing
 import com.threerings.s3.client.acl.AccessControlList.StandardPolicy
 
-import scala.collection.jcl.Conversions._
+import scala.collection.JavaConversions._
 
 
 /**
