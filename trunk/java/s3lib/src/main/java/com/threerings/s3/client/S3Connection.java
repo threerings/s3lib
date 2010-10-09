@@ -600,6 +600,15 @@ public class S3Connection {
         }
 
         if (!(statusCode >= HttpStatus.SC_OK && statusCode < HttpStatus.SC_MULTIPLE_CHOICES)) {
+            if (method instanceof HeadMethod) {
+                // HEAD calls don't include a response body, so the best we can do is to throw an
+                // exception indicating the status code.  Happily, S3 does a good job of mapping
+                // their errors to HTTP status codes, so things like 404 mean either the bucket
+                // or key didn't exist
+                throw S3ServerException.exceptionForS3ErrorCode(statusCode,
+                    "S3 returned status code " + statusCode + " for a HEAD request for "
+                        + method.getPath());
+            }
             // Request failed, throw exception.
             InputStream stream;
             byte[] errorDoc = new byte[S3_MAX_ERROR_SIZE];

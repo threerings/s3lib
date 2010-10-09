@@ -424,6 +424,20 @@ public class S3ConnectionTest {
         badConn.createBucket(_testBucketName);
     }
 
+    @Test(expected = S3ServerException.NoSuchKeyException.class)
+    public void testMissingObjectGet ()
+        throws Exception
+    {
+        _conn.getObject(_testBucketName, _fileObj.getKey());
+    }
+
+    @Test(expected = S3ServerException.S3Server404Exception.class)
+    public void testMissingObjectHead ()
+        throws Exception
+    {
+        _conn.getObjectMetadata(_testBucketName, _fileObj.getKey());
+    }
+
     /** Amazon S3 Authenticated Connection */
     private S3Connection _conn;
 
