@@ -110,7 +110,19 @@ public class S3Connection {
     public S3Connection (String keyId, String secretKey, HostConfiguration hostConfig)
     {
         this(keyId, secretKey, hostConfig, DEFAULT_TIMEOUT_MILLIS);
+    }
 
+    /**
+     * Create a new S3 client connection, with the given credentials and timeout, but with the
+     * default connection host parameters.
+     *
+     * @param keyId The your user key into AWS
+     * @param secretKey The secret string used to generate signatures for authentication.
+     * @param timeoutMillis Connection and read timeout for http connections in milliseconds
+     */
+    public S3Connection (String keyId, String secretKey, int timeoutMillis)
+    {
+        this(keyId, secretKey, S3Utils.createDefaultHostConfig(), timeoutMillis);
     }
 
     /**
