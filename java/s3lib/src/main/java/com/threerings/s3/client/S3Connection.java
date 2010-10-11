@@ -81,9 +81,13 @@ import org.xml.sax.SAXException;
  * S3Connection instances are thread-safe.
  */
 public class S3Connection {
+
+    /** Default connection and read timeout for our http connections in milliseconds. */
+    public static final int DEFAULT_TIMEOUT_MILLIS = 2 * 60 * 1000;
+
     /**
-     * Create a new S3 client connection, with the given credentials and connection
-     * host parameters.
+     * Create a new S3 client connection, with the given credentials and the default connection
+     * host parameters and timeout.
      *
      * Connections will be SSL encrypted.
      *
@@ -97,13 +101,29 @@ public class S3Connection {
 
     /**
      * Create a new S3 client connection, with the given credentials and connection host
-     * parameters.
+     * parameters, but with the default timeout.
      *
      * @param keyId The your user key into AWS
      * @param secretKey The secret string used to generate signatures for authentication.
      * @param hostConfig HttpClient HostConfig.
      */
     public S3Connection (String keyId, String secretKey, HostConfiguration hostConfig)
+    {
+        this(keyId, secretKey, hostConfig, DEFAULT_TIMEOUT_MILLIS);
+
+    }
+
+    /**
+     * Create a new S3 client connection, with the given credentials and connection host
+     * parameters.
+     *
+     * @param keyId The your user key into AWS
+     * @param secretKey The secret string used to generate signatures for authentication.
+     * @param hostConfig HttpClient HostConfig.
+     * @param timeoutMillis Connection and read timeout for http connections in milliseconds
+     */
+    public S3Connection (String keyId, String secretKey, HostConfiguration hostConfig,
+            int timeoutMillis)
     {
         this.keyId = keyId;
         this.secretKey = secretKey;
@@ -114,8 +134,8 @@ public class S3Connection {
         /* httpclient defaults to no timeout, which is troublesome if we ever drop our network
          * connection.  Give it a generous timeout to keep things moving. */
         HttpClientParams clientParams = new HttpClientParams();
-        clientParams.setSoTimeout(TIMEOUT_MILLIS);
-        clientParams.setConnectionManagerTimeout(TIMEOUT_MILLIS);
+        clientParams.setSoTimeout(timeoutMillis);
+        clientParams.setConnectionManagerTimeout(timeoutMillis);
         this.httpClient.setParams(clientParams);
 
         /* Configure the multi-threaded connection manager. Default to MAX_INT (eg, unlimited)
@@ -743,7 +763,4 @@ public class S3Connection {
 
     /** Header prefix for object metadata. */
     private static final String S3_COPY_METADATA_COPY_VALUE = "COPY";
-
-    /** Connection and read timeout for our http connections in milliseconds. */
-    private static final int TIMEOUT_MILLIS = 2 * 60 * 1000;
 }
