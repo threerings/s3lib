@@ -610,23 +610,30 @@ public class S3Connection {
                         + method.getPath());
             }
             // Request failed, throw exception.
-            InputStream stream;
-            byte[] errorDoc = new byte[S3_MAX_ERROR_SIZE];
+            byte[] responseData = new byte[S3_MAX_ERROR_SIZE];
+            int errorLen;
 
             try {
-                stream = method.getResponseBodyAsStream();
+                InputStream stream = method.getResponseBodyAsStream();
                 if (stream == null) {
                     // We should always receive a response!
                     throw new S3Exception("S3 failed to return an error " +
                         "response for HTTP status code: "+ statusCode);
                 }
 
-                stream.read(errorDoc, 0, errorDoc.length);
+                errorLen = stream.read(responseData, 0, responseData.length);
             } catch (IOException ioe) {
                 throw new S3ClientException.NetworkException("Network error receiving S3 error response: " + ioe.getMessage(), ioe);
             }
 
-            throw S3ServerException.exceptionForS3Error(new String(errorDoc).trim());
+            if (errorLen == S3_MAX_ERROR_SIZE) {
+                throw new S3Exception("S3 returned an error response longer than is valid");
+            }
+
+            // Trim the byte array to the response's length to make it a valid XML document.
+            byte[] errorDoc = new byte[errorLen];
+            System.arraycopy(responseData, 0, errorDoc, 0, errorLen);
+            throw S3ServerException.exceptionForS3Error(errorDoc);
         }
     }
 

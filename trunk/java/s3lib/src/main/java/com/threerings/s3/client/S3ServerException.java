@@ -34,8 +34,9 @@
 
 package com.threerings.s3.client;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 
 import java.lang.reflect.Constructor;
 
@@ -135,29 +136,37 @@ public class S3ServerException extends S3Exception
         }
     }
 
+    private static S3ServerException _createGenericException(String reason, byte[] document, Exception cause)
+    {
+        // Assume UTF-8 if the we couldn't parse the XML.  That's what amazon has returned
+        // historically, though all bets are off if things aren't parsable
+        try {
+            return new S3ServerException(reason + ": " + new String(document, "UTF-8"), cause);
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException("UTF-8 not available?", e);
+        }
+    }
+
     /**
      * Convert an S3 XML error document into a S3ServerException instance.
      * @param documentString A string containing the XML error document.
      */
-    public static S3ServerException exceptionForS3Error (String documentString) {
+    public static S3ServerException exceptionForS3Error (byte[] document) {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         Document doc;
 
         try {
             DocumentBuilder db = dbf.newDocumentBuilder();
-            doc = db.parse(new InputSource(new StringReader(documentString)));
+            doc = db.parse(new InputSource(new ByteArrayInputStream(document)));
         } catch (ParserConfigurationException e) {
             // This should not happen. Return a generic S3 exception
-            return new S3ServerException("Error parsing S3 error document: '" + documentString +
-                "'", e);
+            return _createGenericException("Error parsing S3 error document", document, e);
         } catch (SAXException e) {
             // Return a generic exception
-            return new S3ServerException("Error parsing S3 error document: '" + documentString
-                + "'", e);
+            return _createGenericException("Error parsing S3 error document", document, e);
         } catch (IOException e) {
             // This is not really possible
-            return new S3ServerException("I/O error parsing S3 error document: '" + documentString
-                + "'", e);
+            return _createGenericException("I/O error parsing S3 error document", document, e);
         }
 
         // Extract the error data. We ignore elements that we don't understand,
