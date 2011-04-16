@@ -1,4 +1,4 @@
-/* 
+/*
  * S3ClientException vi:ts=4:sw=4:expandtab:
  *
  * Copyright (c) 2005 - 2007 Three Rings Design, Inc.
@@ -34,12 +34,9 @@ package com.threerings.s3.client;
 
 import org.apache.commons.codec.binary.Base64;
 
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HostConfiguration;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
-import org.apache.commons.httpclient.methods.RequestEntity;
-import org.apache.commons.httpclient.protocol.Protocol;
+import org.apache.http.Header;
+import org.apache.http.HttpHost;
+import org.apache.http.client.methods.HttpRequestBase;
 
 import javax.crypto.spec.SecretKeySpec;
 import javax.crypto.Mac;
@@ -50,7 +47,6 @@ import java.security.InvalidKeyException;
 import java.text.SimpleDateFormat;
 
 import java.util.Date;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.SortedMap;
 import java.util.TimeZone;
@@ -65,38 +61,19 @@ class S3Utils {
 
     /** Header for S3 access settings. */
     static final String ACL_HEADER = "x-amz-acl";
-    
+
     /** Default AWS S3 Host. */
     static final String DEFAULT_HOST = "s3.amazonaws.com";
-    
-    /** HTTPS protocol instance. */
-    private static final Protocol HTTPS_PROTOCOL = Protocol.getProtocol("https");
-    
-    /**
-     * Helper method to create and initialize a HostConfiguration, when provided with
-     * the host, port, and protocol.
-     * 
-     * @param host Host to connect to
-     * @param port HTTP port
-     * @param protocol Protocol used
-     * @return Initialized {@link HostConfiguration}
-     */
-    static HostConfiguration createHostConfig (String host, int port, Protocol protocol) {
-        final HostConfiguration hostConfig = new HostConfiguration();
-        hostConfig.setHost(host, port, protocol);
-        return hostConfig;
-    }
-    
+
     /**
      * Helper method to create and initialize a {@link HostConfiguration} instance.
      * Always uses SSL.
      */
-    static HostConfiguration createDefaultHostConfig () {
-        final HostConfiguration hostConfig = new HostConfiguration();
-        hostConfig.setHost(DEFAULT_HOST, HTTPS_PROTOCOL.getDefaultPort(), HTTPS_PROTOCOL);
-        return hostConfig;
+    static HttpHost createDefaultHost () {
+        // Use -1 to specify the scheme default port
+        return new HttpHost(DEFAULT_HOST, -1, "https");
     }
-    
+
     /**
      * Sign (SHA-1 HMAC) a given AWS web request using the provided key.
      * The canonical request format used for signing is defined by the
@@ -111,44 +88,30 @@ class S3Utils {
      * @param expires The expiration date for the signature
      */
     public static void signAWSRequest (String awsKeyId, String awsSecretKey,
-        HttpMethod method, Date expires)
+        HttpRequestBase method, Date expires)
     {
 
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
 
         // Set the required Date header (now)
-        method.setRequestHeader("Date", rfc822Date(new Date()));
-        
+        method.addHeader("Date", rfc822Date(new Date()));
+
         // Append method "verb"
-        buf.append(method.getName() + "\n");
+        buf.append(method.getMethod() + "\n");
 
         // Add all interesting headers to a list, then sort them.  "Interesting"
         // is defined as Content-MD5, Content-Type, Date, and x-amz-
         SortedMap<String,String> interestingHeaders = new TreeMap<String,String>();
-        Header[] requestHeaders = method.getRequestHeaders();
-        for (int i = 0; i < requestHeaders.length; i++) {
-            Header header = requestHeaders[i];
+        for (Header header : method.getAllHeaders()) {
             String key = header.getName().toLowerCase();
-            
+
             // Pull out only the headers that should be included in the signature.
             if (key.equals("content-type") || key.equals("content-md5") ||
                 key.equals("date") ||
                 key.startsWith(AMAZON_HEADER_PREFIX)) {
-                    
+
                 // Stow the header
                 interestingHeaders.put(key, header.getValue().trim());
-            }
-        }
-        
-        // If there's a request entity, use that to find the content-type
-        // header
-        if (method instanceof EntityEnclosingMethod) {
-            RequestEntity requestEntity =
-                ((EntityEnclosingMethod) method).getRequestEntity();
-                
-            if (requestEntity != null) {
-                interestingHeaders.put("content-type",
-                    requestEntity.getContentType());
             }
         }
 
@@ -163,9 +126,9 @@ class S3Utils {
         if (expires != null) {
             interestingHeaders.put("date", rfc822Date(expires));
             // Set the expires header
-            method.setRequestHeader("Expires", rfc822Date(expires));
+            method.addHeader("Expires", rfc822Date(expires));
         }
-        
+
         // these headers require that we still put a new line in after them,
         // even if they don't exist.
         if (!interestingHeaders.containsKey("content-type")) {
@@ -177,8 +140,7 @@ class S3Utils {
         }
 
         // Finally, add all the interesting headers (i.e.: all that startwith x-amz- ;-))
-        for (Iterator<String> i = interestingHeaders.keySet().iterator(); i.hasNext(); ) {
-            String key = i.next();
+        for (String key : interestingHeaders.keySet()) {
             if (key.startsWith(AMAZON_HEADER_PREFIX)) {
                 buf.append(key).append(':').append(interestingHeaders.get(key));
             } else {
@@ -188,7 +150,7 @@ class S3Utils {
         }
 
         // Don't include the query parameters...
-        String path = method.getPath();
+        String path = method.getURI().getPath();
         int queryIndex = path.indexOf('?');
         if (queryIndex == -1) {
             buf.append(path);
@@ -202,47 +164,45 @@ class S3Utils {
         } else if (path.matches(".*[&?]torrent($|=|&).*")) {
             buf.append("?torrent");
         }
-        
+
         // Finally, sign and encode the canonicalized headers
         SecretKeySpec signingKey = new SecretKeySpec(awsSecretKey.getBytes(), HMAC_SHA1_ALGORITHM);
-        
+
         // Initialize a MAC instance with the signing key
         Mac mac;
         try {
-            mac = Mac.getInstance(HMAC_SHA1_ALGORITHM);            
+            mac = Mac.getInstance(HMAC_SHA1_ALGORITHM);
         } catch (NoSuchAlgorithmException e) {
             // Should never happen
             throw new RuntimeException("Could not find SHA-1 algorithm.");
         }
-        
+
         try {
             mac.init(signingKey);
         } catch (InvalidKeyException e) {
             // Also should not happen
             throw new RuntimeException("Could not initialize the MAC algorithm.", e);
         }
-        
+
         // Compute the HMAC
         byte[] raw = buf.toString().getBytes();
         String b64 = new String(Base64.encodeBase64(mac.doFinal(raw)));
-        
+
         // Insert the header
-        method.setRequestHeader(S3Utils.AUTH_HEADER, "AWS " + awsKeyId + ":" + b64);
+        method.addHeader(S3Utils.AUTH_HEADER, "AWS " + awsKeyId + ":" + b64);
     }
-    
+
     public static String rfc822Date (Date date) {
         // Convert the expiration date to rfc822 format.
         final String DateFormat = "EEE, dd MMM yyyy HH:mm:ss ";
-        SimpleDateFormat format;
-        
-        format = new SimpleDateFormat( DateFormat, Locale.US );
+        SimpleDateFormat format = new SimpleDateFormat(DateFormat, Locale.US);
         format.setTimeZone(TimeZone.getTimeZone("GMT"));
         return format.format(date) + "GMT";
     }
-    
+
     /** AWS Authorization Header Name. */
     protected static final String AUTH_HEADER = "Authorization";
-    
+
     /** HMAC/SHA1 Algorithm per RFC 2104. */
     protected static final String HMAC_SHA1_ALGORITHM = "HmacSHA1";
 }

@@ -35,9 +35,8 @@ package com.threerings.s3.client;
 import java.util.Map;
 
 /**
- * A representation of an S3Object whose contents are unavailable
- * (eg, retrieved via a HEAD request). The returned InputStream
- * will always throw an IOException.
+ * A representation of an S3Object whose contents are unavailable (eg, retrieved via a HEAD
+ * request).
  */
 class S3EmptyObject extends S3Metadata {
     /**

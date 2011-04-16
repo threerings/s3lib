@@ -32,46 +32,49 @@
 
 package com.threerings.s3.client;
 
-import com.threerings.s3.client.S3ClientException.InvalidURIException;
-import com.threerings.s3.client.acl.AccessControlList;
-
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.EncoderException;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.net.URLCodec;
-
-import org.apache.commons.httpclient.HostConfiguration;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethodBase;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
-
-import org.apache.commons.httpclient.params.HttpClientParams;
-import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
-
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.NameValuePair;
-import org.apache.commons.httpclient.methods.DeleteMethod;
-import org.apache.commons.httpclient.methods.HeadMethod;
-import org.apache.commons.httpclient.methods.PutMethod;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
-import org.apache.commons.httpclient.protocol.Protocol;
-import org.apache.commons.httpclient.util.DateParseException;
-import org.apache.commons.httpclient.util.DateUtil;
-
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.utils.URIUtils;
+import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.http.conn.EofSensorInputStream;
+import org.apache.http.entity.InputStreamEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.CoreConnectionPNames;
+import org.apache.http.params.HttpParams;
+import org.apache.http.util.EntityUtils;
 import org.xml.sax.SAXException;
+
+import com.threerings.s3.client.S3ClientException.InvalidURIException;
+import com.threerings.s3.client.acl.AccessControlList;
 
 /**
  * An interface into the S3 system.  It is initially configured with
@@ -96,7 +99,7 @@ public class S3Connection {
      *        for authentication.
      */
     public S3Connection (String keyId, String secretKey) {
-        this(keyId, secretKey, S3Utils.createDefaultHostConfig());
+        this(keyId, secretKey, S3Utils.createDefaultHost());
     }
 
     /**
@@ -107,7 +110,7 @@ public class S3Connection {
      * @param secretKey The secret string used to generate signatures for authentication.
      * @param hostConfig HttpClient HostConfig.
      */
-    public S3Connection (String keyId, String secretKey, HostConfiguration hostConfig)
+    public S3Connection (String keyId, String secretKey, HttpHost hostConfig)
     {
         this(keyId, secretKey, hostConfig, DEFAULT_TIMEOUT_MILLIS);
     }
@@ -122,7 +125,7 @@ public class S3Connection {
      */
     public S3Connection (String keyId, String secretKey, int timeoutMillis)
     {
-        this(keyId, secretKey, S3Utils.createDefaultHostConfig(), timeoutMillis);
+        this(keyId, secretKey, S3Utils.createDefaultHost(), timeoutMillis);
     }
 
     /**
@@ -134,54 +137,26 @@ public class S3Connection {
      * @param hostConfig HttpClient HostConfig.
      * @param timeoutMillis Connection and read timeout for http connections in milliseconds
      */
-    public S3Connection (String keyId, String secretKey, HostConfiguration hostConfig,
+    public S3Connection (String keyId, String secretKey, HttpHost hostConfig,
             int timeoutMillis)
     {
         this.keyId = keyId;
         this.secretKey = secretKey;
-        this.httpClient = new HttpClient();
-        this.httpClient.setHostConfiguration(hostConfig);
-
-
-        /* httpclient defaults to no timeout, which is troublesome if we ever drop our network
-         * connection.  Give it a generous timeout to keep things moving. */
-        HttpClientParams clientParams = new HttpClientParams();
-        clientParams.setSoTimeout(timeoutMillis);
-        clientParams.setConnectionManagerTimeout(timeoutMillis);
-        this.httpClient.setParams(clientParams);
+        this.httpHost = hostConfig;
 
         /* Configure the multi-threaded connection manager. Default to MAX_INT (eg, unlimited)
          * connections, as S3 is intended to support such use */
-        HttpConnectionManagerParams managerParam = new HttpConnectionManagerParams();
-        MultiThreadedHttpConnectionManager manager = new MultiThreadedHttpConnectionManager();
-        managerParam.setDefaultMaxConnectionsPerHost(Integer.MAX_VALUE);
-        managerParam.setMaxTotalConnections(Integer.MAX_VALUE);
-        manager.setParams(managerParam);
-        this.httpClient.setHttpConnectionManager(manager);
-    }
+        ThreadSafeClientConnManager connMgr = new ThreadSafeClientConnManager();
+        connMgr.setMaxTotal(Integer.MAX_VALUE);
+        connMgr.setDefaultMaxPerRoute(Integer.MAX_VALUE);
 
-    /**
-     * @deprecated Use {@link S3Connection#S3Connection(String, String, HostConfiguration)}
-     */
-    @Deprecated
-    public S3Connection (String awsKeyId, String awsSecretKey, Protocol protocol) {
-        this(awsKeyId, awsSecretKey, protocol, S3Utils.DEFAULT_HOST);
-    }
+        /* httpclient defaults to no timeout, which is troublesome if we ever drop our network
+         * connection.  Give it a generous timeout to keep things moving. */
+        HttpParams params = new BasicHttpParams();
+        params.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, timeoutMillis);
+        params.setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, timeoutMillis);
 
-    /**
-     * @deprecated Use {@link S3Connection#S3Connection(String, String, HostConfiguration)}
-     */
-    @Deprecated
-    public S3Connection (String awsKeyId, String awsSecretKey, Protocol protocol, String host) {
-        this(awsKeyId, awsSecretKey, protocol, host, protocol.getDefaultPort());
-    }
-
-    /**
-     * @deprecated Use {@link S3Connection#S3Connection(String, String, HostConfiguration)}
-     */
-    @Deprecated
-    public S3Connection (String awsKeyId, String awsSecretKey, Protocol protocol, String host, int port) {
-        this(awsKeyId, awsSecretKey, S3Utils.createHostConfig(host, port, protocol));
+        this.httpClient = new DefaultHttpClient(connMgr, params);
     }
 
     /**
@@ -191,13 +166,7 @@ public class S3Connection {
     public void createBucket (String bucketName)
         throws S3Exception
     {
-        PutMethod method = new PutMethod(encodePath(bucketName));
-
-        try {
-            executeS3Method(method);
-        } finally {
-            method.releaseConnection();
-        }
+        executeAndConsumeS3Method(new HttpPut(createURI(bucketName)));
     }
 
 
@@ -243,40 +212,43 @@ public class S3Connection {
     public S3ObjectListing listObjects (String bucketName, String prefix, String marker, int maxKeys, String delimiter)
         throws S3Exception
     {
-        GetMethod method = new GetMethod(encodePath(bucketName));
         List<NameValuePair> parameters = new ArrayList<NameValuePair>(4);
 
         if (prefix != null) {
-            parameters.add(new NameValuePair(LIST_PREFIX_PARAMETER, prefix));
+            parameters.add(new BasicNameValuePair(LIST_PREFIX_PARAMETER, prefix));
         }
-
         if (marker != null) {
-            parameters.add(new NameValuePair(LIST_MARKER_PARAMETER, marker));
+            parameters.add(new BasicNameValuePair(LIST_MARKER_PARAMETER, marker));
         }
-
         if (maxKeys != 0) {
-            parameters.add(new NameValuePair(LIST_MAXKEYS_PARAMETER, Integer.toString(maxKeys)));
+            parameters.add(new BasicNameValuePair(LIST_MAXKEYS_PARAMETER, Integer.toString(maxKeys)));
         }
-
         if (delimiter != null) {
-            parameters.add(new NameValuePair(LIST_DELIMITER_PARAMETER, delimiter));
+            parameters.add(new BasicNameValuePair(LIST_DELIMITER_PARAMETER, delimiter));
         }
 
-        if (parameters.size() > 0) {
-            method.setQueryString(parameters.toArray(new NameValuePair[parameters.size()]));
-        }
+        HttpGet method = new HttpGet(createURI(bucketName, null, parameters));
 
+        HttpResponse resp  = executeS3Method(method);
+        InputStream content;
         try {
-            executeS3Method(method);
-            return new S3ObjectListing(method.getResponseBodyAsStream());
+            content = resp.getEntity().getContent();
+        } catch (IOException e) {
+            method.abort();
+            throw new S3ClientException("Error getting bucket GET response", e);
+        }
+        try {
+            return new S3ObjectListing(content);
         } catch (SAXException se) {
-            throw new S3ClientException("Error parsing bucket GET response: " + se.getMessage(),
-                se);
-        } catch (IOException ioe) {
-            throw new S3ClientException.NetworkException("Error receiving bucket GET response: " +
-                ioe.getMessage(), ioe);
+            method.abort();
+            throw new S3ClientException("Error parsing bucket GET response", se);
+        } catch (IOException e) {
+            method.abort();
+            throw new S3ClientException("Error reading bucket GET response", e);
         } finally {
-            method.releaseConnection();
+            try {
+                content.close();
+            } catch (IOException e) {}
         }
     }
 
@@ -288,7 +260,7 @@ public class S3Connection {
     public void deleteBucket (String bucketName)
         throws S3Exception
     {
-        executeS3MethodAndRelease(new DeleteMethod(encodePath(bucketName)));
+        executeAndConsumeS3Method(new HttpDelete(createURI(bucketName)));
     }
 
     /**
@@ -330,28 +302,24 @@ public class S3Connection {
     {
         byte[] checksum;
 
-        PutMethod method = new PutMethod(encodePath(bucketName, object.getKey()));
+        HttpPut method = new HttpPut(createURI(bucketName, object.getKey()));
 
         // Set the request entity, handling unknown content lengths
         final MediaType mediaType = object.getMediaType();
         long length = object.length();
-        if (length < 0)
-          length = InputStreamRequestEntity.CONTENT_LENGTH_AUTO;
 
-        method.setRequestEntity(new InputStreamRequestEntity(
-            object.getInputStream(), length, mediaType.getMimeType()));
-
+        method.setEntity(new InputStreamEntity(object.getInputStream(), length));
+        method.addHeader(CONTENT_TYPE_HEADER, mediaType.getMimeType());
         // Set the content encoding
         if (mediaType.getContentEncoding() != null) {
-          method.setRequestHeader(CONTENT_ENCODING_HEADER, mediaType.getContentEncoding());
+          method.addHeader(CONTENT_ENCODING_HEADER, mediaType.getContentEncoding());
         }
 
-        // Set the access policy
-        method.setRequestHeader(S3Utils.ACL_HEADER, accessPolicy.toString());
+        method.addHeader(S3Utils.ACL_HEADER, accessPolicy.toString());// Set the access policy
 
         // add any headers that were supplied
         for (Map.Entry<String,String> header : headers.entrySet()) {
-            method.setRequestHeader(header.getKey(), header.getValue());
+            method.addHeader(header.getKey(), header.getValue());
         }
 
         // Compute and set the content-md5 value (base64 of 128bit digest)
@@ -360,7 +328,7 @@ public class S3Connection {
             byte[] md5 = object.getMD5();
             if (md5 != null) {
                 checksum = Base64.encodeBase64(md5);
-                method.setRequestHeader(CONTENT_MD5_HEADER, new String(checksum, "ascii"));
+                method.addHeader(CONTENT_MD5_HEADER, new String(checksum, "ascii"));
             }
         } catch (UnsupportedEncodingException uee) {
             // ASCII must always be supported.
@@ -370,10 +338,10 @@ public class S3Connection {
         // Set any metadata fields
         for (Map.Entry<String,String> entry : object.getMetadata().entrySet()) {
             String header = S3_METADATA_PREFIX + entry.getKey();
-            method.setRequestHeader(header, entry.getValue());
+            method.addHeader(header, entry.getValue());
         }
 
-        executeS3MethodAndRelease(method);
+        executeAndConsumeS3Method(method);
     }
 
     /**
@@ -386,106 +354,100 @@ public class S3Connection {
     private S3Metadata getObject (String bucketName, String objectKey, boolean hasBody)
     	throws S3Exception
     {
-        final InputStream response;
-        final HashMap<String,String> metadata;
-        final MediaType mediaType;
-        final byte digest[];
-        final long length;
-        boolean success = false;
-        long lastModified = 0L;
-
-        String path = encodePath(bucketName, objectKey);
-        HttpMethodBase method;
+        URI uri = createURI(bucketName, objectKey);
+        HttpRequestBase method;
         if (hasBody) {
-            method = new GetMethod(path);
+            method = new HttpGet(uri);
         } else {
-            method = new HeadMethod(path);
+            method = new HttpHead(uri);
         }
 
-        /* Attempt the GET, and release the held method connection on failure */
+        HttpResponse resp = executeS3Method(method);
         try {
-            // Execute the get request and retrieve all metadata from the response
-            executeS3Method(method);
+            return buildS3Object(objectKey, hasBody, resp);
+        } catch (S3Exception e) {
+            method.abort();// Cleanup if something went wrong in extracting the metadata
+            throw e;
+        }
+    }
 
-            // Mime type
-            final String mimeType = getResponseHeader(method, CONTENT_TYPE_HEADER, true);
-            final String contentEncoding = getResponseHeader(method, CONTENT_ENCODING_HEADER, false);
-            if (contentEncoding != null) {
-                mediaType = new MediaType(mimeType, contentEncoding);
-            } else {
-                mediaType = new MediaType(mimeType);
+    /**
+     * Creates an S3Object from <code>resp</code> if hasBody is true, or an S3EmptyObject otherwise.
+     * If an error is encountered in building the object, an S3Exception is thrown, but the
+     * connection is left open. It's the responsibility of a caller to clean up the connection.
+     */
+    private S3Metadata buildS3Object (String objectKey, boolean hasBody, HttpResponse resp)
+        throws S3Exception
+    {
+        HttpEntity entity = resp.getEntity();
+
+        // Mime type
+        String mimeType = getResponseHeader(resp, CONTENT_TYPE_HEADER, true);
+        String contentEncoding = getResponseHeader(resp, CONTENT_ENCODING_HEADER, false);
+        MediaType mediaType;
+        if (contentEncoding != null) {
+            mediaType = new MediaType(mimeType, contentEncoding);
+        } else {
+            mediaType = new MediaType(mimeType);
+        }
+
+        // Last modified
+        String dateString = getResponseHeader(resp, LAST_MODIFIED_HEADER, false);
+        long lastModified = 0L;
+        try {
+            if (dateString != null) {
+                lastModified = RFC822Format.parse(dateString).getTime();
             }
+        } catch (ParseException e) {}
 
-            // Last modified
-            final String dateString = getResponseHeader(method, LAST_MODIFIED_HEADER, false);
+        // Data length
+        String lengthHeader = getResponseHeader(resp, CONTENT_LENGTH_HEADER, true);
+        long length = Long.parseLong(lengthHeader);
+
+        // MD5 Checksum. S3 returns this as the standard 128bit hex string, enclosed in quotes.
+        byte[] digest;
+        try {
+            String hex = getResponseHeader(resp, S3_MD5_HEADER, true);
+            // Strip the surrounding quotes
+            hex = hex.substring(1, hex.length() - 1);
+            digest = new Hex().decode(hex.getBytes("utf8"));
+        } catch (DecoderException de) {
+            throw new S3Exception("S3 returned an invalid " + S3_MD5_HEADER + " header: " + de);
+        } catch (UnsupportedEncodingException uee) {
+            // UTF8 must always be supported.
+            throw new RuntimeException("Missing UTF8 encoding");
+        }
+
+        // Retrieve metadata
+        Map<String, String> metadata = new HashMap<String, String>();
+        for (Header header : resp.getAllHeaders()) {
+            if (header.getName().startsWith(S3_METADATA_PREFIX)) {
+                // Strip the S3 prefix
+                String key = header.getName().substring(S3_METADATA_PREFIX.length());
+                metadata.put(key, header.getValue());
+            }
+        }
+
+        if (hasBody) {
+            // Get the response body as an "auto closing" stream -- it will return the HTTP
+            // connection to the pool when the stream is closed or the end of the stream is reached
+            InputStream response;
             try {
-                if (dateString != null)
-                    lastModified = DateUtil.parseDate(dateString).getTime();
-            } catch (DateParseException e) {
-                lastModified = 0L;
+                InputStream s = entity.getContent();
+                response = new EofSensorInputStream(s, null);
+            } catch (IOException ioe) {
+                throw new S3ClientException.NetworkException(
+                    "Error receiving object GET response: " + ioe.getMessage(), ioe);
             }
 
-            // Data length
-            length = method.getResponseContentLength();
-            if (length == -1) {
-                throw new S3Exception("S3 failed to supply the Content-Length header");
-            }
-
-            // MD5 Checksum. S3 returns this as the standard 128bit hex string, enclosed
-            // in quotes.
-            try {
-                String hex;
-
-                hex = getResponseHeader(method, S3_MD5_HEADER, true);
-                // Strip the surrounding quotes
-                hex = hex.substring(1, hex.length() - 1);
-                digest = new Hex().decode(hex.getBytes("utf8"));
-            } catch (DecoderException de) {
-                throw new S3Exception("S3 returned an invalid " + S3_MD5_HEADER + " header: " +
-                    de);
-            } catch (UnsupportedEncodingException uee) {
-                // UTF8 must always be supported.
-                throw new RuntimeException("Missing UTF8 encoding");
-            }
-
-            // Retrieve metadata
-            metadata = new HashMap<String,String>();
-            for (Header header : method.getResponseHeaders()) {
-                String name;
-
-                name = header.getName();
-                if (name.startsWith(S3_METADATA_PREFIX)) {
-                    // Strip the S3 prefix
-                    String key = name.substring(S3_METADATA_PREFIX.length());
-                    metadata.put(key, header.getValue());
-                }
-            }
-
-            if (hasBody) {
-                // Get the response body as an "auto closing" stream -- it will close the HTTP connection
-                // when the stream is closed, the end of the stream is reached, or finalization occurs.
-                try {
-                    InputStream s = method.getResponseBodyAsStream();
-                    response = new HttpInputStream(s, method);
-                } catch (IOException ioe) {
-                    throw new S3ClientException.NetworkException("Error receiving object " + method.getName() +
-                    	"response: " + ioe.getMessage(), ioe);
-                }
-
-                /* Finished successfully */
-                success = true;
-                return new S3StreamObject(objectKey, mediaType, length, digest, metadata, response, lastModified);
-            } else {
-            	return new S3EmptyObject(objectKey, mediaType, length, digest, metadata, lastModified);
-            }
-        } finally {
-            /* If a body was requested and the request was successful, cleanup will be handled by
-             * the HttpInputStream. Otherwise, return the method now. */
-            if (hasBody && success) {
-                // Concluded successfully
-            } else {
-                method.releaseConnection();
-            }
+            // The client now needs to close the response stream to release this connection
+            // back to the pool
+            return new S3StreamObject(objectKey, mediaType, length, digest, metadata, response,
+                lastModified);
+        } else {
+            // We just fetched the head, so the response didn't have an entity and the connection
+            // was already returned to the pool
+            return new S3EmptyObject(objectKey, mediaType, length, digest, metadata, lastModified);
         }
     }
 
@@ -504,8 +466,7 @@ public class S3Connection {
 
     /**
      * Retrieve an S3Object's metadata. The data stream is not retrieved (a HEAD request is
-     * performed). Any attempt to read() the returned S3Object's input stream will throw
-     * an IOException.
+     * performed).
      *
      * @param bucketName Source bucket.
      * @param objectKey Object key.
@@ -524,9 +485,8 @@ public class S3Connection {
     public void deleteObject (String bucketName, String objectKey)
         throws S3Exception
     {
-        executeS3MethodAndRelease(new DeleteMethod(encodePath(bucketName, objectKey)));
+        executeAndConsumeS3Method(new HttpDelete(createURI(bucketName, objectKey)));
     }
-
     /**
      * Copies the object at <code>srcObjectKey</code> in <code>bucket</code> to
      * <code>destObjectKey</code> in the same bucket preserving its metadata and setting its
@@ -576,146 +536,189 @@ public class S3Connection {
         throws S3Exception
     {
 
-        PutMethod method = new PutMethod(encodePath(destBucket, destObjectKey));
+        HttpPut method = new HttpPut(createURI(destBucket, destObjectKey));
 
-        method.setRequestHeader(S3_COPY_SOURCE_HEADER, encodePath(srcBucket, srcObjectKey));
+        method.addHeader(S3_COPY_SOURCE_HEADER, encodePath(srcBucket, srcObjectKey));
 
         // Set the access policy
-        method.setRequestHeader(S3Utils.ACL_HEADER, accessPolicy.toString());
+        method.addHeader(S3Utils.ACL_HEADER, accessPolicy.toString());
         if (metadata != null) {
-            method.setRequestHeader(S3_COPY_METADATA_HEADER, S3_COPY_METADATA_REPLACE_VALUE);
+            method.addHeader(S3_COPY_METADATA_HEADER, S3_COPY_METADATA_REPLACE_VALUE);
             // Set any metadata fields
             for (Map.Entry<String, String> entry : metadata.entrySet()) {
                 String header = S3_METADATA_PREFIX + entry.getKey();
-                method.setRequestHeader(header, entry.getValue());
+                method.addHeader(header, entry.getValue());
             }
         } else {
-            method.setRequestHeader(S3_COPY_METADATA_HEADER, S3_COPY_METADATA_COPY_VALUE);
+            method.addHeader(S3_COPY_METADATA_HEADER, S3_COPY_METADATA_COPY_VALUE);
         }
 
-        executeS3MethodAndRelease(method);
+        executeAndConsumeS3Method(method);
     }
 
     /**
      * Execute the provided method, translating any error response into the appropriate
-     * S3Exception, and then releases the method's connection.
+     * S3Exception, and then releases the method's resources.
      */
-    private void executeS3MethodAndRelease (HttpMethod method)
+    private void executeAndConsumeS3Method (HttpRequestBase method)
         throws S3Exception
     {
         try {
-            executeS3Method(method);
-        } finally {
-            method.releaseConnection();
+            EntityUtils.consume(executeS3Method(method).getEntity());
+        } catch (IOException e) {
+            method.abort();
+            throw new S3ClientException("Error closing S3 entity", e);
         }
     }
 
     /**
      * Execute the provided method, translating any error response into the appropriate
-     * S3Exception.
+     * S3Exception. If there's an error response, the connection is closed. Otherwise it's the
+     * responsibility of the caller to close the entity of the returned HttpResponse to free the
+     * resources.
      * @param method HTTP method to execute.
      */
-    private void executeS3Method (HttpMethod method)
+    private HttpResponse executeS3Method (HttpRequestBase method)
         throws S3Exception
     {
-        int statusCode;
+        HttpResponse resp;
 
         // Sign the request
         S3Utils.signAWSRequest(keyId, secretKey, method, null);
 
         // Execute the request
         try {
-            statusCode = httpClient.executeMethod(method);
+            resp = httpClient.execute(method);
         } catch (IOException ioe) {
+            method.abort();
             throw new S3ClientException.NetworkException("Network error executing S3 method: " +
                 ioe.getMessage(), ioe);
         }
 
+        int statusCode = resp.getStatusLine().getStatusCode();
         if (!(statusCode >= HttpStatus.SC_OK && statusCode < HttpStatus.SC_MULTIPLE_CHOICES)) {
-            if (method instanceof HeadMethod) {
-                // HEAD calls don't include a response body, so the best we can do is to throw an
-                // exception indicating the status code.  Happily, S3 does a good job of mapping
-                // their errors to HTTP status codes, so things like 404 mean either the bucket
-                // or key didn't exist
-                throw S3ServerException.exceptionForS3ErrorCode(statusCode,
-                    "S3 returned status code " + statusCode + " for a HEAD request for "
-                        + method.getPath());
+            try {
+                handleErrorResponse(method, resp, statusCode);
+            } finally {
+                method.abort();
             }
-            // Request failed, throw exception.
-            byte[] responseData = new byte[S3_MAX_ERROR_SIZE];
-            int errorLen;
+        }
+        return resp;
+    }
+
+    /**
+     * Constructs and throws an appropriate S3Exception from the given respose and statusCode.
+     * The connection is left open, so the caller should clean up after the exception is thrown.
+     */
+    private void handleErrorResponse (HttpRequestBase method, HttpResponse resp, int statusCode)
+        throws S3Exception
+    {
+        if (method instanceof HttpHead) {
+            // HEAD calls don't include a response body, so the best we can do is to throw an
+            // exception indicating the status code.  Happily, S3 does a good job of mapping
+            // their errors to HTTP status codes, so things like 404 mean either the bucket
+            // or key didn't exist
+            throw S3ServerException.exceptionForS3ErrorCode(statusCode,
+                "S3 returned status code " + statusCode + " for a HEAD request for "
+                    + method.getURI());
+        }
+        // Request failed, throw exception.
+        byte[] responseData = new byte[S3_MAX_ERROR_SIZE];
+        int errorLen;
+
+        try {
+            InputStream stream = resp.getEntity().getContent();
+            if (stream == null) {
+                // We should always receive a response!
+                throw new S3Exception("S3 failed to return an error response for HTTP status code: " + statusCode);
+            }
 
             try {
-                InputStream stream = method.getResponseBodyAsStream();
-                if (stream == null) {
-                    // We should always receive a response!
-                    throw new S3Exception("S3 failed to return an error " +
-                        "response for HTTP status code: "+ statusCode);
-                }
-
                 errorLen = stream.read(responseData, 0, responseData.length);
-            } catch (IOException ioe) {
-                throw new S3ClientException.NetworkException("Network error receiving S3 error response: " + ioe.getMessage(), ioe);
+            } finally {
+                stream.close();
             }
-
-            if (errorLen == S3_MAX_ERROR_SIZE) {
-                throw new S3Exception("S3 returned an error response longer than is valid");
-            }
-
-            // Trim the byte array to the response's length to make it a valid XML document.
-            byte[] errorDoc = new byte[errorLen];
-            System.arraycopy(responseData, 0, errorDoc, 0, errorLen);
-            throw S3ServerException.exceptionForS3Error(errorDoc);
+        } catch (IOException ioe) {
+            throw new S3ClientException.NetworkException("Network error receiving S3 error response", ioe);
         }
+
+        if (errorLen == S3_MAX_ERROR_SIZE) {
+            // We didn't consume the entirety of the response, so we need to close the connection
+            throw new S3Exception("S3 returned an error response longer than is valid");
+        }
+
+        // Trim the byte array to the response's length to make it a valid XML document.
+        byte[] errorDoc = new byte[errorLen];
+        System.arraycopy(responseData, 0, errorDoc, 0, errorLen);
+        throw S3ServerException.exceptionForS3Error(errorDoc);
     }
 
     /**
      * Pull the header value out of the HTTP method response.
      */
-    private String getResponseHeader (HttpMethod method, String name, boolean required)
+    private String getResponseHeader (HttpResponse resp, String name, boolean required)
         throws S3Exception
     {
-        Header header;
-
-        header = method.getResponseHeader(name);
-        if (header == null) {
+        Header[] headers = resp.getHeaders(name);
+        if (headers.length == 0) {
             if (required) {
                 throw new S3Exception("S3 failed to return a " + name + " header");
             } else {
                 return null;
             }
+        } else if (headers.length > 1) {
+            throw new S3Exception("S3 returned " + headers.length + " " + name + " headers instead of 1");
         }
 
-        return header.getValue();
+        return headers[0].getValue();
     }
 
-    /**
-     * Encodes a path to the given object in the given bucket with www-form-urlencoded.
-     */
-    private String encodePath (String bucketName, String objectKey)
+    private URI createURI (String bucketName, String objectKey)
         throws InvalidURIException
     {
-        String bucketPath = encodePath(bucketName);
+        return createURI(bucketName, objectKey, null);
+    }
+
+
+    private URI createURI (String path)
+        throws InvalidURIException
+    {
+        return createURI(path, null, null);
+    }
+
+    private URI createURI (String bucket, String objectKey, List<NameValuePair> queryParams)
+        throws InvalidURIException
+    {
+        String encodedPath = encodePath(bucket, objectKey);
+        String query = queryParams == null ? "" : URLEncodedUtils.format(queryParams, "UTF-8");
         try {
-            return bucketPath + "/" + _urlEncoder.encode(objectKey);
-        } catch (EncoderException e) {
-            throw new S3ClientException.InvalidURIException("Encoding error for bucket "
-                + bucketName + " and key " + objectKey + ": " + e);
+            return URIUtils.createURI(httpHost.getSchemeName(), httpHost.getHostName(),
+                httpHost.getPort(), encodedPath, query, null);
+        } catch (URISyntaxException e) {
+            throw new S3ClientException.InvalidURIException("Invalid URI for path " + encodedPath
+                + " with params " + query, e);
         }
     }
 
-    /**
-     * Encodes a path to the given bucket with www-form-urlencoded.
-     */
-    private String encodePath (String bucketName)
+    private String encodePath (String bucket, String objectKey)
         throws InvalidURIException
     {
+        String encodedPath;
         try {
-            return "/" + _urlEncoder.encode(bucketName) ;
+            encodedPath = "/" + _urlEncoder.encode(bucket);
         } catch (EncoderException e) {
-            throw new S3ClientException.InvalidURIException("Encoding error for bucket "
-                + bucketName + ": " + e);
+            throw new S3ClientException.InvalidURIException(
+                "Encoding error for bucket " + bucket, e);
         }
+        if (objectKey != null) {
+            try {
+                encodedPath += "/" + _urlEncoder.encode(objectKey);
+            } catch (EncoderException e) {
+                throw new S3ClientException.InvalidURIException("Encoding error for object key "
+                    + objectKey, e);
+            }
+        }
+        return encodedPath;
     }
 
     /** AWS Access ID. */
@@ -726,6 +729,9 @@ public class S3Connection {
 
     /** S3 HTTP client. */
     private final HttpClient httpClient;
+
+    /** S3 HTTP client. */
+    private final HttpHost httpHost;
 
     /** URL encoder. */
     private final URLCodec _urlEncoder = new URLCodec();
@@ -753,6 +759,9 @@ public class S3Connection {
 
     /** Mime Type Header. */
     private static final String CONTENT_TYPE_HEADER = "Content-Type";
+
+    /** Content-Length Header. */
+    private static final String CONTENT_LENGTH_HEADER = "Content-Length";
 
     /** Content Encoding Header. */
     private static final String CONTENT_ENCODING_HEADER = "Content-Encoding";

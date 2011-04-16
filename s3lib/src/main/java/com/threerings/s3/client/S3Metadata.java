@@ -92,8 +92,7 @@ public abstract class S3Metadata {
     public abstract byte[] getMD5 () throws S3ClientException;
 
     /**
-     * Returns the number of bytes required to store the
-     * S3 Object, or -1 if the object length is unknown.
+     * Returns the number of bytes required to store the S3 Object.
      */
     public abstract long length ();
 

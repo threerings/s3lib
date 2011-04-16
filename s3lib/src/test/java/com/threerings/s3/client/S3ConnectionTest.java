@@ -34,6 +34,8 @@ package com.threerings.s3.client;
 import com.threerings.s3.client.acl.AccessControlList;
 import com.threerings.s3.client.acl.AccessControlList.StandardPolicy;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -44,8 +46,11 @@ import java.util.List;
 import java.util.Map;
 import org.apache.commons.codec.binary.Hex;
 
-import org.apache.commons.httpclient.*;
-import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.http.Header;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
 
 import org.junit.*;
 import static org.junit.Assert.*;
@@ -324,17 +329,16 @@ public class S3ConnectionTest {
 
         // Get the data via HTTP
         String url = "http://" + S3Utils.DEFAULT_HOST + "/" + _testBucketName + "/" + _fileObj.getKey();
-        HttpClient client = new HttpClient();
-        GetMethod method = new GetMethod(url);
-        client.executeMethod(method);
+        HttpClient client = new DefaultHttpClient();
+        HttpGet method = new HttpGet(url);
+        HttpResponse resp = client.execute(method);
 
         // Get the expires header
-        Header header = method.getResponseHeader(name);
-        String headerValue = header.toExternalForm().trim();
+        Header header = resp.getHeaders(name)[0];
 
         // Check that it has the right date.
-        assertTrue(headerValue.startsWith(name));
-        assertTrue(headerValue.endsWith(date));
+        assertEquals(name, header.getName());
+        assertEquals(date, header.getValue());
     }
 
     @Test
