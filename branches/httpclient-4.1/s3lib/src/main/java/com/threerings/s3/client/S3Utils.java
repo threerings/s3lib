@@ -41,15 +41,12 @@ import org.apache.http.client.methods.HttpRequestBase;
 import javax.crypto.spec.SecretKeySpec;
 import javax.crypto.Mac;
 
+import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;
 
-import java.text.SimpleDateFormat;
-
 import java.util.Date;
-import java.util.Locale;
 import java.util.SortedMap;
-import java.util.TimeZone;
 import java.util.TreeMap;
 
 class S3Utils {
@@ -94,7 +91,7 @@ class S3Utils {
         StringBuilder buf = new StringBuilder();
 
         // Set the required Date header (now)
-        method.addHeader("Date", rfc822Date(new Date()));
+        method.addHeader("Date", RFC822Format.format(new Date()));
 
         // Append method "verb"
         buf.append(method.getMethod() + "\n");
@@ -124,9 +121,10 @@ class S3Utils {
         // If the expires is non-null, use that for the date field. This
         // trumps the x-amz-date behavior.
         if (expires != null) {
-            interestingHeaders.put("date", rfc822Date(expires));
+            String expires822 = RFC822Format.format(expires);
+            interestingHeaders.put("date", expires822);
             // Set the expires header
-            method.addHeader("Expires", rfc822Date(expires));
+            method.addHeader("Expires", expires822);
         }
 
         // these headers require that we still put a new line in after them,
@@ -185,19 +183,16 @@ class S3Utils {
         }
 
         // Compute the HMAC
-        byte[] raw = buf.toString().getBytes();
+        byte[] raw;
+        try {
+            raw = buf.toString().getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException("Couldn't find UTF-8?", e);
+        }
         String b64 = new String(Base64.encodeBase64(mac.doFinal(raw)));
 
         // Insert the header
         method.addHeader(S3Utils.AUTH_HEADER, "AWS " + awsKeyId + ":" + b64);
-    }
-
-    public static String rfc822Date (Date date) {
-        // Convert the expiration date to rfc822 format.
-        final String DateFormat = "EEE, dd MMM yyyy HH:mm:ss ";
-        SimpleDateFormat format = new SimpleDateFormat(DateFormat, Locale.US);
-        format.setTimeZone(TimeZone.getTimeZone("GMT"));
-        return format.format(date) + "GMT";
     }
 
     /** AWS Authorization Header Name. */
