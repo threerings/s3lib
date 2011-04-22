@@ -148,7 +148,7 @@ class S3Utils {
         }
 
         // Don't include the query parameters...
-        String path = method.getURI().getPath();
+        String path = method.getURI().getRawPath();
         int queryIndex = path.indexOf('?');
         if (queryIndex == -1) {
             buf.append(path);
