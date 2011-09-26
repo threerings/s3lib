@@ -993,7 +993,7 @@ public class S3ServerException extends S3Exception
             this(message, null, null);
         }
         public S3Server500Exception (String message, String requestId, String hostId) {
-            super(message, requestId, hostId);
+            super(message, requestId, hostId, true);
         }
     }
 
