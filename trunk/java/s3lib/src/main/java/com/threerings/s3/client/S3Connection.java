@@ -58,9 +58,11 @@ import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 
 import org.apache.commons.httpclient.params.HttpClientParams;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
+import org.apache.commons.httpclient.params.HttpMethodParams;
 
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.HttpMethodRetryHandler;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.HeadMethod;
@@ -191,13 +193,7 @@ public class S3Connection {
     public void createBucket (String bucketName)
         throws S3Exception
     {
-        PutMethod method = new PutMethod(encodePath(bucketName));
-
-        try {
-            executeS3Method(method);
-        } finally {
-            method.releaseConnection();
-        }
+        executeS3MethodAndRelease(new PutMethod(encodePath(bucketName)));
     }
 
 
@@ -335,8 +331,13 @@ public class S3Connection {
         // Set the request entity, handling unknown content lengths
         final MediaType mediaType = object.getMediaType();
         long length = object.length();
-        if (length < 0)
+        if (length < 0) {
           length = InputStreamRequestEntity.CONTENT_LENGTH_AUTO;
+        } else {
+          // httpclient can't retry anything without buffered input, and when it tries, it spits an
+          // internal method instead of telling us what happened. Just tell it not to retry.
+          method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, NO_RETRY);
+        }
 
         method.setRequestEntity(new InputStreamRequestEntity(
             object.getInputStream(), length, mediaType.getMimeType()));
@@ -775,4 +776,11 @@ public class S3Connection {
 
     /** Header prefix for object metadata. */
     private static final String S3_COPY_METADATA_COPY_VALUE = "COPY";
+
+    /** A retry handler that never retries. */
+    private static final HttpMethodRetryHandler NO_RETRY = new HttpMethodRetryHandler () {
+        public boolean retryMethod (HttpMethod method, IOException exception, int exceptionCount) {
+            return false;
+        }
+    };
 }
