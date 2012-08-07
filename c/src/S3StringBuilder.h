@@ -48,7 +48,7 @@
 
 typedef struct S3StringBuilder S3StringBuilder;
 
-S3_EXTERN S3StringBuilder *s3stringbuilder_new ();
+S3_EXTERN S3StringBuilder *s3stringbuilder_new (uint32_t capacity);
 S3_EXTERN S3String *s3stringbuilder_string (S3StringBuilder *builder);
 S3_EXTERN size_t s3stringbuilder_length (S3StringBuilder *builder);
 S3_EXTERN void s3stringbuilder_append (S3StringBuilder *builder, S3String *source);
